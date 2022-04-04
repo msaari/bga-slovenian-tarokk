@@ -81,8 +81,52 @@ class SlovenianTarokk extends Table {
 		//self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
 		//self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
 
-		// TODO: setup the initial game situation here
+		/**
+		 * Hand types:
+		 * 0: normal
+		 * 1: klop
+		 */
+		self::setGameStateInitialValue( 'currentHandType', 0 );
 
+		// Set current trick color to zero (= no trick color)
+		self::setGameStateInitialValue( 'trickColor', 0 );
+
+		// Create cards
+		$cards = array ();
+		foreach ( $this->colors as $color_id => $color ) {
+			if ( $color_id < 5 ) {
+				// Non-trump suits.
+				for ( $value = 7; $value <= 13; $value++ ) {
+					$cards[] = array(
+						'type'     => $color_id,
+						'type_arg' => $value,
+						'nbr'      => 1
+					);
+				}
+			} else {
+				// Trump suit.
+				for ( $value = 1; $value <= 22; $value++ ) {
+					$cards[] = array(
+						'type'     => $color_id,
+						'type_arg' => $value,
+						'nbr'      => 1
+					);
+				}
+			}
+		}
+
+		$this->cards->createCards( $cards, 'deck' );
+
+		// Shuffle deck
+		$this->cards->shuffle('deck');
+
+		// Deal 12 cards to each player.
+		$players = self::loadPlayersBasicInfos();
+		foreach ( $players as $player_id => $player ) {
+			$cards = $this->cards->pickCards( 12, 'deck', $player_id );
+		}
+
+		$this->talon = $this->cards->pickCards( 6, 'deck', 'talon' );
 
 		// Activate first player (which is in general a good idea :) )
 		$this->activeNextPlayer();
