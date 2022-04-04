@@ -28,14 +28,15 @@ class SlovenianTarokk extends Table {
 		// Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
 		parent::__construct();
 
-		self::initGameStateLabels( array(
-			//    "my_first_global_variable" => 10,
-			//    "my_second_global_variable" => 11,
-			//      ...
-			//    "my_first_game_variant" => 100,
-			//    "my_second_game_variant" => 101,
-			//      ...
-		) );
+		self::initGameStateLabels(
+			array(
+				'currentHandType' => 10,
+				'trickColor'      => 11,
+			)
+		);
+
+		$this->cards = self::getNew( 'module.common.deck' );
+		$this->cards->init( 'card' );
 	}
 
 	protected function getGameName() {
@@ -59,11 +60,13 @@ class SlovenianTarokk extends Table {
 
 		// Create players
 		// Note: if you added some extra field on "player" table in the database (dbmodel.sql), you can initialize it there.
-		$sql    = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES ";
+		$sql    = 'INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES ';
 		$values = array();
 		foreach ( $players as $player_id => $player ) {
 			$color    = array_shift( $default_colors );
-			$values[] = "('".$player_id."','$color','".$player['player_canal']."','".addslashes( $player['player_name'] )."','".addslashes( $player['player_avatar'] )."')";
+			$name     = addslashes( $player['player_name'] );
+			$avatar   = addslashes( $player['player_avatar'] );
+			$values[] = "('$player_id','$color','{$player['player_canal']}','$name','$avatar')";
 		}
 		$sql .= implode( $values, ',' );
 		self::DbQuery( $sql );
@@ -151,10 +154,18 @@ class SlovenianTarokk extends Table {
 
 		// Get information about players
 		// Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-		$sql = "SELECT player_id id, player_score score FROM player ";
+		$sql = 'SELECT player_id id, player_score score, player_radl rald, player_team team FROM player ';
+
 		$result['players'] = self::getCollectionFromDb( $sql );
 
-		// TODO: Gather all information about current game situation (visible by player $current_player_id).
+		// Cards in player hand
+		$result['hand'] = $this->cards->getCardsInLocation( 'hand', $current_player_id );
+
+		// Cards played on the table
+		$result['cardsontable'] = $this->cards->getCardsInLocation( 'cardsontable' );
+
+		// Cards in talon
+		$result['cardsintalon'] = $this->cards->getCardsInLocation( 'talon' );
 
 		return $result;
 	}
