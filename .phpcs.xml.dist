@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ruleset name="BGA Game Coding Standards">
+	<arg name="tab-width" value="4"/>
+	<rule ref="Generic.Files.LineEndings">
+  		<properties>
+   			<property name="eolChar" value="\r\n"/>
+  		</properties>
+ 	</rule>
+ 	<rule ref="Generic">
+		<exclude name="Generic.Files.LineLength.TooLong" />
+		<exclude name="Generic.WhiteSpace.DisallowTabIndent" />
+		<exclude name="Generic.Arrays.DisallowLongArraySyntax" />
+		<exclude name="Generic.Functions.OpeningFunctionBraceBsdAllman" />
+		<exclude name="Generic.Files.EndFileNoNewline" />
+		<exclude name="Generic.PHP.RequireStrictTypes" />
+		<exclude name="Generic.PHP.ClosingPHPTag.NotFound" />
+ 	</rule>
+	<rule ref="Generic.WhiteSpace.DisallowSpaceIndent" />
+	<rule ref="Generic.Functions.OpeningFunctionBraceKernighanRitchie" />
+	<rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="0"/>
+        </properties>
+    </rule>
+	<rule ref="Zend.Files.ClosingTag" />
+
+</ruleset>
