@@ -48,8 +48,8 @@ $this->black_suit_labels = array(
 	10 => '10',
 	11 => clienttranslate('J'),
 	12 => clienttranslate('C'),
-	12 => clienttranslate('Q'),
-	13 => clienttranslate('K'),
+	13 => clienttranslate('Q'),
+	14 => clienttranslate('K'),
 );
 
 $this->red_suits = array(
@@ -59,8 +59,8 @@ $this->red_suits = array(
 	10 => '1',
 	11 => clienttranslate('J'),
 	12 => clienttranslate('C'),
-	12 => clienttranslate('Q'),
-	13 => clienttranslate('K'),
+	13 => clienttranslate('Q'),
+	14 => clienttranslate('K'),
 );
 
 $this->trump_values = array(
