@@ -18,6 +18,10 @@
 -- Note: The database schema is created from this file when the game starts. If you modify this file,
 --       you have to restart a game to see your changes in database.
 
+-- ALTER TABLE `player` ADD `player_score` INT NOT NULL DEFAULT 0;
+-- ALTER TABLE `player` ADD `player_radl` INT NOT NULL DEFAULT 0;
+-- ALTER TABLE `player` ADD `player_team` INT NOT NULL DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS `card` (
   `card_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `card_type` varchar(16) NOT NULL,
@@ -26,7 +30,3 @@ CREATE TABLE IF NOT EXISTS `card` (
   `card_location_arg` int(11) NOT NULL,
   PRIMARY KEY (`card_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
-ALTER TABLE `player` ADD `player_score` INT NOT NULL DEFAULT '0';
-ALTER TABLE `player` ADD `player_radl` INT NOT NULL DEFAULT '0';
-ALTER TABLE `player` ADD `player_team` INT NOT NULL DEFAULT '0';
