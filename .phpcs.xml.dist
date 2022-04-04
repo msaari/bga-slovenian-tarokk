@@ -14,6 +14,7 @@
 		<exclude name="Generic.Files.EndFileNoNewline" />
 		<exclude name="Generic.PHP.RequireStrictTypes" />
 		<exclude name="Generic.PHP.ClosingPHPTag.NotFound" />
+		<exclude name="Generic.PHP.UpperCaseConstant" />
  	</rule>
 	<rule ref="Generic.WhiteSpace.DisallowSpaceIndent" />
 	<rule ref="Generic.Functions.OpeningFunctionBraceKernighanRitchie" />
