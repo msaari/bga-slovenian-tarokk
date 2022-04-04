@@ -99,7 +99,7 @@ class SlovenianTarokk extends Table {
 		foreach ( $this->colors as $color_id => $color ) {
 			if ( $color_id < 5 ) {
 				// Non-trump suits.
-				for ( $value = 7; $value <= 13; $value++ ) {
+				for ( $value = 7; $value <= 14; $value++ ) {
 					$cards[] = array(
 						'type'     => $color_id,
 						'type_arg' => $value,
@@ -129,7 +129,7 @@ class SlovenianTarokk extends Table {
 			$cards = $this->cards->pickCards( 12, 'deck', $player_id );
 		}
 
-		$this->talon = $this->cards->pickCards( 6, 'deck', 'talon' );
+		$this->talon = $this->cards->pickCardsForLocation( 6, 'deck', 'talon' );
 
 		// Activate first player (which is in general a good idea :) )
 		$this->activeNextPlayer();
@@ -154,7 +154,8 @@ class SlovenianTarokk extends Table {
 
 		// Get information about players
 		// Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-		$sql = 'SELECT player_id id, player_score score, player_radl rald, player_team team FROM player ';
+		// $sql = 'SELECT player_id id, player_score score, player_radl radl, player_team team FROM player ';
+		$sql = 'SELECT player_id id FROM player ';
 
 		$result['players'] = self::getCollectionFromDb( $sql );
 
