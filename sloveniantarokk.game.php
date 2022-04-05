@@ -42,6 +42,8 @@ class SlovenianTarokk extends Table {
 				'currentHandType' => 10,
 				'trickColor'      => 11,
 				'dealer'          => 12,
+				'declarer'        => 13,
+				'declarerPartner' => 14,
 			)
 		);
 
@@ -86,6 +88,8 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'dealer', 0 );
 		self::setGameStateInitialValue( 'currentHandType', 0 );
 		self::setGameStateInitialValue( 'trickColor', 0 );
+		self::setGameStateInitialValue( 'declarer', 0 );
+		self::setGameStateInitialValue( 'declarerPartner', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -207,6 +211,17 @@ class SlovenianTarokk extends Table {
 		return false;
 	}
 
+	function getPlayerWithTheKing( $color ) {
+		$sql    = "SELECT card_location, card_location_arg FROM card WHERE card_type = '"
+			. intval( $color ) . "' AND card_type_arg = 14";
+		$result = self::getObjectFromDB( $sql );
+		if ( $result->card_location === 'talon' ) {
+			return 'talon';
+		} else {
+			return $result->card_location_arg;
+		}
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Player actions
 	////////////
@@ -244,7 +259,67 @@ class SlovenianTarokk extends Table {
 				'color_displayed' => $this->colors[ $currentCard['type'] ]['name']
 			),
 		);
+
+		self::trace( 'playCard->playCard' );
 		$this->gamestate->nextState( 'playCard' );
+	}
+
+	function callSpadeKing() {
+		self::checkAction('callSpadeKing');
+		self::trace('callSpadeKing');
+		$this->callKing( SUIT_SPADES );
+	}
+
+	function callClubKing() {
+		self::checkAction('callClubKing');
+		self::trace('callClubKing');
+		$this->callKing( SUIT_CLUBS );
+	}
+
+	function callHeartKing() {
+		self::checkAction('callHeartKing');
+		self::trace('callHeartKing');
+		$this->callKing( SUIT_HEARTS );
+	}
+
+	function callDiamondKing() {
+		self::checkAction('callDiamondKing');
+		self::trace('callDiamondKing');
+		$this->callKing( SUIT_DIAMONDS );
+	}
+
+	function callKing( $color ) {
+		$players = self::loadPlayersBasicInfos();
+		$partner = $this->getPlayerWithTheKing( $color );
+
+		self::notifyAllPlayers(
+			'callKing',
+			clienttranslate( '${player_name} calls the ${color_displayed} king' ),
+			array(
+				'i18n'            => array( 'color_displayed' ),
+				'player_id'       => self::getActivePlayerId(),
+				'player_name'     => self::getActivePlayerName(),
+				'color'           => $color,
+				'color_displayed' => $this->colors[ $color ]['name']
+			)
+		);
+
+		if ( $partner !== 'talon' && $partner !== self::getActivePlayerId() ) {
+			self::setGameStateValue( 'declarerPartner', $partner );
+			self::notifyPlayer(
+				$partner,
+				'youreChosen',
+				clienttranslate( '${you} have the ${color_displayed} king and are the declarer\'s partner' ),
+				array(
+					'i18n'            => array( 'color_displayed' ),
+					'color'           => $color,
+					'color_displayed' => $this->colors[ $color ]['name']
+				)
+			);
+		}
+
+		self::trace('callKing->kingChosen->newTrick');
+		$this->gamestate->nextState( 'kingChosen' );
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
@@ -303,6 +378,7 @@ class SlovenianTarokk extends Table {
 			);
 		}
 		$this->gamestate->changeActivePlayer( $this->getPlayerAfter( $dealer ) );
+		self::setGameStateValue( 'declarer', $this->getActivePlayerId() );
 
 		// Deal 12 cards to each player.
 		$players = self::loadPlayersBasicInfos();
@@ -320,16 +396,28 @@ class SlovenianTarokk extends Table {
 			)
 		);
 
+		self::notifyAllPlayers(
+			'declarer',
+			clienttranslate( '${player_name} is the declarer' ),
+			array(
+				'player_id'   => $this->getActivePlayerId(),
+				'player_name' => $players[ $this->getActivePlayerId() ]['player_name'],
+			)
+		);
+
+		self::trace( 'stNewHand->kingCalling' );
 		$this->gamestate->nextState();
 	}
 
 	function stNewTrick() {
 		self::setGameStateInitialValue( 'trickColor', 0 );
+		self::trace( 'stNewTrick->playerTurn' );
 		$this->gamestate->nextState();
 	}
 
 	function stNextPlayer() {
 		if ( intval( $this->cards->countCardInLocation( 'cardsontable' ) ) === 4 ) {
+			self::trace('Trick over, determine winner.');
 			$cardsOnTable      = $this->cards->getCardsInLocation( 'cardsontable' );
 			$bestValue         = 0;
 			$bestValuePlayerId = null;
@@ -380,13 +468,16 @@ class SlovenianTarokk extends Table {
 			);
 
 			if ( intval( $this->cards->countCardInLocation( 'hand' ) ) === 0 ) {
+				self::trace( 'stNextPlayer->endHand' );
 				$this->gamestate->nextState( 'endHand' );
 			} else {
+				self::trace( 'stNextPlayer->nextTrick' );
 				$this->gamestate->nextState( 'nextTrick' );
 			}
 		} else {
 			$player_id = self::activeNextPlayer();
 			self::giveExtraTime( $player_id );
+			self::trace( 'stNextPlayer->nextPlayer' );
 			$this->gamestate->nextState( 'nextPlayer' );
 		}
 	}
@@ -396,9 +487,17 @@ class SlovenianTarokk extends Table {
 
 		$teamCards = array();
 
+		$declarerTeam    = array( self::getGameStateValue( 'declarer' ) );
+		$declarerPartner = intval( self::getGameStateValue( 'declarerPartner' ) );
+		if ( $declarerPartner ) {
+			$declarerTeam[] = $declarerPartner;
+		}
+
 		$cards = $this->cards->getCardsInLocation("cardswon");
 		foreach ( $cards as $card ) {
-			$teamCards[ $card['location_arg'] ][] = $card;
+			$team = in_array( $card['location_arg'], $declarerTeam ) ? 'Declarer' : 'Opponents';
+
+			$teamCards[ $team ][] = $card;
 		}
 
 		$teamScores = $this->countScores( $teamCards );
@@ -406,7 +505,7 @@ class SlovenianTarokk extends Table {
 		foreach ( $teamScores as $team => $score ) {
 			self::notifyAllPlayers(
 				'score',
-				clienttranslate( '${team} scores ${score}' ),
+				clienttranslate( '${team} team scores ${score}' ),
 				array(
 					'team'  => $team,
 					'score' => $score,
@@ -414,6 +513,7 @@ class SlovenianTarokk extends Table {
 			);
 		}
 
+		self::trace( 'stCountingAndScoring->endHand' );
 		$this->gamestate->nextState();
 	}
 
@@ -432,10 +532,7 @@ class SlovenianTarokk extends Table {
 		);
 		self::setGameStateValue( 'dealer', $nextDealer );
 
-		$this->gamestate->nextState();
-	}
-
-	function stScoring() {
+		self::trace( 'stEndHand->nextHand' );
 		$this->gamestate->nextState();
 	}
 
