@@ -211,6 +211,12 @@ class SlovenianTarokk extends Table {
 		$player_id = self::getActivePlayerId();
 		$this->cards->moveCard( $card_id, 'cardsontable', $player_id );
 		$currentCard = $this->cards->getCard( $card_id );
+
+		$currentTrickColor = self::getGameStateValue( 'trickColor' );
+		if ( intval( $currentTrickColor ) === 0 ) {
+			self::setGameStateValue( 'trickColor', $currentCard['type'] );
+		}
+
 		self::notifyAllPlayers(
 			'playCard',
 			clienttranslate( '${player_name} plays ${value_displayed} ${color_displayed}' ),
@@ -271,23 +277,51 @@ class SlovenianTarokk extends Table {
 
 	function stNextPlayer() {
 		if ( intval( $this->cards->countCardInLocation( 'cardsontable' ) ) === 4 ) {
-			$best_value_player_id = self::activeNextPlayer();
-			$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $best_value_player_id );
+			$cardsOnTable      = $this->cards->getCardsInLocation( 'cardsontable' );
+			$bestValue         = 0;
+			$bestValuePlayerId = null;
+			$bestValueIsTrump  = false;
+			$currentTrickColor = self::getGameStateValue( 'trickColor' );
+
+			foreach ( $cardsOnTable as $card ) {
+				$cardValue = $card['type_arg'];
+				if ( $card['type'] === $currentTrickColor && ! $bestValueIsTrump ) {
+					if ( $cardValue > $bestValue ) {
+						$bestValue         = $cardValue;
+						$bestValuePlayerId = $card['location_arg'];
+					}
+				}
+				if ( $card['type'] === 5 ) {
+					if ( ! $bestValueIsTrump ) {
+						$bestValue         = $cardValue;
+						$bestValuePlayerId = $card['location_arg'];
+						$bestValueIsTrump  = true;
+					} else {
+						if ( $cardValue > $bestValue ) {
+							$bestValue         = $cardValue;
+							$bestValuePlayerId = $card['location_arg'];
+						}
+					}
+				}
+			}
+
+			$this->gamestate->changeActivePlayer( $best_value_player_id );
+			$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $bestValuePlayerId );
 
 			$players = self::loadPlayersBasicInfos();
 			self::notifyAllPlayers(
 				'trickWin',
 				clienttranslate( '${player_name} wins the trick' ),
 				array(
-					'player_id'   => $best_value_player_id,
-					'player_name' => $players[ $best_value_player_id ]['player_name'],
+					'player_id'   => $bestValuePlayerId,
+					'player_name' => $players[ $bestValuePlayerId ]['player_name'],
 				)
 			);
 			self::notifyAllPlayers(
 				'giveAllCardsToPlayer',
 				'',
 				array(
-					'player_id' => $best_value_player_id,
+					'player_id' => $bestValuePlayerId,
 				)
 			);
 
