@@ -17,6 +17,7 @@
 
 require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
 
+define( 'HAND_TYPE_NORMAL', 1 );
 
 class SlovenianTarokk extends Table {
 	function __construct() {
@@ -32,6 +33,7 @@ class SlovenianTarokk extends Table {
 			array(
 				'currentHandType' => 10,
 				'trickColor'      => 11,
+				'dealer'          => 12,
 			)
 		);
 
@@ -73,25 +75,8 @@ class SlovenianTarokk extends Table {
 		self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
 		self::reloadPlayersBasicInfos();
 
-		/*
-		*********** Start the game initialization *****/
-
-		// Init global values with their initial values
-		//self::setGameStateInitialValue( 'my_first_global_variable', 0 );
-
-		// Init game statistics
-		// (note: statistics used in this file must be defined in your stats.inc.php file)
-		//self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
-		//self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
-
-		/**
-		 * Hand types:
-		 * 0: normal
-		 * 1: klop
-		 */
+		self::setGameStateInitialValue( 'dealer', 0 );
 		self::setGameStateInitialValue( 'currentHandType', 0 );
-
-		// Set current trick color to zero (= no trick color)
 		self::setGameStateInitialValue( 'trickColor', 0 );
 
 		// Create cards
@@ -119,20 +104,6 @@ class SlovenianTarokk extends Table {
 		}
 
 		$this->cards->createCards( $cards, 'deck' );
-
-		// Shuffle deck
-		$this->cards->shuffle('deck');
-
-		// Deal 12 cards to each player.
-		$players = self::loadPlayersBasicInfos();
-		foreach ( $players as $player_id => $player ) {
-			$cards = $this->cards->pickCards( 12, 'deck', $player_id );
-		}
-
-		$this->talon = $this->cards->pickCardsForLocation( 6, 'deck', 'talon' );
-
-		// Activate first player (which is in general a good idea :) )
-		$this->activeNextPlayer();
 
 		/*
 		*********** End of the game initialization *****/
@@ -202,24 +173,58 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
+	function countScores( $teamCards ) {
+		$scores = array();
+		foreach ( $teamCards as $team => $cards ) {
+			$totalPoints = 0;
+			foreach ( $cards as $card ) {
+				$totalPoints += $this->point_values[ intval( $card['type_arg'] ) ];
+			}
+			$cardCount    = count( $cards );
+			$totalPoints -= intdiv( $cardCount, 3 ) * 2;
+			if ( $cardCount % 3 !== 0 ) {
+				$totalPoints -= 1;
+			}
+			$scores[ $team ] = $totalPoints;
+		}
+		return $scores;
+	}
+
+	function haveColorInHand( $color, $hand ) {
+		foreach ( $hand as $card ) {
+			if ( intval( $card['type'] ) === intval( $color ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Player actions
 	////////////
 
 	function playCard( $card_id ) {
 		self::checkAction( 'playCard' );
-		$player_id = self::getActivePlayerId();
-		$this->cards->moveCard( $card_id, 'cardsontable', $player_id );
-		$currentCard = $this->cards->getCard( $card_id );
+		$player_id         = self::getActivePlayerId();
+		$currentCard       = $this->cards->getCard( $card_id );
+		$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
+		$cardsInHand       = $this->cards->getCardsInLocation( 'hand', $player_id );
 
-		$currentTrickColor = self::getGameStateValue( 'trickColor' );
-		if ( intval( $currentTrickColor ) === 0 ) {
+		if ( $currentTrickColor > 0 ) {
+			if ( $this->haveColorInHand( $currentTrickColor, $cardsInHand )
+				&& intval( $currentCard['type'] ) !== $currentTrickColor ) {
+				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ $currentTrickColor ]['name'] . '.' );
+			}
+		}
+		$this->cards->moveCard( $card_id, 'cardsontable', $player_id );
+
+		if ( $currentTrickColor === 0 ) {
 			self::setGameStateValue( 'trickColor', $currentCard['type'] );
 		}
 
 		self::notifyAllPlayers(
 			'playCard',
-			clienttranslate( '${player_name} plays ${value_displayed} ${color_displayed}' ),
+			clienttranslate( '${player_name} plays ${color_displayed} ${value_displayed}' ),
 			array(
 				'i18n'            => array( 'color_displayed','value_displayed' ),
 				'card_id'         => $card_id,
@@ -265,10 +270,50 @@ class SlovenianTarokk extends Table {
 	//////////// Game state actions
 	////////////
 
-	/*
-		Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
-		The action method of state X is called everytime the current game state is set to X.
-	*/
+	function stNewHand() {
+		self::setGameStateValue( 'currentHandType', HAND_TYPE_NORMAL );
+		self::setGameStateValue( 'trickColor', 0 );
+		$this->cards->moveAllCardsInLocation( null, 'deck' );
+
+		// Shuffle deck
+		$this->cards->shuffle('deck');
+
+		$dealer = intval( self::getGameStateValue( 'dealer' ) );
+
+		if ( $dealer === 0 ) {
+			$playerTable = $this->getNextPlayerTable();
+			$dealer      = $this->getPlayerBefore( $playerTable[0] );
+			$players     = self::loadPlayersBasicInfos();
+
+			self::notifyAllPlayers(
+				'newDealer',
+				clienttranslate( '${player_name} is the first dealer' ),
+				array(
+					'player_id'   => $dealer,
+					'player_name' => $players[ $dealer ]['player_name'],
+				)
+			);
+		}
+		$this->gamestate->changeActivePlayer( $this->getPlayerAfter( $dealer ) );
+
+		// Deal 12 cards to each player.
+		$players = self::loadPlayersBasicInfos();
+		foreach ( $players as $player_id => $player ) {
+			$cards = $this->cards->pickCards( 12, 'deck', $player_id );
+		}
+
+		$this->talon = $this->cards->pickCardsForLocation( 6, 'deck', 'talon' );
+
+		self::notifyAllPlayers(
+			'newHand',
+			'',
+			array(
+				'cards' => $this->cards,
+			)
+		);
+
+		$this->gamestate->nextState();
+	}
 
 	function stNewTrick() {
 		self::setGameStateInitialValue( 'trickColor', 0 );
@@ -281,17 +326,18 @@ class SlovenianTarokk extends Table {
 			$bestValue         = 0;
 			$bestValuePlayerId = null;
 			$bestValueIsTrump  = false;
-			$currentTrickColor = self::getGameStateValue( 'trickColor' );
+			$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
 
 			foreach ( $cardsOnTable as $card ) {
 				$cardValue = $card['type_arg'];
-				if ( $card['type'] === $currentTrickColor && ! $bestValueIsTrump ) {
+				$cardColor = intval( $card['type'] );
+				if ( $cardColor === $currentTrickColor && ! $bestValueIsTrump ) {
 					if ( $cardValue > $bestValue ) {
 						$bestValue         = $cardValue;
 						$bestValuePlayerId = $card['location_arg'];
 					}
 				}
-				if ( $card['type'] === 5 ) {
+				if ( $cardColor === 5 ) {
 					if ( ! $bestValueIsTrump ) {
 						$bestValue         = $cardValue;
 						$bestValuePlayerId = $card['location_arg'];
@@ -305,7 +351,7 @@ class SlovenianTarokk extends Table {
 				}
 			}
 
-			$this->gamestate->changeActivePlayer( $best_value_player_id );
+			$this->gamestate->changeActivePlayer( $bestValuePlayerId );
 			$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $bestValuePlayerId );
 
 			$players = self::loadPlayersBasicInfos();
@@ -337,7 +383,47 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
-	function stCounting() {
+	function stCountingAndScoring() {
+		$players = self::loadPlayersBasicInfos();
+
+		$teamCards = array();
+
+		$cards = $this->cards->getCardsInLocation("cardswon");
+		foreach ( $cards as $card ) {
+			$teamCards[ $card['location_arg'] ][] = $card;
+		}
+
+		$teamScores = $this->countScores( $teamCards );
+
+		foreach ( $teamScores as $team => $score ) {
+			self::notifyAllPlayers(
+				'score',
+				clienttranslate( '${team} scores ${score}' ),
+				array(
+					'team'  => $team,
+					'score' => $score,
+				)
+			);
+		}
+
+		$this->gamestate->nextState();
+	}
+
+	function stEndHand() {
+		$players = self::loadPlayersBasicInfos();
+		$dealer  = intval( self::getGameStateValue( 'dealer' ) );
+
+		$nextDealer = $this->getPlayerAfter( $dealer );
+		self::notifyAllPlayers(
+			'newDealer',
+			clienttranslate( '${player_name} is the new dealer' ),
+			array(
+				'player_id'   => $nextDealer,
+				'player_name' => $players[ $nextDealer ]['player_name'],
+			)
+		);
+		self::setGameStateValue( 'dealer', $nextDealer );
+
 		$this->gamestate->nextState();
 	}
 
