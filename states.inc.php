@@ -70,6 +70,14 @@ $machinestates = array(
 		'description' => '',
 		'type'        => 'manager',
 		'action'      => 'stGameSetup',
+		'transitions' => array( '' => 10 ),
+	),
+
+	10 => array(
+		'name'        => 'newHand',
+		'description' => '',
+		'type'        => 'game',
+		'action'      => 'stNewHand',
 		'transitions' => array( '' => 60 ),
 	),
 
@@ -109,7 +117,18 @@ $machinestates = array(
 		'description' => '',
 		'type'        => 'game',
 		'action'      => 'stCountingAndScoring',
-		'transitions' => array(	'' => 99 ),
+		'transitions' => array(	'' => 80 ),
+	),
+
+	80 => array(
+		'name'        => 'endHand',
+		'description' => '',
+		'type'        => 'game',
+		'action'      => 'stEndHand',
+		'transitions' => array(
+			'nextHand' => 10,
+			'gameEnd'  => 99,
+		),
 	),
 
 	/*
