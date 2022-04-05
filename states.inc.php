@@ -98,6 +98,7 @@ $machinestates = array(
 		'type'        => 'game',
 		'action'      => 'stNextPlayer',
 		'transitions' => array(
+			'nextPlayer' => 61,
 			'nextTrick'  => 60,
 			'endHand'    => 70,
 		),
