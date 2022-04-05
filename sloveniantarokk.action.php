@@ -38,4 +38,28 @@ class action_sloveniantarokk extends APP_GameAction {
 		$this->game->playCard( $card_id );
 		self::ajaxResponse();
 	}
+
+	public function callSpadeKing() {
+		self::setAjaxMode();
+		$this->game->callSpadeKing();
+		self::ajaxResponse();
+	}
+
+	public function callHeartKing() {
+		self::setAjaxMode();
+		$this->game->callHeartKing();
+		self::ajaxResponse();
+	}
+
+	public function callDiamondKing() {
+		self::setAjaxMode();
+		$this->game->callDiamondKing();
+		self::ajaxResponse();
+	}
+
+	public function callClubKing() {
+		self::setAjaxMode();
+		$this->game->callClubKing();
+		self::ajaxResponse();
+	}
 }
