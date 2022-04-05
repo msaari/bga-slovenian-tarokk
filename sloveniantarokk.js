@@ -25,8 +25,8 @@ function (dojo, declare) {
         constructor: function(){
             console.log('sloveniantarokk constructor');
 
-            this.cardwidth = 220;
-            this.cardheight = 301;
+            this.cardwidth = 100;
+            this.cardheight = 137;
 
         },
 
