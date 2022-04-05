@@ -225,7 +225,7 @@ class SlovenianTarokk extends Table {
 				'player_id'       => $player_id,
 				'player_name'     => self::getActivePlayerName(),
 				'value'           => $currentCard['type_arg'],
-				'value_displayed' => getCardDisplayValue( $currentCard['type'], $currentCard['type_arg'] ),
+				'value_displayed' => $this->getCardDisplayValue( $currentCard['type'], $currentCard['type_arg'] ),
 				'color'           => $currentCard['type'],
 				'color_displayed' => $this->colors[ $currentCard['type'] ]['name']
 			),
