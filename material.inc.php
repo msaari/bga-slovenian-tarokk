@@ -87,13 +87,3 @@ $this->trump_values = array(
 	21 => '21 (Mond)',
 	22 => 'Škiš',
 );
-
-function getCardDisplayValue( $color, $card ) {
-	if ( $color == 5 ) {
-		return $this->trump_values[ $card ];
-	} elseif ( $color >= 3) {
-		return $this->red_suit_labels[ $card ];
-	} else {
-		return $this->black_suit_labels[ $card ];
-	}
-}

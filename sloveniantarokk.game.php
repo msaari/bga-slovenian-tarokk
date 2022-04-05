@@ -197,6 +197,15 @@ class SlovenianTarokk extends Table {
 	*/
 
 
+	function getCardDisplayValue( $color, $card ) {
+		if ( $color == 5 ) {
+			return $this->trump_values[ $card ];
+		} elseif ( $color >= 3) {
+			return $this->red_suit_labels[ $card ];
+		} else {
+			return $this->black_suit_labels[ $card ];
+		}
+	}
 
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Player actions
