@@ -215,10 +215,10 @@ class SlovenianTarokk extends Table {
 		$sql    = "SELECT card_location, card_location_arg FROM card WHERE card_type = '"
 			. intval( $color ) . "' AND card_type_arg = 14";
 		$result = self::getObjectFromDB( $sql );
-		if ( $result->card_location === 'talon' ) {
+		if ( $result['card_location'] === 'talon' ) {
 			return 'talon';
 		} else {
-			return $result->card_location_arg;
+			return $result['card_location_arg'];
 		}
 	}
 
@@ -309,7 +309,7 @@ class SlovenianTarokk extends Table {
 			self::notifyPlayer(
 				$partner,
 				'youreChosen',
-				clienttranslate( '${you} have the ${color_displayed} king and are the declarer\'s partner' ),
+				clienttranslate( 'You have the ${color_displayed} king and are the declarer\'s partner' ),
 				array(
 					'i18n'            => array( 'color_displayed' ),
 					'color'           => $color,
@@ -533,7 +533,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'dealer', $nextDealer );
 
 		self::trace( 'stEndHand->nextHand' );
-		$this->gamestate->nextState();
+		$this->gamestate->nextState( 'nextHand' );
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
