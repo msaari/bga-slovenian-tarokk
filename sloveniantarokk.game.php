@@ -392,7 +392,7 @@ class SlovenianTarokk extends Table {
 			'newHand',
 			'',
 			array(
-				'cards' => $this->cards,
+				'cards' => $cards,
 			)
 		);
 
