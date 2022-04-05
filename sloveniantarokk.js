@@ -193,10 +193,6 @@ function (dojo, declare) {
         playCardOnTable : function(player_id, color, value, card_id) {
             // player_id => direction
             var card_x_pos = value - 1;
-            if (color < 5) {
-                var card_x_pos = value - 7;
-            }
-            console.log( 'color: ' + color + ' - value: ' + value + ' - card_x_pos: ' + card_x_pos);
             dojo.place(this.format_block('jstpl_cardontable', {
                 x : this.cardwidth * card_x_pos,
                 y : this.cardheight * (color - 1),
@@ -228,11 +224,11 @@ function (dojo, declare) {
          *
          * Here, you are defining methods to handle player's action (ex: results of mouse click on game objects).
          *
-         * Most of the time, these methods: _ check the action is possible at this game state. _ make a call to the game server
+         * Most of the time, these methods:
+         * _ check the action is possible at this game state.
+         * _ make a call to the game server
          *
          */
-
-
 
         onPlayerHandSelectionChanged : function() {
             var items = this.playerHand.getSelectedItems();
@@ -242,12 +238,15 @@ function (dojo, declare) {
                 if (this.checkAction(action, true)) {
                     // Can play a card
                     var card_id = items[0].id;
-                    this.ajaxcall("/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
-                        id : card_id,
-                        lock : true
-                    }, this, function(result) {
-                    }, function(is_error) {
-                    });
+                    console.log("on playCard " + card_id);
+                    this.ajaxcall(
+                        "/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
+                            id : card_id,
+                            lock : true
+                        }, this, function(result) {
+                        }, function(is_error) {
+                    }
+                    );
 
                     this.playerHand.unselectAll();
                 } else if (this.checkAction('giveCards')) {
@@ -313,10 +312,11 @@ function (dojo, declare) {
             this.playCardOnTable(notif.args.player_id, notif.args.color, notif.args.value, notif.args.card_id);
         },
 
-
-        notif_trickWin : function(notif) {
-            // We do nothing here (just wait in order players can view the 4 cards played before they're gone.
+        notif_trickWin: function (notif) {
+            // We do nothing here (just wait in order players can view the 4
+            // cards played before they're gone.
         },
+
         notif_giveAllCardsToPlayer : function(notif) {
             // Move all cards on table to given table, then destroy them
             var winner_id = notif.args.player_id;
@@ -328,6 +328,7 @@ function (dojo, declare) {
                 anim.play();
             }
         },
+
         notif_newScores : function(notif) {
             // Update players' scores
             for ( var player_id in notif.args.newScores) {
@@ -335,4 +336,4 @@ function (dojo, declare) {
             }
         },
    });
-    });
+});
