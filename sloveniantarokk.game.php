@@ -137,8 +137,7 @@ class SlovenianTarokk extends Table {
 
 		// Get information about players
 		// Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-		// $sql = 'SELECT player_id id, player_score score, player_radl radl, player_team team FROM player ';
-		$sql = 'SELECT player_id id FROM player ';
+		$sql = 'SELECT player_id id, player_score score FROM player ';
 
 		$result['players'] = self::getCollectionFromDb( $sql );
 
@@ -190,11 +189,17 @@ class SlovenianTarokk extends Table {
 		foreach ( $teamCards as $team => $cards ) {
 			$totalPoints = 0;
 			foreach ( $cards as $card ) {
-				$totalPoints += $this->point_values[ intval( $card['type_arg'] ) ];
+				$totalPoints += $card['type'] == SUIT_TRUMP
+					? $this->trump_point_values[ intval( $card['type_arg'] ) ]
+					: $this->point_values[ intval( $card['type_arg'] ) ];
 			}
 			$cardCount    = count( $cards );
+			self::trace( "Total points: " . $totalPoints );
+			self::trace( "Card count: " . $cardCount );
 			$totalPoints -= intdiv( $cardCount, 3 ) * 2;
+			self::trace( "Total points after reduction: " . $totalPoints );
 			if ( $cardCount % 3 !== 0 ) {
+				self::trace( "Card count not divisible by 3" );
 				$totalPoints -= 1;
 			}
 			$scores[ $team ] = $totalPoints;
@@ -356,9 +361,8 @@ class SlovenianTarokk extends Table {
 	function stNewHand() {
 		self::setGameStateValue( 'currentHandType', HAND_TYPE_NORMAL );
 		self::setGameStateValue( 'trickColor', 0 );
-		$this->cards->moveAllCardsInLocation( null, 'deck' );
 
-		// Shuffle deck
+		$this->cards->moveAllCardsInLocation( null, 'deck' );
 		$this->cards->shuffle('deck');
 
 		$dealer = intval( self::getGameStateValue( 'dealer' ) );
@@ -487,7 +491,8 @@ class SlovenianTarokk extends Table {
 
 		$teamCards = array();
 
-		$declarerTeam    = array( self::getGameStateValue( 'declarer' ) );
+		$declarer        = intval( self::getGameStateValue( 'declarer' ) );
+		$declarerTeam    = array( $declarer );
 		$declarerPartner = intval( self::getGameStateValue( 'declarerPartner' ) );
 		if ( $declarerPartner ) {
 			$declarerTeam[] = $declarerPartner;
@@ -512,6 +517,39 @@ class SlovenianTarokk extends Table {
 				)
 			);
 		}
+
+		$difference = abs( $teamScores['Declarer'] - 35 );
+		$difference = floor( $difference / 5 ) * 5;
+		$points     = 10 + $difference;
+
+		if ( $teamScores['Declarer'] > 35 ) {
+			$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarer'";
+			self::DbQuery($sql);
+			if ( $declarerPartner ) {
+				$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarerPartner'";
+				self::DbQuery($sql);
+			}
+			self::notifyAllPlayers(
+				'points',
+				clienttranslate( 'Declarer\s team gains ${points} points' ),
+				array ( 'points' => $points )
+			);
+		} else {
+			$sql = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarer'";
+			self::DbQuery($sql);
+			if ( $declarerPartner ) {
+				$sql = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarerPartner'";
+				self::DbQuery($sql);
+			}
+			self::notifyAllPlayers(
+				'points',
+				clienttranslate( 'Declarer\s team lost ${points} points' ),
+				array ( 'points' => $points )
+			);
+		}
+
+		$newScores = self::getCollectionFromDb( 'SELECT player_id, player_score FROM player', true );
+		self::notifyAllPlayers( 'newScores', '', array( 'newScores' => $newScores ) );
 
 		self::trace( 'stCountingAndScoring->endHand' );
 		$this->gamestate->nextState();
