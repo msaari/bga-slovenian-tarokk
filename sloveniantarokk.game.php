@@ -19,6 +19,14 @@ require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
 
 define( 'HAND_TYPE_NORMAL', 1 );
 
+define( 'SUIT_SPADES', 1 );
+define( 'SUIT_CLUBS', 2 );
+define( 'SUIT_HEARTS', 3 );
+define( 'SUIT_DIAMONDS', 4 );
+define( 'SUIT_TRUMP', 5 );
+
+define( 'RED_SUITS', array( SUIT_HEARTS, SUIT_DIAMONDS ) );
+
 class SlovenianTarokk extends Table {
 	function __construct() {
 		// Your global variables labels:
@@ -82,7 +90,7 @@ class SlovenianTarokk extends Table {
 		// Create cards
 		$cards = array ();
 		foreach ( $this->colors as $color_id => $color ) {
-			if ( $color_id < 5 ) {
+			if ( $color_id < SUIT_TRUMP ) {
 				// Non-trump suits.
 				for ( $value = 7; $value <= 14; $value++ ) {
 					$cards[] = array(
@@ -164,9 +172,9 @@ class SlovenianTarokk extends Table {
 	////////////
 
 	function getCardDisplayValue( $color, $card ) {
-		if ( $color == 5 ) {
+		if ( $color == SUIT_TRUMP ) {
 			return $this->trump_values[ $card ];
-		} elseif ( $color >= 3) {
+		} elseif ( in_array( $color, RED_SUITS ) ) {
 			return $this->red_suit_labels[ $card ];
 		} else {
 			return $this->black_suit_labels[ $card ];

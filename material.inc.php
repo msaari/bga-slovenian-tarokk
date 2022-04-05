@@ -19,23 +19,23 @@
  */
 
 $this->colors = array(
-	1 => array(
+	SUIT_SPADES => array(
 		'name' => clienttranslate( 'spade' ),
 		'nametr' => self::_('spade')
 	),
-	2 => array(
+	SUIT_CLUBS => array(
 		'name' => clienttranslate( 'club' ),
 		'nametr' => self::_('club')
 	),
-	3 => array(
+	SUIT_HEARTS => array(
 		'name' => clienttranslate( 'heart' ),
 		'nametr' => self::_('heart')
 	),
-	4 => array(
+	SUIT_DIAMONDS => array(
 		'name' => clienttranslate( 'diamond' ),
 		'nametr' => self::_('diamond')
 	),
-	5 => array(
+	SUIT_TRUMP => array(
 		'name' => clienttranslate( 'trump' ),
 		'nametr' => self::_('trump')
 	)
