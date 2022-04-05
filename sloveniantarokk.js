@@ -157,10 +157,10 @@ function (dojo, declare) {
             if( this.isCurrentPlayerActive() ) {
                 switch (stateName) {
                     case 'kingCalling':
-                        this.addActionButton('call_spade_king', __('Spade'), 'callSpadeKing');
-                        this.addActionButton('call_heart_king', __('Heart'), 'callHeartKing');
-                        this.addActionButton('call_club_king', __('Club'), 'callClubKing');
-                        this.addActionButton('call_diamong_king', __('Diamond'), 'callDiamondKing');
+                        this.addActionButton('call_spade_king', _('Spade'), 'callSpadeKing');
+                        this.addActionButton('call_heart_king', _('Heart'), 'callHeartKing');
+                        this.addActionButton('call_club_king', _('Club'), 'callClubKing');
+                        this.addActionButton('call_diamong_king', _('Diamond'), 'callDiamondKing');
                         break;
 /*
                  Example:
