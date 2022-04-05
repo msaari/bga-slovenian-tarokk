@@ -192,11 +192,6 @@ class SlovenianTarokk extends Table {
 	//////////// Utility functions
 	////////////
 
-	/*
-		In this space, you can put any utility methods useful for your game logic
-	*/
-
-
 	function getCardDisplayValue( $color, $card ) {
 		if ( $color == 5 ) {
 			return $this->trump_values[ $card ];
@@ -219,7 +214,7 @@ class SlovenianTarokk extends Table {
 		self::notifyAllPlayers(
 			'playCard',
 			clienttranslate( '${player_name} plays ${value_displayed} ${color_displayed}' ),
-			array (
+			array(
 				'i18n'            => array( 'color_displayed','value_displayed' ),
 				'card_id'         => $card_id,
 				'player_id'       => $player_id,
@@ -275,11 +270,28 @@ class SlovenianTarokk extends Table {
 	}
 
 	function stNextPlayer() {
-		if ( $this->cards->countCardInLocation( 'cardsontable' ) === 4 ) {
+		if ( intval( $this->cards->countCardInLocation( 'cardsontable' ) ) === 4 ) {
 			$best_value_player_id = self::activeNextPlayer();
 			$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $best_value_player_id );
 
-			if ( $this->cards->countCardInLocation( 'hand' ) === 0 ) {
+			$players = self::loadPlayersBasicInfos();
+			self::notifyAllPlayers(
+				'trickWin',
+				clienttranslate( '${player_name} wins the trick' ),
+				array(
+					'player_id'   => $best_value_player_id,
+					'player_name' => $players[ $best_value_player_id ]['player_name'],
+				)
+			);
+			self::notifyAllPlayers(
+				'giveAllCardsToPlayer',
+				'',
+				array(
+					'player_id' => $best_value_player_id,
+				)
+			);
+
+			if ( intval( $this->cards->countCardInLocation( 'hand' ) ) === 0 ) {
 				$this->gamestate->nextState( 'endHand' );
 			} else {
 				$this->gamestate->nextState( 'nextTrick' );
