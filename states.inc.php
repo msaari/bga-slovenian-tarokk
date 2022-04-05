@@ -108,18 +108,11 @@ $machinestates = array(
 		'name'        => 'counting',
 		'description' => '',
 		'type'        => 'game',
-		'action'      => 'stCounting',
-		'transitions' => array(	'' => 71 ),
+		'action'      => 'stCountingAndScoring',
+		'transitions' => array(	'' => 99 ),
 	),
 
-	71 => array(
-		'name'        => 'scoring',
-		'description' => '',
-		'type'        => 'game',
-		'action'      => 'stScoring',
-		'transitions' => array( '' => 99 ),
-	),
-/*
+	/*
 	Examples:
 
 	2 => array(
