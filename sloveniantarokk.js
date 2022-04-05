@@ -157,10 +157,10 @@ function (dojo, declare) {
             if( this.isCurrentPlayerActive() ) {
                 switch (stateName) {
                     case 'kingCalling':
-                        this.addActionButton('call_spade_king', _('Spade'), 'callSpadeKing');
-                        this.addActionButton('call_heart_king', _('Heart'), 'callHeartKing');
-                        this.addActionButton('call_club_king', _('Club'), 'callClubKing');
-                        this.addActionButton('call_diamong_king', _('Diamond'), 'callDiamondKing');
+                        this.addActionButton('call_spade_king', _('Spade'), 'onCallSpadeKing');
+                        this.addActionButton('call_heart_king', _('Heart'), 'onCallHeartKing');
+                        this.addActionButton('call_club_king', _('Club'), 'onCallClubKing');
+                        this.addActionButton('call_diamong_king', _('Diamond'), 'onCallDiamondKing');
                         break;
 /*
                  Example:
@@ -260,19 +260,69 @@ function (dojo, declare) {
             }
         },
 
-        /*
-         * Example:
-         *
-         * onMyMethodToCall1: function( evt ) { console.log( 'onMyMethodToCall1' ); // Preventing default browser reaction dojo.stopEvent(
-         * evt ); // Check that this action is possible (see "possibleactions" in states.inc.php) if( ! this.checkAction( 'myAction' ) ) {
-         * return; }
-         *
-         * this.ajaxcall( "/heartsla/heartsla/myAction.html", { lock: true, myArgument1: arg1, myArgument2: arg2, ... }, this, function(
-         * result ) { // What to do after the server call if it succeeded // (most of the time: nothing) }, function( is_error) { // What to
-         * do after the server call in anyway (success or failure) // (most of the time: nothing) } ); },
-         *
-         */
+        onCallSpadeKing: function () {
+            if (!this.checkAction('callSpadeKing')) {
+                return;
+            }
+            var action = 'callSpadeKing';
+            console.log("on callSpadeKing");
+            this.ajaxcall(
+                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
+                {
+                    lock : true
+                }, this, function(result) {
+                }, function(is_error) {
+                }
+            );
+        },
 
+        onCallClubKing: function () {
+            if (!this.checkAction('callClubKing')) {
+                return;
+            }
+            var action = 'callClubKing';
+            console.log("on callClubKing");
+            this.ajaxcall(
+                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
+                {
+                    lock : true
+                }, this, function(result) {
+                }, function(is_error) {
+                }
+            );
+        },
+
+        onCallHeartKing: function () {
+            if (!this.checkAction('callHeartKing')) {
+                return;
+            }
+            var action = 'callHeartKing';
+            console.log("on callHeartKing");
+            this.ajaxcall(
+                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
+                {
+                    lock: true
+                }, this, function (result) {
+                }, function (is_error) {
+                }
+            );
+        },
+
+        onCallDiamondKing: function () {
+            if (!this.checkAction('callDiamondKing')) {
+                return;
+            }
+            var action = 'callDiamondKing';
+            console.log("on callDiamondKing");
+            this.ajaxcall(
+                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
+                {
+                    lock: true
+                }, this, function (result) {
+                }, function (is_error) {
+                }
+            );
+        },
 
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
