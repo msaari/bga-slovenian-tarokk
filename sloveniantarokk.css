@@ -52,3 +52,18 @@
 	top: 50%;
 	margin-top: -60px;
 }
+
+.playertablecard {
+	display: inline-block;
+	position: relative;
+	margin-top: 5px;
+	width: 100px;
+	height: 137px;
+}
+
+.cardontable {
+	position: absolute;
+	width: 100px;
+	height: 137px;
+	background-image: url("img/cards.png");
+}
