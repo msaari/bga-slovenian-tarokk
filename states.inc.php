@@ -78,7 +78,24 @@ $machinestates = array(
 		'description' => '',
 		'type'        => 'game',
 		'action'      => 'stNewHand',
-		'transitions' => array( '' => 60 ),
+		'transitions' => array( '' => 30 ),
+	),
+
+	30 => array(
+		'name'              => 'kingCalling',
+		'description'       => clienttranslate( '${actplayer} must choose a king to call' ),
+		'descriptionmyturn' => clienttranslate( '${you} must choose a king to call' ),
+		'type'              => 'activeplaer',
+		'action'            => 'stKingCalling',
+		'possibleactions'   => array(
+			'callSpadeKing',
+			'callHeartKing',
+			'callDiamondKing',
+			'callClubKing',
+		),
+		'transitions'       => array(
+			'kingChosen' => 60
+		),
 	),
 
 	60 => array(
