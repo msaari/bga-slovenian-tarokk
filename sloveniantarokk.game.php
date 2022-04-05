@@ -384,17 +384,17 @@ class SlovenianTarokk extends Table {
 		$players = self::loadPlayersBasicInfos();
 		foreach ( $players as $player_id => $player ) {
 			$cards = $this->cards->pickCards( 12, 'deck', $player_id );
+			self::notifyPlayer(
+				$player_id,
+				'newHand',
+				'',
+				array(
+					'cards' => $cards
+				)
+			);
 		}
 
 		$this->talon = $this->cards->pickCardsForLocation( 6, 'deck', 'talon' );
-
-		self::notifyAllPlayers(
-			'newHand',
-			'',
-			array(
-				'cards' => $cards,
-			)
-		);
 
 		self::notifyAllPlayers(
 			'declarer',
