@@ -18,7 +18,8 @@
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
-    "ebg/counter"
+    "ebg/counter",
+    "ebg/stock"
 ],
 function (dojo, declare) {
     return declare("bgagame.sloveniantarokk", ebg.core.gamegui, {
@@ -48,7 +49,7 @@ function (dojo, declare) {
             // Player hand
             this.playerHand = new ebg.stock();
             this.playerHand.create(this, $('myhand'), this.cardwidth, this.cardheight);
-            this.playerHand.image_items_per_row = 12;
+            this.playerHand.image_items_per_row = 22;
 
             dojo.connect( this.playerHand, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
 
@@ -184,15 +185,20 @@ function (dojo, declare) {
 
         */
         // Get card unique identifier based on its color and value
-        getCardUniqueId : function(color, value) {
-            return (color - 1) * 22 + (value - 7);
+        getCardUniqueId: function (color, value) {
+            return (color - 1) * 22 + (value - 1);
         },
 
 
         playCardOnTable : function(player_id, color, value, card_id) {
             // player_id => direction
+            var card_x_pos = value - 1;
+            if (color < 5) {
+                var card_x_pos = value - 7;
+            }
+            console.log( 'color: ' + color + ' - value: ' + value + ' - card_x_pos: ' + card_x_pos);
             dojo.place(this.format_block('jstpl_cardontable', {
-                x : this.cardwidth * (value - 2),
+                x : this.cardwidth * card_x_pos,
                 y : this.cardheight * (color - 1),
                 player_id : player_id
             }), 'playertablecard_' + player_id);
