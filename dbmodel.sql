@@ -18,10 +18,6 @@
 -- Note: The database schema is created from this file when the game starts. If you modify this file,
 --       you have to restart a game to see your changes in database.
 
-ALTER TABLE `player` ADD `player_score` INT(1) NOT NULL DEFAULT '0';
-
-ALTER TABLE `player` ADD `player_radl` INT(1) NOT NULL DEFAULT '0';
-
 CREATE TABLE IF NOT EXISTS `card` (
   `card_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `card_type` varchar(16) NOT NULL,
