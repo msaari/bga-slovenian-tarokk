@@ -151,14 +151,17 @@ function (dojo, declare) {
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
         //                        action status bar (ie: the HTML links in the status bar).
         //
-        onUpdateActionButtons: function( stateName, args )
-        {
+        onUpdateActionButtons: function( stateName, args ) {
             console.log( 'onUpdateActionButtons: '+stateName );
 
-            if( this.isCurrentPlayerActive() )
-            {
-                switch( stateName )
-                {
+            if( this.isCurrentPlayerActive() ) {
+                switch (stateName) {
+                    case 'kingCalling':
+                        this.addActionButton('call_spade_king', __('Spade'), 'callSpadeKing');
+                        this.addActionButton('call_heart_king', __('Heart'), 'callHeartKing');
+                        this.addActionButton('call_club_king', __('Club'), 'callClubKing');
+                        this.addActionButton('call_diamong_king', __('Diamond'), 'callDiamondKing');
+                        break;
 /*
                  Example:
 
@@ -296,7 +299,6 @@ function (dojo, declare) {
         },
 
         notif_newHand : function(notif) {
-            // We received a new full hand of 13 cards.
             this.playerHand.removeAll();
 
             for ( var i in notif.args.cards) {
