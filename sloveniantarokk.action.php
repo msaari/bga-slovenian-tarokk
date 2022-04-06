@@ -62,4 +62,15 @@ class action_sloveniantarokk extends APP_GameAction {
 		$this->game->callClubKing();
 		self::ajaxResponse();
 	}
+
+	public function chooseCards() {
+		self::setAjaxMode();
+		self::trace( 'chooseCards' );
+		$cards = self::getArg( 'cards', AT_alphanum, true );
+		$cards = explode( ' ', $cards );
+		$talon = self::getArg( 'talon', AT_alphanum, true );
+		self::trace( 'chooseCards: ' . $talon );
+		$this->game->chooseCards( $cards, $talon );
+		self::ajaxResponse();
+	}
 }
