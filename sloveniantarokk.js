@@ -102,32 +102,34 @@ function (dojo, declare) {
         onEnteringState: function( stateName, args ) {
             console.log( 'Entering state: '+stateName );
 
+            switch( stateName ) {
+                case 'exchange':
+                    dojo.style('talonexchange', 'display', 'block');
+                    dojo.place(this.format_block('jstpl_talonexchange_33', {}), 'talonexchange');
+                    var counter = 0;
+                    for (i in this.gamedatas.cardsintalon) {
+                        counter++;
+                        var card = this.gamedatas.cardsintalon[i];
+                        var talon = counter <= 3 ? 'talon_33_1' : 'talon_33_2';
+                        this.playCardInTalon(talon, card.type, card.type_arg, this.getCardUniqueId(card.type, card.type_arg))
+
+                    }
+                    dojo.connect(dojo.byId('talon_33_1'), 'onclick', this, 'onTalonClickChooseCards');
+                    dojo.connect(dojo.byId('talon_33_2'), 'onclick', this, 'onTalonClickChooseCards');
+                    break;
             }
         },
 
         // onLeavingState: this method is called each time we are leaving a game state.
         //                 You can use this method to perform some user interface changes at this moment.
         //
-        onLeavingState: function( stateName )
-        {
+        onLeavingState: function( stateName ) {
             console.log( 'Leaving state: '+stateName );
 
-            switch( stateName )
-            {
-
-            /* Example:
-
-            case 'myGameState':
-
-                // Hide the HTML block we are displaying only during this game state
-                dojo.style( 'my_html_block_id', 'display', 'none' );
-
-                break;
-           */
-
-
-            case 'dummmy':
-                break;
+            switch (stateName) {
+                case 'exchange':
+                    dojo.style('talonexchange', 'display', 'none');
+                    break;
             }
         },
 
@@ -157,7 +159,13 @@ function (dojo, declare) {
             return (color - 1) * 22 + (value - 1);
         },
 
+        getColorAndValueFromUniqueId: function (unique_id) {
+            var color = Math.floor(unique_id / 22) + 1;
+            var value = unique_id % 22 + 1;
+            return { color: color, value: value };
+        },
 
+        // Play a card on table for a player
         playCardOnTable : function(player_id, color, value, card_id) {
             // player_id => direction
             var card_x_pos = value - 1;
@@ -185,20 +193,19 @@ function (dojo, declare) {
             this.slideToObject('cardontable_' + player_id, 'playertablecard_' + player_id).play();
         },
 
+        playCardInTalon : function(talon_id, color, value, card_id) {
+            var card_x_pos = value - 1;
+            dojo.place(this.format_block('jstpl_cardintalon', {
+                x : this.cardwidth * card_x_pos,
+                y : this.cardheight * (color - 1),
+                card_id : card_id
+            }), talon_id);
+        },
+
         // /////////////////////////////////////////////////
         // // Player's action
 
-        /*
-         *
-         * Here, you are defining methods to handle player's action (ex: results of mouse click on game objects).
-         *
-         * Most of the time, these methods:
-         * _ check the action is possible at this game state.
-         * _ make a call to the game server
-         *
-         */
-
-        onPlayerHandSelectionChanged : function() {
+        onPlayerHandSelectionChanged: function () {
             var items = this.playerHand.getSelectedItems();
 
             if (items.length > 0) {
@@ -217,8 +224,19 @@ function (dojo, declare) {
                     );
 
                     this.playerHand.unselectAll();
-                } else if (this.checkAction('giveCards')) {
-                    // Can give cards => let the player select some cards
+                } else if (this.checkAction('discardCard')) {
+                    action = 'discardCard';
+                    var card_id = items[0].id;
+                    console.log("on discardCard " + card_id);
+                    this.ajaxcall(
+                        "/" + this.game_name + "/" + this.game_name + "/" + action + ".html", {
+                            id : card_id,
+                            lock : true
+                        }, this, function(result) {
+                        }, function(is_error) {
+                    }
+                    );
+                    this.playerHand.unselectAll();
                 } else {
                     this.playerHand.unselectAll();
                 }
@@ -289,6 +307,35 @@ function (dojo, declare) {
             );
         },
 
+        onTalonClickChooseCards: function (event) {
+            if (!this.checkAction('chooseCards')) {
+                return;
+            }
+            var talon = event.target;
+            if (talon.classList.contains('cardontable')) {
+                // Clicked a card, get the parent.
+                talon = talon.parentNode;
+            }
+            var cards = [];
+            for (var i = 0; i < talon.children.length; i++) {
+                var child = talon.children[i];
+                var card = this.getColorAndValueFromUniqueId(child.id.substring(12))
+                cards.push(card.color + '_' + card.value);
+            }
+            var action = 'chooseCards';
+            console.log("on chooseCards ", cards, talon.id);
+            this.ajaxcall(
+                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
+                {
+                    talon: talon.id,
+                    cards: cards.join(' '),
+                    lock: true
+                }, this, function (result) {
+                }, function (is_error) {
+                }
+            );
+        },
+
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
 
@@ -296,8 +343,10 @@ function (dojo, declare) {
             console.log('notifications subscriptions setup');
 
             dojo.subscribe('newHand', this, "notif_newHand");
+            dojo.subscribe('newCards', this, "notif_newCards");
+            dojo.subscribe('talonChosen', this, "notif_talonChosen");
+            dojo.subscribe('discardCard', this, "notif_discardCard");
             dojo.subscribe('playCard', this, "notif_playCard");
-
             dojo.subscribe('trickWin', this, "notif_trickWin");
             this.notifqueue.setSynchronous('trickWin', 1000);
             dojo.subscribe('giveAllCardsToPlayer', this, "notif_giveAllCardsToPlayer");
@@ -313,6 +362,22 @@ function (dojo, declare) {
                 var value = card.type_arg;
                 this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
             }
+        },
+
+        notif_newCards: function (notif) {
+            console.log( "on newCards ", notif.args.cards);
+            for ( var i in notif.args.cards) {
+                var card = notif.args.cards[i];
+                var color = card.type;
+                var value = card.type_arg;
+                this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
+                console.log("new card " + this.getCardUniqueId(color, value) + " " + color + " " + value);
+            }
+        },
+
+        notif_discardCard: function (notif) {
+            console.log("notif_discardCard", notif.args);
+            this.playerHand.removeFromStockById(notif.args.card_id)
         },
 
         notif_playCard : function(notif) {
@@ -341,6 +406,22 @@ function (dojo, declare) {
             // Update players' scores
             for ( var player_id in notif.args.newScores) {
                 this.scoreCtrl[player_id].toValue(notif.args.newScores[player_id]);
+            }
+        },
+
+        notif_talonChosen: function (notif) {
+            if (notif.args.player_id != this.player_id) {
+                var anim = this.slideToObject(notif.args.talon_id, 'overall_player_board_' + notif.args.player_id);
+                dojo.connect(anim, 'onEnd', function (node) {
+                    dojo.destroy(node);
+                });
+                anim.play();
+            } else {
+                var anim = this.slideToObject(notif.args.talon_id, 'myhand');
+                dojo.connect(anim, 'onEnd', function (node) {
+                    dojo.destroy(node);
+                });
+                anim.play();
             }
         },
    });
