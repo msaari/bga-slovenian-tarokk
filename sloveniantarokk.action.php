@@ -39,6 +39,13 @@ class action_sloveniantarokk extends APP_GameAction {
 		self::ajaxResponse();
 	}
 
+	public function discardCard() {
+		self::setAjaxMode();
+		$card_id = self::getArg( 'id', AT_posint, true );
+		$this->game->discardCard( $card_id );
+		self::ajaxResponse();
+	}
+
 	public function callSpadeKing() {
 		self::setAjaxMode();
 		$this->game->callSpadeKing();
