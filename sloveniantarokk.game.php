@@ -186,16 +186,20 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
+	function getCardPointValue( $card ) {
+		return $card['type'] == SUIT_TRUMP
+			? $this->trump_point_values[ intval( $card['type_arg'] ) ]
+			: $this->point_values[ intval( $card['type_arg'] ) ];
+	}
+
 	function countScores( $teamCards ) {
 		$scores = array();
 		foreach ( $teamCards as $team => $cards ) {
 			$totalPoints = 0;
 			foreach ( $cards as $card ) {
-				$totalPoints += $card['type'] == SUIT_TRUMP
-					? $this->trump_point_values[ intval( $card['type_arg'] ) ]
-					: $this->point_values[ intval( $card['type_arg'] ) ];
+				$totalPoints += $this->getCardPointValue( $card );
 			}
-			$cardCount    = count( $cards );
+			$cardCount = count( $cards );
 			self::trace( "Total points: " . $totalPoints );
 			self::trace( "Card count: " . $cardCount );
 			$totalPoints -= intdiv( $cardCount, 3 ) * 2;
