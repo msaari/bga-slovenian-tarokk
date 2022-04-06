@@ -288,6 +288,65 @@ class SlovenianTarokk extends Table {
 		$this->gamestate->nextState( 'playCard' );
 	}
 
+	function discardCard( $card_id ) {
+		self::checkAction( 'discardCard' );
+		$playerId    = self::getActivePlayerId();
+		$currentCard = $this->cards->getCard( $card_id );
+		$cardsInHand = $this->cards->getCardsInLocation( 'hand', $playerId );
+
+		if ( $this->getCardPointValue( $currentCard ) === 5 ) {
+			throw new BgaUserException( self::_( 'You cannot discard a five-point card.' ) );
+		}
+
+		$this->cards->moveCard( $card_id, 'cardswon', $playerId );
+
+		if ( $currentCard['type'] == SUIT_TRUMP ) {
+			self::notifyAllPlayers(
+				'discardTrump',
+				clienttranslate( '${player_name} discards ${color_displayed} ${value_displayed}' ),
+				array(
+					'i18n'            => array( 'color_displayed','value_displayed' ),
+					'card_id'         => $card_id,
+					'player_id'       => $playerId,
+					'player_name'     => self::getActivePlayerName(),
+					'value'           => $currentCard['type_arg'],
+					'value_displayed' => $this->getCardDisplayValue( $currentCard['type'], $currentCard['type_arg'] ),
+					'color'           => $currentCard['type'],
+					'color_displayed' => $this->colors[ $currentCard['type'] ]['name']
+				),
+			);
+		} else {
+			self::notifyAllPlayers(
+				'discardNontrump',
+				clienttranslate( '${player_name} discards a non-trump card' ),
+				array(
+					'player_id'       => $playerId,
+					'player_name'     => self::getActivePlayerName(),
+				),
+			);
+
+		}
+
+		self::notifyPlayer(
+			$playerId,
+			'discardCard',
+			'',
+			array(
+				'card_id' => $card_id,
+				'value'   => $currentCard['type_arg'],
+				'color'   => $currentCard['type'],
+			)
+		);
+
+		if ( $this->cards->countCardInLocation( 'hand', $playerId ) > HAND_SIZE ) {
+			self::trace( 'discardCard->discardCard' );
+			$this->gamestate->nextState( 'discardCard' );
+		} else {
+			self::trace( 'discardCard->doneDiscarding' );
+			$this->gamestate->nextState( 'doneDiscarding' );
+		}
+	}
+
 	function callSpadeKing() {
 		self::checkAction('callSpadeKing');
 		self::trace('callSpadeKing');
@@ -344,6 +403,58 @@ class SlovenianTarokk extends Table {
 
 		self::trace('callKing->kingChosen->newTrick');
 		$this->gamestate->nextState( 'kingChosen' );
+	}
+
+	function chooseCards( $cards, $talon ) {
+		self::checkAction( 'chooseCards' );
+		self::trace( 'chooseCards' );
+
+		$unpackedCards = array();
+		foreach ( $cards as $card ) {
+			$card            = explode( '_', $card );
+			$unpackedCards[] = array(
+				'color' => $card[0],
+				'value' => $card[1],
+			);
+		}
+
+		$playerId   = self::getActivePlayerId();
+		$talonCards = $this->cards->getCardsInLocation( 'talon' );
+
+		$cardObjects = $this->getCardsBasedOnColorValue( $talonCards, $unpackedCards );
+
+		if ( count( $cardObjects ) !== count( $unpackedCards ) ) {
+			throw new BgaUserException( self::_( 'All cards were not found in the talon' ) );
+		}
+
+		foreach ( $cardObjects as $card ) {
+			if ( $card['location'] !== 'talon' ) {
+				throw new BgaUserException( self::_('This card is not in the talon!') );
+			}
+			$this->cards->moveCard( $card['id'], 'hand', $playerId );
+		}
+
+		$this->cards->moveAllCardsInLocation( 'talon', 'opponents' );
+
+		self::notifyPlayer(
+			$playerId,
+			'newHand',
+			'',
+			array( 'cards' => $this->cards->getCardsInLocation( 'hand', $playerId ) )
+		);
+
+		self::notifyAllPlayers(
+			'talonChosen',
+			clienttranslate( '${player_name} takes cards from the talon' ),
+			array(
+				'player_id'   => $playerId,
+				'player_name' => self::getActivePlayerName(),
+				'talon_id'    => $talon,
+			)
+		);
+
+		self::trace( 'chooseCards->discardCards' );
+		$this->gamestate->nextState( 'chooseCards' );
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
