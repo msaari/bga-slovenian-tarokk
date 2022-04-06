@@ -99,26 +99,9 @@ function (dojo, declare) {
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
-        onEnteringState: function( stateName, args )
-        {
+        onEnteringState: function( stateName, args ) {
             console.log( 'Entering state: '+stateName );
 
-            switch( stateName )
-            {
-
-            /* Example:
-
-            case 'myGameState':
-
-                // Show some HTML block at this game state
-                dojo.style( 'my_html_block_id', 'display', 'block' );
-
-                break;
-           */
-
-
-            case 'dummmy':
-                break;
             }
         },
 
@@ -154,7 +137,7 @@ function (dojo, declare) {
         onUpdateActionButtons: function( stateName, args ) {
             console.log( 'onUpdateActionButtons: '+stateName );
 
-            if( this.isCurrentPlayerActive() ) {
+            if (this.isCurrentPlayerActive()) {
                 switch (stateName) {
                     case 'kingCalling':
                         this.addActionButton('call_spade_king', _('Spade'), 'onCallSpadeKing');
@@ -162,18 +145,6 @@ function (dojo, declare) {
                         this.addActionButton('call_club_king', _('Club'), 'onCallClubKing');
                         this.addActionButton('call_diamong_king', _('Diamond'), 'onCallDiamondKing');
                         break;
-/*
-                 Example:
-
-                 case 'myGameState':
-
-                    // Add 3 action buttons in the action status bar:
-
-                    this.addActionButton( 'button_1_id', _('Button 1 label'), 'onMyMethodToCall1' );
-                    this.addActionButton( 'button_2_id', _('Button 2 label'), 'onMyMethodToCall2' );
-                    this.addActionButton( 'button_3_id', _('Button 3 label'), 'onMyMethodToCall3' );
-                    break;
-*/
                 }
             }
         },
@@ -181,12 +152,6 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Utility methods
 
-        /*
-
-            Here, you can defines some utility methods that you can use everywhere in your javascript
-            script.
-
-        */
         // Get card unique identifier based on its color and value
         getCardUniqueId: function (color, value) {
             return (color - 1) * 22 + (value - 1);
@@ -327,25 +292,16 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
 
-        /*
-            setupNotifications:
-
-            In this method, you associate each of your game notifications with your local method to handle it.
-
-            Note: game notification names correspond to "notifyAllPlayers" and "notifyPlayer" calls in
-                  your template.game.php file.
-
-        */
         setupNotifications : function() {
             console.log('notifications subscriptions setup');
 
             dojo.subscribe('newHand', this, "notif_newHand");
             dojo.subscribe('playCard', this, "notif_playCard");
 
-            dojo.subscribe( 'trickWin', this, "notif_trickWin" );
-            this.notifqueue.setSynchronous( 'trickWin', 1000 );
-            dojo.subscribe( 'giveAllCardsToPlayer', this, "notif_giveAllCardsToPlayer" );
-            dojo.subscribe( 'newScores', this, "notif_newScores" );
+            dojo.subscribe('trickWin', this, "notif_trickWin");
+            this.notifqueue.setSynchronous('trickWin', 1000);
+            dojo.subscribe('giveAllCardsToPlayer', this, "notif_giveAllCardsToPlayer");
+            dojo.subscribe('newScores', this, "notif_newScores");
         },
 
         notif_newHand : function(notif) {
