@@ -543,7 +543,7 @@ class SlovenianTarokk extends Table {
 			}
 			self::notifyAllPlayers(
 				'points',
-				clienttranslate( 'Declarer\s team lost ${points} points' ),
+				clienttranslate( 'Declarer\'s team lost ${points} points' ),
 				array ( 'points' => $points )
 			);
 		}
