@@ -93,8 +93,36 @@ $machinestates = array(
 			'callClubKing',
 		),
 		'transitions'       => array(
-			'kingChosen' => 60
+			'kingChosen' => 40
 		),
+	),
+
+	40 => array(
+		'name'              => 'exchange',
+		'description'       => clienttranslate( '${actplayer} must take cards from the talon' ),
+		'descriptionmyturn' => clienttranslate( '${you} must take cards from the talon' ),
+		'type'              => 'activeplayer',
+		'possibleactions'   => array(
+			'chooseCards',
+		),
+		'transitions'       => array(
+			'chooseCards' => 41
+		),
+	),
+
+	41 => array(
+		'name'              => 'discardCards',
+		'description'       => clienttranslate( '${actplayer} must discard extra cards' ),
+		'descriptionmyturn' => clienttranslate( '${you} must discard extra cards from your hand' ),
+		'type'              => 'activeplayer',
+		'possibleactions'   => array(
+			'discardCard',
+			'doneDiscarding',
+		),
+		'transitions'       => array(
+			'discardCard'    => 41,
+			'doneDiscarding' => 60,
+		)
 	),
 
 	60 => array(
