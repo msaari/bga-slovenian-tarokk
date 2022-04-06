@@ -27,6 +27,8 @@ define( 'SUIT_TRUMP', 5 );
 
 define( 'RED_SUITS', array( SUIT_HEARTS, SUIT_DIAMONDS ) );
 
+define( 'HAND_SIZE', 12 );
+
 class SlovenianTarokk extends Table {
 	function __construct() {
 		// Your global variables labels:
@@ -400,7 +402,7 @@ class SlovenianTarokk extends Table {
 		// Deal 12 cards to each player.
 		$players = self::loadPlayersBasicInfos();
 		foreach ( $players as $player_id => $player ) {
-			$cards = $this->cards->pickCards( 12, 'deck', $player_id );
+			$cards = $this->cards->pickCards( HAND_SIZE, 'deck', $player_id );
 			self::notifyPlayer(
 				$player_id,
 				'newHand',
