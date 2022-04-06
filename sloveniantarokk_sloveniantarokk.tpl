@@ -28,7 +28,7 @@ var jstpl_cardontable =
 '<div class="cardontable" id="cardontable_${player_id}" style="background-position:-${x}px -${y}px"></div>';
 
 var jstpl_cardintalon =
-'<div class="cardontable" id="cardontable_${card_id}" style="background-position:-${x}px -${y}px"></div>';
+'<div class="cardontable stockitem" id="cardontable_${card_id}" style="background-position:-${x}px -${y}px"></div>';
 
 var jstpl_talonexchange_33 =
 '<div id="talon_exchange_33" class="talon_exchange_wrapper"><div id="talon_33_1" class="talon_exchange_wrapper cardset"></div><div id="talon_33_2" class="talon_exchange_wrapper cardset"></div></div>';
