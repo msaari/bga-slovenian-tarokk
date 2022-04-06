@@ -227,6 +227,19 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
+	function getCardsBasedOnColorValue( $deck, $cards ) {
+		$returnCards = array();
+		foreach ( $cards as $card ) {
+			foreach ( $deck as $deckCard ) {
+				if ( $deckCard['type'] == $card['color'] && $deckCard['type_arg'] == $card['value'] ) {
+					$returnCards[] = $deckCard;
+					continue;
+				}
+			}
+		}
+		return $returnCards;
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Player actions
 	////////////
