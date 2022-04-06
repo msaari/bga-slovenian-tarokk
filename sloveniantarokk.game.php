@@ -513,7 +513,7 @@ class SlovenianTarokk extends Table {
 		$declarer        = intval( self::getGameStateValue( 'declarer' ) );
 		$declarerTeam    = array( $declarer );
 		$declarerPartner = intval( self::getGameStateValue( 'declarerPartner' ) );
-		if ( $declarerPartner ) {
+		if ( $declarerPartner && $declarerPartner !== $declarer ) {
 			$declarerTeam[] = $declarerPartner;
 		}
 
@@ -523,6 +523,8 @@ class SlovenianTarokk extends Table {
 
 			$teamCards[ $team ][] = $card;
 		}
+		$opponentCards          = $this->cards->getCardsInLocation('opponents');
+		$teamCards['Opponents'] = array_merge( $teamCards['Opponents'], $opponentCards );
 
 		$teamScores = $this->countScores( $teamCards );
 
@@ -550,7 +552,7 @@ class SlovenianTarokk extends Table {
 			}
 			self::notifyAllPlayers(
 				'points',
-				clienttranslate( 'Declarer\s team gains ${points} points' ),
+				clienttranslate( 'Declarer\'s team gains ${points} points' ),
 				array ( 'points' => $points )
 			);
 		} else {
