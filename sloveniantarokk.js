@@ -1,7 +1,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * SlovenianTarokk implementation : © <Your name here> <Your email address here>
+ * SlovenianTarokk implementation : © Mikko Saari <mikko@mikkosaari.fi>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -29,6 +29,7 @@ function (dojo, declare) {
             this.cardwidth = 100;
             this.cardheight = 137;
 
+            this.highBid = 0;
         },
 
         /*
@@ -117,6 +118,11 @@ function (dojo, declare) {
                     dojo.connect(dojo.byId('talon_33_1'), 'onclick', this, 'onTalonClickChooseCards');
                     dojo.connect(dojo.byId('talon_33_2'), 'onclick', this, 'onTalonClickChooseCards');
                     break;
+                case 'playerBid':
+                    if (this.highBid == 0) {
+                        this.highBid = 2;
+                    }
+                    break;
             }
         },
 
@@ -146,6 +152,21 @@ function (dojo, declare) {
                         this.addActionButton('call_heart_king', _('Heart'), 'onCallHeartKing');
                         this.addActionButton('call_club_king', _('Club'), 'onCallClubKing');
                         this.addActionButton('call_diamong_king', _('Diamond'), 'onCallDiamondKing');
+                        break;
+                    case 'playerBid':
+                        var playerMinimumBid = this.highBid + 1;
+                        if (this.highBidder > 0 && playerMinimumBid > 2) {
+                            // Someone has already bid; if current player has a higher priority, they can bid the same
+                            if (this.hasHigherPriority(this.playerId, this.highBidder)) {
+                                playerMinimumBid = this.highBid;
+                            }
+                        }
+
+                        var bids = this.possibleBids(playerMinimumBid)
+                        for (var i in bids) {
+                            var bid = bids[i];
+                            this.addActionButton(bid.id, bid.name, bid.action);
+                        }
                         break;
                 }
             }
@@ -202,6 +223,44 @@ function (dojo, declare) {
             }), talon_id);
         },
 
+        possibleBids: function (minimumBid) {
+            var bids = [
+                { name: _('Klop'), value: 1, action: 'onBidKlop', id: 'bid_klop' },
+                { name: _('Three'), value: 2, action: 'onBidThree', id: 'bid_three' },
+                { name: _('Two'), value: 3, action: 'onBidTwo', id: 'bid_two' },
+                { name: _('One'), value: 4, action: 'onBidOne', id: 'bid_one' },
+                { name: _('Solo three'), value: 5, action: 'onBidSoloThree', id: 'bid_solo_three' },
+                { name: _('Solo two'), value: 6, action: 'onBidSoloTwo', id: 'bid_solo_two' },
+                { name: _('Solo one'), value: 7, action: 'onBidSoloOne', id: 'bid_solo_one' },
+                { name: _('Beggar'), value: 8, action: 'onBidBeggar', id: 'bid_beggar' },
+                { name: _('Solo without'), value: 9, action: 'onBidSoloWithout', id: 'bid_solo_without' },
+                { name: _('Open beggar'), value: 10, action: 'onBidOpenBeggar', id: 'bid_open_beggar' },
+                { name: _('Colour valat without'), value: 11, action: 'onBidColourValat', id: 'bid_colour_valat' },
+                { name: _('Valat without'), value: 12, action: 'onBidValat', id: 'bid_valat' },
+                { name: _('Pass'), value: 13, action: 'onPass', id: 'pass' },
+            ];
+            return bids.filter(bid => bid.value >= minimumBid);
+        },
+
+        hasHigherPriority: function (activePlayer, highBidder) {
+            // If this.priorityOrder is not an array, return false
+            if (!dojo.isArray(this.priorityOrder)) {
+                return false;
+            }
+
+            for (var i in this.priorityOrder) {
+                var player = this.priorityOrder[i];
+                if (player == activePlayer) {
+                    return true;
+                }
+                if (player == highBidder) {
+                    return false;
+                }
+            }
+
+            return false;
+        },
+
         // /////////////////////////////////////////////////
         // // Player's action
 
@@ -244,67 +303,71 @@ function (dojo, declare) {
         },
 
         onCallSpadeKing: function () {
-            if (!this.checkAction('callSpadeKing')) {
-                return;
-            }
-            var action = 'callSpadeKing';
-            console.log("on callSpadeKing");
-            this.ajaxcall(
-                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
-                {
-                    lock : true
-                }, this, function(result) {
-                }, function(is_error) {
-                }
-            );
+            this.checkAndAjaxCall('callSpadeKing');
         },
 
         onCallClubKing: function () {
-            if (!this.checkAction('callClubKing')) {
-                return;
-            }
-            var action = 'callClubKing';
-            console.log("on callClubKing");
-            this.ajaxcall(
-                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
-                {
-                    lock : true
-                }, this, function(result) {
-                }, function(is_error) {
-                }
-            );
+            this.checkAndAjaxCall('callClubKing');
         },
 
         onCallHeartKing: function () {
-            if (!this.checkAction('callHeartKing')) {
-                return;
-            }
-            var action = 'callHeartKing';
-            console.log("on callHeartKing");
-            this.ajaxcall(
-                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
-                {
-                    lock: true
-                }, this, function (result) {
-                }, function (is_error) {
-                }
-            );
+            this.checkAndAjaxCall('callHeartKing');
         },
 
         onCallDiamondKing: function () {
-            if (!this.checkAction('callDiamondKing')) {
-                return;
-            }
-            var action = 'callDiamondKing';
-            console.log("on callDiamondKing");
-            this.ajaxcall(
-                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
-                {
-                    lock: true
-                }, this, function (result) {
-                }, function (is_error) {
-                }
-            );
+            this.checkAndAjaxCall('callDiamondKing');
+        },
+
+        onBidKlop: function () {
+            this.checkAndAjaxCall('bid', { bid: 1 });
+        },
+
+        onBidThree: function () {
+            this.checkAndAjaxCall('bid', { bid: 2 });
+        },
+
+        onBidTwo: function () {
+            this.checkAndAjaxCall('bid', { bid: 3 });
+        },
+
+        onBidOne: function () {
+            this.checkAndAjaxCall('bid', { bid: 4 });
+        },
+
+        onBidSoloThree: function () {
+            this.checkAndAjaxCall('bid', { bid: 5 });
+        },
+
+        onBidSoloTwo: function () {
+            this.checkAndAjaxCall('bid', { bid: 6 });
+        },
+
+        onBidSoloOne: function () {
+            this.checkAndAjaxCall('bid', { bid: 7 });
+        },
+
+        onBidBeggar: function () {
+            this.checkAndAjaxCall('bid', { bid: 8 });
+        },
+
+        onBidSoloWithout: function () {
+            this.checkAndAjaxCall('bid', { bid: 9 });
+        },
+
+        onBidOpenBeggar: function () {
+            this.checkAndAjaxCall('bid', { bid: 10 });
+        },
+
+        onBidColourValat: function () {
+            this.checkAndAjaxCall('bid', { bid: 11 });
+        },
+
+        onBidValat: function () {
+            this.checkAndAjaxCall('bid', { bid: 12 });
+        },
+
+        onPass: function () {
+            this.checkAndAjaxCall('pass');
         },
 
         onTalonClickChooseCards: function (event) {
@@ -336,6 +399,20 @@ function (dojo, declare) {
             );
         },
 
+        checkAndAjaxCall: function (action, parameters) {
+            if (!this.checkAction(action)) {
+                return;
+            }
+            console.log("on " + action);
+            parameters.lock = true;
+            this.ajaxcall(
+                "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
+                parameters, this, function (result) {
+                }, function (is_error) {
+                }
+            );
+        },
+
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
 
@@ -344,6 +421,8 @@ function (dojo, declare) {
 
             dojo.subscribe('newHand', this, "notif_newHand");
             dojo.subscribe('newCards', this, "notif_newCards");
+            dojo.subscribe('setPriorityOrder', this, "notif_setPriorityOrder");
+            dojo.subscribe('updatedBids', this, "notif_updatedBids");
             dojo.subscribe('talonChosen', this, "notif_talonChosen");
             dojo.subscribe('discardCard', this, "notif_discardCard");
             dojo.subscribe('playCard', this, "notif_playCard");
@@ -373,6 +452,22 @@ function (dojo, declare) {
                 this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
                 console.log("new card " + this.getCardUniqueId(color, value) + " " + color + " " + value);
             }
+        },
+
+        notif_setPriorityOrder: function (notif) {
+            console.log( "on setPriorityOrder ", notif.args.priorityOrder);
+            this.priorityOrder = notif.args.priorityOrder.split(',');
+            this.forehand = notif.args.forehand;
+            this.highBidder = 0;
+
+            console.log("received priority order ", this.priorityOrder);
+            console.log("received forehand ", this.forehand);
+        },
+
+        notif_updateBids: function (notif) {
+            console.log("on updatedBids ", notif.args.highBid + " " + notif.args.highBidder);
+            this.highBidder = notif.args.highBidder;
+            this.highBid = notif.args.highBid;
         },
 
         notif_discardCard: function (notif) {
