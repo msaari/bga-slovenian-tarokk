@@ -29,6 +29,22 @@ define( 'RED_SUITS', array( SUIT_HEARTS, SUIT_DIAMONDS ) );
 
 define( 'HAND_SIZE', 12 );
 
+define( 'CAPTURED_MOND_PENALTY', 20 );
+
+define( 'BID_KLOP', 1 );
+define( 'BID_THREE', 2 );
+define( 'BID_TWO', 3 );
+define( 'BID_ONE', 4 );
+define( 'BID_SOLO_THREE', 5 );
+define( 'BID_SOLO_TWO', 6 );
+define( 'BID_SOLO_ONE', 7 );
+define( 'BID_BEGGAR', 8 );
+define( 'BID_SOLO_WITHOUT', 9 );
+define( 'BID_OPEN_BEGGAR', 10 );
+define( 'BID_COLOUR_VALAT', 11 );
+define( 'BID_VALAT', 12 );
+
+
 class SlovenianTarokk extends Table {
 	function __construct() {
 		// Your global variables labels:
@@ -41,11 +57,16 @@ class SlovenianTarokk extends Table {
 
 		self::initGameStateLabels(
 			array(
-				'currentHandType' => 10,
-				'trickColor'      => 11,
-				'dealer'          => 12,
-				'declarer'        => 13,
-				'declarerPartner' => 14,
+				'currentHandType'   => 10,
+				'trickColor'        => 11,
+				'dealer'            => 12,
+				'declarer'          => 13,
+				'declarerPartner'   => 14,
+				'forehand'          => 15,
+				'priorityOrder'     => 16,
+				'highBidder'        => 17,
+				'highBid'           => 18,
+				'outOfBidding'		=> 19,
 			)
 		);
 
@@ -92,6 +113,11 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'trickColor', 0 );
 		self::setGameStateInitialValue( 'declarer', 0 );
 		self::setGameStateInitialValue( 'declarerPartner', 0 );
+		self::setGameStateInitialValue( 'forehand', 0 );
+		self::setGameStateInitialValue( 'priorityOrder', '' );
+		self::setGameStateInitialValue( 'highBidder', 0 );
+		self::setGameStateInitialValue( 'highBid', 0 );
+		self::setGameStateInitialValue( 'outOfBidding', '' );
 
 		// Create cards
 		$cards = array ();
@@ -118,9 +144,6 @@ class SlovenianTarokk extends Table {
 		}
 
 		$this->cards->createCards( $cards, 'deck' );
-
-		/*
-		*********** End of the game initialization *****/
 	}
 
 	/*
@@ -151,6 +174,9 @@ class SlovenianTarokk extends Table {
 
 		// Cards in talon
 		$result['cardsintalon'] = $this->cards->getCardsInLocation( 'talon' );
+
+		$result['forehand']      = self::getGameStateValue( 'forehand' );
+		$result['priorityOrder'] = self::getGameStateValue( 'priorityOrder' );
 
 		return $result;
 	}
@@ -246,24 +272,125 @@ class SlovenianTarokk extends Table {
 		return $returnCards;
 	}
 
+	function updateScores() {
+		$newScores = self::getCollectionFromDb( 'SELECT player_id, player_score FROM player', true );
+		self::notifyAllPlayers( 'newScores', '', array( 'newScores' => $newScores ) );
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Player actions
 	////////////
 
+	function bid( $bid ) {
+		if ( $bid !== 'pass' ) {
+			self::checkAction( 'bid' );
+		} else {
+			self::checkAction( 'pass' );
+		}
+
+		$playerId = self::getActivePlayerId();
+
+		if ( $bid === 'pass' ) {
+			self::notifyAllPlayers(
+				'someonePasses',
+				clienttranslate( '${player_name} passes' ),
+				array(
+					'player_id'   => $playerId,
+					'player_name' => self::getActivePlayerName(),
+				)
+			);
+			$outOfBidding  = self::getGameStateValue( 'outOfBidding' );
+			$outOfBidding .= empty( $outOfBidding ) ? $playerId : ',' . $playerId;
+			self::setGameStateValue( 'outOfBidding', $outOfBidding );
+
+			self::trace( 'playerBid->pass' );
+			$this->gameState->nextState( 'pass' );
+		}
+
+		$highBid    = self::getGameStateValue( 'highBid' );
+		$highBidder = self::getGameStateValue( 'highBidder' );
+
+		if ( $highBidder == $playerId ) {
+			throw new BgaUserException( 'You cannot overbid your own bid!' );
+		}
+		if ( $bid < $highBid ) {
+			throw new BgaUserException( 'Your bid is too low!' );
+		}
+
+		self::notifyAllPlayers(
+			'updateBids',
+			clienttranslate( '${player_name} bids ${bid_name}' ),
+			array(
+				'highBidder'  => $playerId,
+				'player_name' => self::getActivePlayerName(),
+				'highBid'     => $bid,
+				'bid_name'    => $this->bid_names[ $bid ],
+			)
+		);
+
+		self::trace( 'playerBid->bid' );
+		$this->gameState->nextState( 'bid' );
+	}
+
+	function stNextBid() {
+		$players      = self::loadPlayersBasicInfos();
+		$outOfBidding = self::getGameStateValue( 'outOfBidding' );
+		$outOfBidding = explode( ',', $outOfBidding );
+
+		$playerId = self::activeNextPlayer();
+		while ( in_array( $playerId, $outOfBidding ) ) {
+			$playerId = self::activeNextPlayer();
+		}
+
+		self::giveExtraTime( $playerId );
+
+		$highBidder = self::getGameStateValue( 'highBidder' );
+
+		if ( $highBidder == $playerId ) {
+			// The next player is already the high bidder, all have passed.
+			self::setGameStateValue( 'declarer', $highBidder );
+			self::setGameStateValue( 'outOfBidding', '' );
+			$highBid = self::getGameStateValue( 'highBid' );
+
+			self::trace( 'stNextBid->allPass' );
+
+			self::notifyAllPlayers(
+				'updateBids',
+				clienttranslate( 'All players have passed, ${player_name} is the high bidder.' ),
+				array(
+					'highBidder'  => $playerId,
+					'highBid'     => $highBid,
+					'player_name' => $players[ $playerId ]['player_name'],
+				)
+			);
+			$this->gamestate->nextState('allPass');
+		} else {
+			self::trace( 'stNextBid->nextBidder' );
+			$this->gamestate->nextState( 'nextBidder' );
+		}
+	}
+
 	function playCard( $card_id ) {
 		self::checkAction( 'playCard' );
-		$player_id         = self::getActivePlayerId();
+		$playerId          = self::getActivePlayerId();
 		$currentCard       = $this->cards->getCard( $card_id );
 		$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
-		$cardsInHand       = $this->cards->getCardsInLocation( 'hand', $player_id );
+		$cardsInHand       = $this->cards->getCardsInLocation( 'hand', $playerId );
 
 		if ( $currentTrickColor > 0 ) {
 			if ( $this->haveColorInHand( $currentTrickColor, $cardsInHand )
 				&& intval( $currentCard['type'] ) !== $currentTrickColor ) {
 				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ $currentTrickColor ]['name'] . '.' );
 			}
+			if ( $currentTrickColor !== SUIT_TRUMP
+				&& intval( $currentCard['type'] ) !== SUIT_TRUMP
+				&& ! $this->haveColorInHand( $currentTrickColor, $cardsInHand )
+				&& $this->haveColorInHand( SUIT_TRUMP, $cardsInHand ) ) {
+				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ SUIT_TRUMP ]['name'] . '.' );
+			}
 		}
-		$this->cards->moveCard( $card_id, 'cardsontable', $player_id );
+
+		$this->cards->moveCard( $card_id, 'cardsontable', $playerId );
 
 		if ( $currentTrickColor === 0 ) {
 			self::setGameStateValue( 'trickColor', $currentCard['type'] );
@@ -275,7 +402,7 @@ class SlovenianTarokk extends Table {
 			array(
 				'i18n'            => array( 'color_displayed','value_displayed' ),
 				'card_id'         => $card_id,
-				'player_id'       => $player_id,
+				'player_id'       => $playerId,
 				'player_name'     => self::getActivePlayerName(),
 				'value'           => $currentCard['type_arg'],
 				'value_displayed' => $this->getCardDisplayValue( $currentCard['type'], $currentCard['type_arg'] ),
@@ -511,8 +638,6 @@ class SlovenianTarokk extends Table {
 				)
 			);
 		}
-		$this->gamestate->changeActivePlayer( $this->getPlayerAfter( $dealer ) );
-		self::setGameStateValue( 'declarer', $this->getActivePlayerId() );
 
 		// Deal 12 cards to each player.
 		$players = self::loadPlayersBasicInfos();
@@ -530,6 +655,41 @@ class SlovenianTarokk extends Table {
 
 		$this->talon = $this->cards->pickCardsForLocation( 6, 'deck', 'talon' );
 
+		self::trace( 'stNewHand->startBidding' );
+		$this->gamestate->nextState();
+	}
+
+	function stStartBidding() {
+		$dealer   = intval( self::getGameStateValue( 'dealer' ) );
+		$forehand = $this->getPlayerAfter( $dealer );
+		self::setGameStateValue( 'forehand', $forehand );
+		$this->gamestate->changeActivePlayer( $this->getPlayerAfter( $forehand ) );
+
+		$priorityArray   = array();
+		$priorityArray[] = $forehand;
+		$priorityArray[] = $this->getPlayerAfter( $priorityArray[0] );
+		$priorityArray[] = $this->getPlayerAfter( $priorityArray[1] );
+		$priorityArray[] = $this->getPlayerAfter( $priorityArray[2] );
+
+		self::setGameStateValue( 'highBidder', $forehand );
+		self::setGameStateValue( 'highBid', BID_THREE );
+		self::setGameStateValue( 'consecutivePasses', 0 );
+		self::setGameStateValue( 'priorityOrder', implode( ',', $priorityArray ) );
+
+		self::notifyAllPlayers(
+			'setPriorityOrder',
+			'',
+			array(
+				'priorityOrder' => $priorityOrder,
+				'forehand'	    => $forehand,
+			)
+		);
+
+		self::trace( 'stStartBidding->playerBid' );
+		$this->gamestate->nextState();
+	}
+
+/*
 		self::notifyAllPlayers(
 			'declarer',
 			clienttranslate( '${player_name} is the declarer' ),
@@ -539,9 +699,7 @@ class SlovenianTarokk extends Table {
 			)
 		);
 
-		self::trace( 'stNewHand->kingCalling' );
-		$this->gamestate->nextState();
-	}
+*/
 
 	function stNewTrick() {
 		self::setGameStateInitialValue( 'trickColor', 0 );
@@ -552,15 +710,26 @@ class SlovenianTarokk extends Table {
 	function stNextPlayer() {
 		if ( intval( $this->cards->countCardInLocation( 'cardsontable' ) ) === 4 ) {
 			self::trace('Trick over, determine winner.');
+			$players = self::loadPlayersBasicInfos();
+
 			$cardsOnTable      = $this->cards->getCardsInLocation( 'cardsontable' );
 			$bestValue         = 0;
 			$bestValuePlayerId = null;
 			$bestValueIsTrump  = false;
 			$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
 
+			$mondPlayer  = 0;
+			$pagatPlayer = 0;
+
 			foreach ( $cardsOnTable as $card ) {
 				$cardValue = $card['type_arg'];
 				$cardColor = intval( $card['type'] );
+				if ( $cardValue == 1 && $cardColor == SUIT_TRUMP ) {
+					$pagatPlayer = $card['location_arg'];
+				}
+				if ( $cardValue == 21 && $cardColor == SUIT_TRUMP ) {
+					$mondPlayer = $card['location_arg'];
+				}
 				if ( $cardColor === $currentTrickColor && ! $bestValueIsTrump ) {
 					if ( $cardValue > $bestValue ) {
 						$bestValue         = $cardValue;
@@ -579,6 +748,35 @@ class SlovenianTarokk extends Table {
 						}
 					}
 				}
+			}
+
+			// Emperor's trick.
+			if ( $pagatPlayer > 0 && $mondPlayer > 0 && $mondPlayer !== $bestValuePlayerId ) {
+				$bestValuePlayerId = $pagatPlayer;
+				self::notifyAllPlayers(
+					'emperorsTrick',
+					clienttranslate( '${player_name} got the Emperor\'s trick!' ),
+					array(
+						'player_id'   => $bestValuePlayerId,
+						'player_name' => $players[ $bestValuePlayerId ]['player_name'],
+					)
+				);
+			}
+
+			// Captured Mond.
+			if ( $mondPlayer > 0 && $mondPlayer !== $bestValuePlayerId ) {
+				$mond_penalty = CAPTURED_MOND_PENALTY;
+				$sql          = "UPDATE player SET player_score=player_score-$mond_penalty  WHERE player_id='$mondPlayer'";
+				self::DbQuery($sql);
+				self::notifyAllPlayers(
+					'capturedMond',
+					clienttranslate( '${player_name} captured the Mond!' ),
+					array(
+						'player_id'   => $bestValuePlayerId,
+						'player_name' => $players[ $bestValuePlayerId ]['player_name'],
+					)
+				);
+				$this->updateScores();
 			}
 
 			$this->gamestate->changeActivePlayer( $bestValuePlayerId );
@@ -680,8 +878,7 @@ class SlovenianTarokk extends Table {
 			);
 		}
 
-		$newScores = self::getCollectionFromDb( 'SELECT player_id, player_score FROM player', true );
-		self::notifyAllPlayers( 'newScores', '', array( 'newScores' => $newScores ) );
+		$this->updateScores();
 
 		self::trace( 'stCountingAndScoring->endHand' );
 		$this->gamestate->nextState();
