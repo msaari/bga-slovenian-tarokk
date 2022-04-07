@@ -78,7 +78,52 @@ $machinestates = array(
 		'description' => '',
 		'type'        => 'game',
 		'action'      => 'stNewHand',
+		'transitions' => array( '' => 20 ),
+	),
+
+	20 => array(
+		'name'        => 'startBidding',
+		'description' => '',
+		'type'        => 'game',
+		'action'      => 'stStartBidding',
 		'transitions' => array( '' => 30 ),
+	),
+
+	21 => array(
+		'name'              => 'playerBid',
+		'description'       => clienttranslate( '${actplayer} must bid or pass' ),
+		'descriptionmyturn' => clienttranslate( '${you} must bid or pass' ),
+		'type'              => 'activeplayer',
+		'possibleactions'   => array(
+			'bid',
+			'pass',
+		),
+		'transitions'       => array(
+			'bid'  => 22,
+			'pass' => 22,
+		),
+	),
+
+	22 => array(
+		'name'        => 'nextBid',
+		'type'        => 'game',
+		'transitions'       => array(
+			'nextBidder' => 21,
+			'allPass'    => 23,
+		),
+	),
+
+	23 => array(
+		'name'              => 'finalBid',
+		'description'       => clienttranslate( '${actplayer} must choose their final bid' ),
+		'descriptionmyturn' => clienttranslate( '${you} must choose your final bid' ),
+		'type'              => 'activeplayer',
+		'possibleactions'   => array(
+			'chooseFinalBid',
+		),
+		'transitions'       => array(
+			'finalBidChosen' => 30,
+		),
 	),
 
 	30 => array(
