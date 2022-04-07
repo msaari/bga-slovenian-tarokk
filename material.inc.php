@@ -123,3 +123,18 @@ $this->point_values = array(
 	13 => 4,
 	14 => 5,
 );
+
+$this->bid_names = array(
+	1 => clienttranslate( 'Klop' ),
+	2 => clienttranslate( 'Three' ),
+	3 => clienttranslate( 'Two' ),
+	4 => clienttranslate( 'One' ),
+	5 => clienttranslate( 'Solo three' ),
+	6 => clienttranslate( 'Solo two' ),
+	7 => clienttranslate( 'Solo one' ),
+	8 => clienttranslate( 'Beggar' ),
+	9 => clienttranslate( 'Solo without' ),
+	10 => clienttranslate( 'Open beggar' ),
+	11 => clienttranslate( 'Colour valat' ),
+	12 => clienttranslate( 'Valat' ),
+);
