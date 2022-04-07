@@ -70,6 +70,19 @@ class action_sloveniantarokk extends APP_GameAction {
 		self::ajaxResponse();
 	}
 
+	public function bid() {
+		self::setAjaxMode();
+		$bid = self::getArg( 'bid', AT_posint, true );
+		$this->game->bid( $bid );
+		self::ajaxResponse();
+	}
+
+	public function pass() {
+		self::setAjaxMode();
+		$this->game->bid( 'pass' );
+		self::ajaxResponse();
+	}
+
 	public function chooseCards() {
 		self::setAjaxMode();
 		self::trace( 'chooseCards' );
