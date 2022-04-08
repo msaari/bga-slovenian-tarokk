@@ -608,20 +608,6 @@ class SlovenianTarokk extends Table {
 		$this->gamestate->nextState( 'chooseCards' );
 	}
 
-	function fetchHighBid() {
-		$highBid    = self::getGameStateValue( 'highBid' );
-		$highBidder = self::getGameStateValue( 'highBidder' );
-		self::notifyPlayer(
-			self::getActivePlayerId(),
-			'updateBids',
-			'',
-			array(
-				'highBid'    => $highBid,
-				'highBidder' => $highBidder,
-			)
-		);
-	}
-
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Game state arguments
 	////////////
