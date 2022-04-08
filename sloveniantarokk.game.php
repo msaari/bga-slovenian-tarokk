@@ -359,6 +359,7 @@ class SlovenianTarokk extends Table {
 	function finalBid( $bid ) {
 		$playerId = self::getActivePlayerId();
 		$highBid  = self::getGameStateValue( 'highBid' );
+		$players  = self::loadPlayersBasicInfos();
 
 		if ( $highBid > 2 && $bid < $highBid ) {
 			// It's ok to downgrade three to a klop.
@@ -374,10 +375,23 @@ class SlovenianTarokk extends Table {
 			clienttranslate( '${player_name} is the declarer and chooses to play ${contract}.' ),
 			array(
 				'player_id'   => $playerId,
-				'player_name' => $players[ $playerId() ]['player_name'],
+				'player_name' => $players[ $playerId ]['player_name'],
 				'contract'    => $this->bid_names[ $bid ],
 			)
 		);
+
+		$transition = 'toKingCalling';
+		if ( $bid == BID_KLOP || $bid > BID_BEGGAR ) {
+			// In klop or bids above beggar, no king calling, exchange or announcements.
+			$transition = 'toTrickTaking';
+		}
+		if ( $bid >= BID_SOLO_THREE && $bid < BID_BEGGAR ) {
+			// In solo bids, there's no king calling.
+			$transition = 'toExchange';
+			$this->gamestate->changeActivePlayer( $playerId );
+		}
+		self::trace( 'finalBid->' . $transition );
+		$this->gamestate->nextState( $transition );
 	}
 
 	function playCard( $card_id ) {
