@@ -231,23 +231,23 @@ class SlovenianTarokk extends Table {
 			: $this->point_values[ intval( $card['type_arg'] ) ];
 	}
 
-	function countScores( $teamCards ) {
+	function countScoresForPlayer( $cards ) {
+		$totalPoints = 0;
+		foreach ( $cards as $card ) {
+			$totalPoints += $this->getCardPointValue( $card );
+		}
+		$cardCount    = count( $cards );
+		$totalPoints -= intdiv( $cardCount, 3 ) * 2;
+		if ( $cardCount % 3 !== 0 ) {
+			$totalPoints -= 1;
+		}
+		return $totalPoints;
+	}
+
+	function countScoresForTeams( $teamCards ) {
 		$scores = array();
 		foreach ( $teamCards as $team => $cards ) {
-			$totalPoints = 0;
-			foreach ( $cards as $card ) {
-				$totalPoints += $this->getCardPointValue( $card );
-			}
-			$cardCount = count( $cards );
-			self::trace( "Total points: " . $totalPoints );
-			self::trace( "Card count: " . $cardCount );
-			$totalPoints -= intdiv( $cardCount, 3 ) * 2;
-			self::trace( "Total points after reduction: " . $totalPoints );
-			if ( $cardCount % 3 !== 0 ) {
-				self::trace( "Card count not divisible by 3" );
-				$totalPoints -= 1;
-			}
-			$scores[ $team ] = $totalPoints;
+			$scores[ $team ] = $this->countScoresForPlayer( $cards );
 		}
 		return $scores;
 	}
@@ -309,10 +309,18 @@ class SlovenianTarokk extends Table {
 		$highestValueInHand = 0;
 		foreach ( $cardsInHand as $card ) {
 			if ( $card['type'] == $currentTrickColor ) {
-				$highestValueInHand = max( $highestValueInHand, $card['type_arg'] );
+				$cardValue = $card['type_arg'];
+				if ( $currentTrickColor == SUIT_TRUMP ) {
+					$cardValue += 14;
+				}
+				$highestValueInHand = max( $highestValueInHand, $cardValue );
 			}
-			if ( $card['type'] == SUIT_TRUMP ) {
-				$highestValueInHand = max( $highestValueInHand, $card['type_arg'] + 14 );
+		}
+		if ( ! $highestValueInHand ) {
+			foreach ( $cardsInHand as $card ) {
+				if ( $card['type'] == SUIT_TRUMP ) {
+					$highestValueInHand = max( $highestValueInHand, $card['type_arg'] + 14 );
+				}
 			}
 		}
 		return $highestValueInHand;
@@ -348,6 +356,7 @@ class SlovenianTarokk extends Table {
 		if ( $currentCard['type'] == SUIT_TRUMP ) {
 			$currentCardValue += 14;
 		}
+		self::trace( "hvp: $highestValuePlayed hvi: $highestValueInHand ccv: $currentCardValue " );
 		if ( $highestValueInHand > $highestValuePlayed && $currentCardValue < $highestValuePlayed ) {
 			throw new BgaUserException( 'You must beat the highest card on the table!' );
 		}
@@ -358,13 +367,13 @@ class SlovenianTarokk extends Table {
 			// - You have no other trump cards.
 			// - It's an Emperor's trick.
 			$pagatAllowed = false;
-			if ( countTrumpsInHand( $playerId ) == 1 ) {
+			if ( $this->countTrumpsInHand( $playerId ) == 1 ) {
 				$pagatAllowed = true;
 			}
 			if ( count( $cardsInHand ) == 1 ) {
 				$pagatAllowed = true;
 			}
-			if ( isCardOnTable( SUIT_TRUMP, 22 ) && isCardOnTable( SUIT_TRUMP, 21 ) ) {
+			if ( $this->isCardOnTable( SUIT_TRUMP, 22 ) && $this->isCardOnTable( SUIT_TRUMP, 21 ) ) {
 				$pagatAllowed = true;
 			}
 			if ( ! $pagatAllowed ) {
@@ -397,7 +406,7 @@ class SlovenianTarokk extends Table {
 		$scores  = array();
 		foreach ( $players as $player_id => $player ) {
 			$playerCards = $this->cards->getCardsInLocation( "cardswon", $player_id );
-			$playerScore = $this->countScores( $playerCards );
+			$playerScore = $this->countScoresForPlayer( $playerCards );
 			if ( $playerScore > 35 ) {
 				$loser = $player_id;
 			}
@@ -407,7 +416,7 @@ class SlovenianTarokk extends Table {
 			$scores[ $player_id ] = $playerScore;
 			self::notifyAllPlayers(
 				'score',
-				clienttranslate( '${player_name} scores {score}' ),
+				clienttranslate( '${player_name} scores ${score}' ),
 				array(
 					'player_name' => $player['player_name'],
 					'score'       => $playerScore,
@@ -478,7 +487,7 @@ class SlovenianTarokk extends Table {
 		$opponentCards          = $this->cards->getCardsInLocation('opponents');
 		$teamCards['Opponents'] = array_merge( $teamCards['Opponents'], $opponentCards );
 
-		$teamScores = $this->countScores( $teamCards );
+		$teamScores = $this->countScoresForTeams( $teamCards );
 
 		foreach ( $teamScores as $team => $score ) {
 			self::notifyAllPlayers(
@@ -975,7 +984,7 @@ class SlovenianTarokk extends Table {
 			$players    = self::loadPlayersBasicInfos();
 
 			self::setGameStateValue( 'declarer', $highBidder );
-			self::setGameStateValue(' declarerPartner', 0 );
+			self::setGameStateValue( 'declarerPartner', 0 );
 			self::setGameStateValue( 'firstPasser', 0 );
 			self::setGameStateValue( 'secondPasser', 0 );
 			self::setGameStateValue( 'thirdPasser', 0 );
@@ -1038,6 +1047,7 @@ class SlovenianTarokk extends Table {
 			$bestValuePlayerId = null;
 			$bestValueIsTrump  = false;
 			$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
+			$currentBid        = self::getGameStateValue( 'highBid' );
 
 			$mondPlayer  = 0;
 			$pagatPlayer = 0;
@@ -1085,7 +1095,8 @@ class SlovenianTarokk extends Table {
 			}
 
 			// Captured Mond.
-			if ( $mondPlayer > 0 && $mondPlayer !== $bestValuePlayerId ) {
+			if ( in_array( $currentBid, array( BID_THREE, BID_TWO, BID_ONE, BID_SOLO_THREE, BID_SOLO_TWO, BID_SOLO_ONE, BID_SOLO_WITHOUT ) )
+				&& $mondPlayer > 0 && $mondPlayer !== $bestValuePlayerId ) {
 				$mond_penalty = CAPTURED_MOND_PENALTY;
 				$sql          = "UPDATE player SET player_score=player_score-$mond_penalty  WHERE player_id='$mondPlayer'";
 				self::DbQuery($sql);
@@ -1119,6 +1130,21 @@ class SlovenianTarokk extends Table {
 					'player_id' => $bestValuePlayerId,
 				)
 			);
+
+			if ( $currentBid == BID_KLOP ) {
+				if ( $this->cards->countCardsInLocation( 'talon' ) > 0 ) {
+					$vitamin = $this->cards->pickCardForLocation( 'talon', 'cardswon', $bestValuePlayerId );
+					self::notifyAllPlayers(
+						'vitamin',
+						clienttranslate( '${player_name} got some vitamins: ${card_display_value}' ),
+						array(
+							'player_id'          => $bestValuePlayerId,
+							'player_name'        => $players[ $bestValuePlayerId ]['player_name'],
+							'card_display_value' => $this->getCardDisplayValue( $vitamin['type'], $vitamin['type_arg'] ),
+						)
+					);
+				}
+			}
 
 			if ( intval( $this->cards->countCardInLocation( 'hand' ) ) === 0 ) {
 				self::trace( 'stNextPlayer->endHand' );
