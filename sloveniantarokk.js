@@ -28,6 +28,21 @@ function (dojo, declare) {
 
             this.cardwidth = 100;
             this.cardheight = 137;
+
+            this.bids = {};
+            this.bids.klop = 1;
+            this.bids.three = 2;
+            this.bids.two = 3;
+            this.bids.one = 4;
+            this.bids.solo_three = 5;
+            this.bids.solo_two = 6;
+            this.bids.solo_one = 7;
+            this.bids.beggar = 8;
+            this.bids.solo_without = 9;
+            this.bids.open_beggar = 10;
+            this.bids.colour_valat_without = 11;
+            this.bids.colour_valat = 12;
+            this.bids.valat = 13;
         },
 
         /*
@@ -248,8 +263,8 @@ function (dojo, declare) {
                 { name: _('Solo without'), value: 9, action: 'onBidSoloWithout', id: 'bid_solo_without' },
                 { name: _('Open beggar'), value: 10, action: 'onBidOpenBeggar', id: 'bid_open_beggar' },
                 { name: _('Colour valat without'), value: 11, action: 'onBidColourValat', id: 'bid_colour_valat' },
-                { name: _('Valat without'), value: 12, action: 'onBidValat', id: 'bid_valat' },
-                { name: _('Pass'), value: 13, action: 'onPass', id: 'pass' },
+                { name: _('Valat without'), value: 13, action: 'onBidValat', id: 'bid_valat' },
+                { name: _('Pass'), value: 14, action: 'onPass', id: 'pass' },
             ];
             return bids.filter(bid => bid.value >= minimumBid);
         },
@@ -380,7 +395,7 @@ function (dojo, declare) {
         },
 
         onBidValat: function () {
-            this.checkAndAjaxCall('bid', { bid: 12 });
+            this.checkAndAjaxCall('bid', { bid: 13 });
         },
 
         onPass: function () {
