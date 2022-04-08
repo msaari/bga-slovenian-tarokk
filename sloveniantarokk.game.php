@@ -746,6 +746,7 @@ class SlovenianTarokk extends Table {
 				)
 			);
 			$this->gamestate->changeActivePlayer( $highBidder );
+			self::trace( 'stNextBid->allPass' );
 			$this->gamestate->nextState('allPass');
 		} else {
 			$passers = array( $firstPasser, $secondPasser, $thirdPasser );
