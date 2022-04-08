@@ -355,52 +355,28 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
-	function stNextBid() {
-		$firstPasser  = self::getGameStateValue( 'firstPasser' );
-		$secondPasser = self::getGameStateValue( 'secondPasser' );
-		$thirdPasser  = self::getGameStateValue( 'thirdPasser' );
+	function finalBid( $bid ) {
+		$playerId = self::getActivePlayerId();
+		$highBid  = self::getGameStateValue( 'highBid' );
 
-		if ( $thirdPasser != 0 ) {
-			// Three passes, so end the bidding.
-			$highBidder = self::getGameStateValue( 'highBidder' );
-			$highBid    = self::getGameStateValue( 'highBid' );
-			$players    = self::loadPlayersBasicInfos();
-
-			self::setGameStateValue( 'declarer', $highBidder );
-			self::setGameStateValue( 'firstPasser', 0 );
-			self::setGameStateValue( 'secondPasser', 0 );
-			self::setGameStateValue( 'thirdPasser', 0 );
-
-			self::trace( 'stNextBid->allPass' );
-
-			self::notifyAllPlayers(
-				'updateBids',
-				clienttranslate( 'All players have passed, ${player_name} is the high bidder.' ),
-				array(
-					'highBidder'  => $highBidder,
-					'highBid'     => $highBid,
-					'player_name' => $players[ $highBidder ]['player_name'],
-				)
-			);
-			$this->gamestate->changeActivePlayer( $highBidder );
-			$this->gamestate->nextState('allPass');
-		} else {
-			$passers = array( $firstPasser, $secondPasser, $thirdPasser );
-
-			$activePlayer = self::getActivePlayerId();
-			$nextPlayer   = $this->getPlayerAfter( $activePlayer );
-			while ( in_array( $nextPlayer, $passers ) )	{
-				$nextPlayer = $this->getPlayerAfter( $nextPlayer );
-				self::trace( 'Trying next player: ' . $nextPlayer );
-			}
-			self::trace( "Next player is: " . $nextPlayer );
-
-			$this->gamestate->changeActivePlayer( $nextPlayer );
-			self::giveExtraTime( $nextPlayer );
-
-			self::trace( 'stNextBid->nextBidder' );
-			$this->gamestate->nextState( 'nextBidder' );
+		if ( $highBid > 2 && $bid < $highBid ) {
+			// It's ok to downgrade three to a klop.
+			throw new BgaUserException( 'The bid is too low!' );
 		}
+
+		self::setGameStateValue( 'highBid', $bid );
+		self::setGameStateValue( 'declarer', $playerId );
+		self::giveExtraTime( $playerId );
+
+		self::notifyAllPlayers(
+			'declarer',
+			clienttranslate( '${player_name} is the declarer and chooses to play ${contract}.' ),
+			array(
+				'player_id'   => $playerId,
+				'player_name' => $players[ $playerId() ]['player_name'],
+				'contract'    => $this->bid_names[ $bid ],
+			)
+		);
 	}
 
 	function playCard( $card_id ) {
@@ -741,17 +717,53 @@ class SlovenianTarokk extends Table {
 		$this->gamestate->nextState();
 	}
 
-/*
-		self::notifyAllPlayers(
-			'declarer',
-			clienttranslate( '${player_name} is the declarer' ),
-			array(
-				'player_id'   => $this->getActivePlayerId(),
-				'player_name' => $players[ $this->getActivePlayerId() ]['player_name'],
-			)
-		);
+	function stNextBid() {
+		$firstPasser  = self::getGameStateValue( 'firstPasser' );
+		$secondPasser = self::getGameStateValue( 'secondPasser' );
+		$thirdPasser  = self::getGameStateValue( 'thirdPasser' );
 
-*/
+		if ( $thirdPasser != 0 ) {
+			// Three passes, so end the bidding.
+			$highBidder = self::getGameStateValue( 'highBidder' );
+			$highBid    = self::getGameStateValue( 'highBid' );
+			$players    = self::loadPlayersBasicInfos();
+
+			self::setGameStateValue( 'declarer', $highBidder );
+			self::setGameStateValue( 'firstPasser', 0 );
+			self::setGameStateValue( 'secondPasser', 0 );
+			self::setGameStateValue( 'thirdPasser', 0 );
+
+			self::trace( 'stNextBid->allPass' );
+
+			self::notifyAllPlayers(
+				'updateBids',
+				clienttranslate( 'All players have passed, ${player_name} is the high bidder.' ),
+				array(
+					'highBidder'  => $highBidder,
+					'highBid'     => $highBid,
+					'player_name' => $players[ $highBidder ]['player_name'],
+				)
+			);
+			$this->gamestate->changeActivePlayer( $highBidder );
+			$this->gamestate->nextState('allPass');
+		} else {
+			$passers = array( $firstPasser, $secondPasser, $thirdPasser );
+
+			$activePlayer = self::getActivePlayerId();
+			$nextPlayer   = $this->getPlayerAfter( $activePlayer );
+			while ( in_array( $nextPlayer, $passers ) )	{
+				$nextPlayer = $this->getPlayerAfter( $nextPlayer );
+				self::trace( 'Trying next player: ' . $nextPlayer );
+			}
+			self::trace( "Next player is: " . $nextPlayer );
+
+			$this->gamestate->changeActivePlayer( $nextPlayer );
+			self::giveExtraTime( $nextPlayer );
+
+			self::trace( 'stNextBid->nextBidder' );
+			$this->gamestate->nextState( 'nextBidder' );
+		}
+	}
 
 	function stNewTrick() {
 		self::setGameStateInitialValue( 'trickColor', 0 );

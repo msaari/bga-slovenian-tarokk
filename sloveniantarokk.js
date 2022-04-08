@@ -152,28 +152,35 @@ function (dojo, declare) {
                         this.addActionButton('call_diamong_king', _('Diamond'), 'onCallDiamondKing');
                         break;
                     case 'playerBid':
-                        console.log("playerBid, current highbid = " + this.gamedatas.highBid);
-                        // add int 1 to this.gamedatas.highBid
                         var playerMinimumBid = Number(this.gamedatas.highBid) + Number("1")
                         if (this.gamedatas.highBidder > 0 && playerMinimumBid > 2) {
                             // Someone has already bid; if current player has a higher priority, they can bid the same
                             if (this.hasHigherPriority(this.player_id, this.gamedatas.highBidder)) {
-                                console.log("current player has higher priority");
                                 playerMinimumBid = this.gamedatas.highBid;
-                            } else {
-                                console.log("current player has lower priority");
                             }
                         }
 
-                        console.log("fetching possibleBids");
                         var bids = this.possibleBids(playerMinimumBid)
-                        console.log(bids);
                         for (var i in bids) {
                             var bid = bids[i];
                             this.addActionButton(bid.id, bid.name, bid.action);
                         }
                         break;
-                }
+                    case 'finalBid':
+                        var playerMinimumBid = this.gamedatas.highBid
+                        if (this.player_id == this.gamedatas.forehand && this.gamedatas.highBid == 2) {
+                            // Forehand can bid klop if the high bid is three.
+                            playerMinimumBid = 1;
+                        }
+
+                        var bids = this.possibleBids(playerMinimumBid).filter(bid => bid.id != 'pass');
+                        for (var i in bids) {
+                            var bid = bids[i];
+                            var action = bid.action.replace('onBid', 'onFinalBid');
+                            this.addActionButton(bid.id, bid.name, action);
+                        }
+                        break;
+                    }
             }
         },
 
@@ -229,7 +236,6 @@ function (dojo, declare) {
         },
 
         possibleBids: function (minimumBid) {
-            console.log("minimumBid = " + minimumBid);
             var bids = [
                 { name: _('Klop'), value: 1, action: 'onBidKlop', id: 'bid_klop' },
                 { name: _('Three'), value: 2, action: 'onBidThree', id: 'bid_three' },
@@ -249,7 +255,6 @@ function (dojo, declare) {
         },
 
         hasHigherPriority: function (activePlayer, highBidder) {
-            console.log("activePlayer " + activePlayer + " highbidder " + highBidder, this.priorityOrder)
             // If this.priorityOrder is not an array, construct it
             if (!dojo.isArray(this.priorityOrder)) {
                 this.priorityOrder = [
@@ -260,7 +265,6 @@ function (dojo, declare) {
                 ];
             }
 
-            console.log(this.priorityOrder)
             for (var i in this.priorityOrder) {
                 var player = this.priorityOrder[i];
                 if (player == activePlayer) {
@@ -381,6 +385,54 @@ function (dojo, declare) {
 
         onPass: function () {
             this.checkAndAjaxCall('pass');
+        },
+
+        onFinalBidKlop: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 1 });
+        },
+
+        onFinalBidThree: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 2 });
+        },
+
+        onFinalBidTwo: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 3 });
+        },
+
+        onFinalBidOne: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 4 });
+        },
+
+        onFinalBidSoloThree: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 5 });
+        },
+
+        onFinalBidSoloTwo: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 6 });
+        },
+
+        onFinalBidSoloOne: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 7 });
+        },
+
+        onFinalBidBeggar: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 8 });
+        },
+
+        onFinalBidSoloWithout: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 9 });
+        },
+
+        onFinalBidOpenBeggar: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 10 });
+        },
+
+        onFinalBidColourValat: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 11 });
+        },
+
+        onFinalBidValat: function () {
+            this.checkAndAjaxCall('finalbid', { bid: 12 });
         },
 
         onTalonClickChooseCards: function (event) {
