@@ -120,10 +120,12 @@ $machinestates = array(
 		'descriptionmyturn' => clienttranslate( '${you} must choose your final bid' ),
 		'type'              => 'activeplayer',
 		'possibleactions'   => array(
-			'chooseFinalBid',
+			'finalBid',
 		),
 		'transitions'       => array(
-			'finalBidChosen' => 30,
+			'toKingCalling'   => 30,
+			'toExchange'      => 40,
+			'toPlay'          => 60,
 		),
 	),
 
@@ -169,6 +171,21 @@ $machinestates = array(
 			'discardCard'    => 41,
 			'doneDiscarding' => 60,
 		)
+	),
+
+	42 => array(
+		'name'              => 'upgradeToColourValat',
+		'description'       => clienttranslate( '${actplayer} can raise bid to colour valat' ),
+		'descriptionmyturn' => clienttranslate( '${you} can raise your bid to colour valat' ),
+		'type'              => 'activeplayer',
+		'possibleactions'   => array(
+			'chooseColourValat',
+			'passUpgrade',
+		),
+		'transitions'       => array(
+			'chooseColourValat' => 50,
+			'passUpgrade'       => 50,
+		),
 	),
 
 	60 => array(
