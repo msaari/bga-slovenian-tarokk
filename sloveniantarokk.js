@@ -388,51 +388,51 @@ function (dojo, declare) {
         },
 
         onFinalBidKlop: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 1 });
+            this.checkAndAjaxCall('finalBid', { bid: 1 });
         },
 
         onFinalBidThree: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 2 });
+            this.checkAndAjaxCall('finalBid', { bid: 2 });
         },
 
         onFinalBidTwo: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 3 });
+            this.checkAndAjaxCall('finalBid', { bid: 3 });
         },
 
         onFinalBidOne: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 4 });
+            this.checkAndAjaxCall('finalBid', { bid: 4 });
         },
 
         onFinalBidSoloThree: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 5 });
+            this.checkAndAjaxCall('finalBid', { bid: 5 });
         },
 
         onFinalBidSoloTwo: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 6 });
+            this.checkAndAjaxCall('finalBid', { bid: 6 });
         },
 
         onFinalBidSoloOne: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 7 });
+            this.checkAndAjaxCall('finalBid', { bid: 7 });
         },
 
         onFinalBidBeggar: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 8 });
+            this.checkAndAjaxCall('finalBid', { bid: 8 });
         },
 
         onFinalBidSoloWithout: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 9 });
+            this.checkAndAjaxCall('finalBid', { bid: 9 });
         },
 
         onFinalBidOpenBeggar: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 10 });
+            this.checkAndAjaxCall('finalBid', { bid: 10 });
         },
 
         onFinalBidColourValat: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 11 });
+            this.checkAndAjaxCall('finalBid', { bid: 11 });
         },
 
         onFinalBidValat: function () {
-            this.checkAndAjaxCall('finalbid', { bid: 12 });
+            this.checkAndAjaxCall('finalBid', { bid: 13 });
         },
 
         onTalonClickChooseCards: function (event) {
