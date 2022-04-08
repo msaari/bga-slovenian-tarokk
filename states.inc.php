@@ -125,7 +125,7 @@ $machinestates = array(
 		'transitions'       => array(
 			'toKingCalling'   => 30,
 			'toExchange'      => 40,
-			'toPlay'          => 60,
+			'toTrickTaking'   => 60,
 		),
 	),
 
