@@ -117,6 +117,9 @@ function (dojo, declare) {
             console.log('Entering state: ' + stateName);
 
             switch (stateName) {
+                case 'newHand':
+                    this.gamedatas.highBid = 2;
+                    break;
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
 
@@ -138,13 +141,13 @@ function (dojo, declare) {
                         console.log(talon);
                         switch (talonSplit) {
                             case 3:
-                                talon += '33_' + counter % 3;
+                                talon += '33_' + Math.ceil(counter / 3);
                                 break;
                             case 2:
-                                talon += '222_' + counter % 2;
+                                talon += '222_' + Math.ceil(counter / 2);
                                 break;
                             case 1:
-                                talon += '111111_' + counter % 1;
+                                talon += '111111_' + counter;
                                 break;
                         }
                         console.log(talon);
@@ -355,7 +358,7 @@ function (dojo, declare) {
                     );
 
                     this.playerHand.unselectAll();
-                } else if (this.checkAction('discardCard')) {
+                } else if (this.checkAction('discardCard',true)) {
                     action = 'discardCard';
                     var card_id = items[0].id;
                     console.log("on discardCard " + card_id);
