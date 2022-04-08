@@ -77,7 +77,7 @@ class action_sloveniantarokk extends APP_GameAction {
 		self::ajaxResponse();
 	}
 
-	public function finalbid() {
+	public function finalBid() {
 		self::setAjaxMode();
 		$bid = self::getArg( 'bid', AT_posint, true );
 		$this->game->finalBid( $bid );
