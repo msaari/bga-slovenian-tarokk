@@ -23,13 +23,11 @@ define([
 ],
 function (dojo, declare) {
     return declare("bgagame.sloveniantarokk", ebg.core.gamegui, {
-        constructor: function(){
+        constructor: function () {
             console.log('sloveniantarokk constructor');
 
             this.cardwidth = 100;
             this.cardheight = 137;
-
-            this.highBid = 0;
         },
 
         /*
@@ -44,7 +42,7 @@ function (dojo, declare) {
 
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
-        setup : function(gamedatas) {
+        setup: function (gamedatas) {
             console.log("Starting game setup");
 
             // Player hand
@@ -52,7 +50,7 @@ function (dojo, declare) {
             this.playerHand.create(this, $('myhand'), this.cardwidth, this.cardheight);
             this.playerHand.image_items_per_row = 22;
 
-            dojo.connect( this.playerHand, 'onChangeSelection', this, 'onPlayerHandSelectionChanged' );
+            dojo.connect(this.playerHand, 'onChangeSelection', this, 'onPlayerHandSelectionChanged');
 
             // Create cards types:
             for (var color = 1; color <= 5; color++) {
@@ -72,7 +70,7 @@ function (dojo, declare) {
             }
 
             // Cards in player's hand
-            for ( var i in this.gamedatas.hand) {
+            for (var i in this.gamedatas.hand) {
                 var card = this.gamedatas.hand[i];
                 var color = card.type;
                 var value = card.type_arg;
@@ -91,7 +89,7 @@ function (dojo, declare) {
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
-            console.log( "Ending game setup" );
+            console.log("Ending game setup");
         },
 
         ///////////////////////////////////////////////////
@@ -100,10 +98,10 @@ function (dojo, declare) {
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
-        onEnteringState: function( stateName, args ) {
-            console.log( 'Entering state: '+stateName );
+        onEnteringState: function (stateName, args) {
+            console.log('Entering state: ' + stateName);
 
-            switch( stateName ) {
+            switch (stateName) {
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
                     dojo.place(this.format_block('jstpl_talonexchange_33', {}), 'talonexchange');
@@ -119,8 +117,8 @@ function (dojo, declare) {
                     dojo.connect(dojo.byId('talon_33_2'), 'onclick', this, 'onTalonClickChooseCards');
                     break;
                 case 'playerBid':
-                    if (this.highBid == 0) {
-                        this.highBid = 2;
+                    if (this.gamedatas.highBid == 0) {
+                        this.gamedatas.highBid = 2;
                     }
                     break;
             }
@@ -129,8 +127,8 @@ function (dojo, declare) {
         // onLeavingState: this method is called each time we are leaving a game state.
         //                 You can use this method to perform some user interface changes at this moment.
         //
-        onLeavingState: function( stateName ) {
-            console.log( 'Leaving state: '+stateName );
+        onLeavingState: function (stateName) {
+            console.log('Leaving state: ' + stateName);
 
             switch (stateName) {
                 case 'exchange':
@@ -142,8 +140,8 @@ function (dojo, declare) {
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
         //                        action status bar (ie: the HTML links in the status bar).
         //
-        onUpdateActionButtons: function( stateName, args ) {
-            console.log( 'onUpdateActionButtons: '+stateName );
+        onUpdateActionButtons: function (stateName, args) {
+            console.log('onUpdateActionButtons: ' + stateName);
 
             if (this.isCurrentPlayerActive()) {
                 switch (stateName) {
@@ -154,15 +152,22 @@ function (dojo, declare) {
                         this.addActionButton('call_diamong_king', _('Diamond'), 'onCallDiamondKing');
                         break;
                     case 'playerBid':
-                        var playerMinimumBid = this.highBid + 1;
-                        if (this.highBidder > 0 && playerMinimumBid > 2) {
+                        console.log("playerBid, current highbid = " + this.gamedatas.highBid);
+                        // add int 1 to this.gamedatas.highBid
+                        var playerMinimumBid = Number(this.gamedatas.highBid) + Number("1")
+                        if (this.gamedatas.highBidder > 0 && playerMinimumBid > 2) {
                             // Someone has already bid; if current player has a higher priority, they can bid the same
-                            if (this.hasHigherPriority(this.playerId, this.highBidder)) {
-                                playerMinimumBid = this.highBid;
+                            if (this.hasHigherPriority(this.player_id, this.gamedatas.highBidder)) {
+                                console.log("current player has higher priority");
+                                playerMinimumBid = this.gamedatas.highBid;
+                            } else {
+                                console.log("current player has lower priority");
                             }
                         }
 
+                        console.log("fetching possibleBids");
                         var bids = this.possibleBids(playerMinimumBid)
+                        console.log(bids);
                         for (var i in bids) {
                             var bid = bids[i];
                             this.addActionButton(bid.id, bid.name, bid.action);
@@ -224,6 +229,7 @@ function (dojo, declare) {
         },
 
         possibleBids: function (minimumBid) {
+            console.log("minimumBid = " + minimumBid);
             var bids = [
                 { name: _('Klop'), value: 1, action: 'onBidKlop', id: 'bid_klop' },
                 { name: _('Three'), value: 2, action: 'onBidThree', id: 'bid_three' },
@@ -243,11 +249,18 @@ function (dojo, declare) {
         },
 
         hasHigherPriority: function (activePlayer, highBidder) {
-            // If this.priorityOrder is not an array, return false
+            console.log("activePlayer " + activePlayer + " highbidder " + highBidder, this.priorityOrder)
+            // If this.priorityOrder is not an array, construct it
             if (!dojo.isArray(this.priorityOrder)) {
-                return false;
+                this.priorityOrder = [
+                    this.gamedatas.forehand,
+                    this.gamedatas.secondPriority,
+                    this.gamedatas.thirdPriority,
+                    this.gamedatas.fourthPriority
+                ];
             }
 
+            console.log(this.priorityOrder)
             for (var i in this.priorityOrder) {
                 var player = this.priorityOrder[i];
                 if (player == activePlayer) {
@@ -404,6 +417,9 @@ function (dojo, declare) {
                 return;
             }
             console.log("on " + action);
+            if (parameters === undefined) {
+                parameters = {};
+            }
             parameters.lock = true;
             this.ajaxcall(
                 "/" + this.game_name + "/" + this.game_name + "/" + action + ".html",
@@ -422,7 +438,7 @@ function (dojo, declare) {
             dojo.subscribe('newHand', this, "notif_newHand");
             dojo.subscribe('newCards', this, "notif_newCards");
             dojo.subscribe('setPriorityOrder', this, "notif_setPriorityOrder");
-            dojo.subscribe('updatedBids', this, "notif_updatedBids");
+            dojo.subscribe('updateBids', this, "notif_updateBids");
             dojo.subscribe('talonChosen', this, "notif_talonChosen");
             dojo.subscribe('discardCard', this, "notif_discardCard");
             dojo.subscribe('playCard', this, "notif_playCard");
@@ -456,18 +472,24 @@ function (dojo, declare) {
 
         notif_setPriorityOrder: function (notif) {
             console.log( "on setPriorityOrder ", notif.args.priorityOrder);
-            this.priorityOrder = notif.args.priorityOrder.split(',');
             this.forehand = notif.args.forehand;
-            this.highBidder = 0;
 
-            console.log("received priority order ", this.priorityOrder);
+            this.priorityOrder = [
+                this.forehand,
+                notif.args.secondPriority,
+                notif.args.thirdPriority,
+                notif.args.fourthPriority
+            ];
+
+            this.gamedatas.highBidder = 0;
+
             console.log("received forehand ", this.forehand);
         },
 
         notif_updateBids: function (notif) {
-            console.log("on updatedBids ", notif.args.highBid + " " + notif.args.highBidder);
-            this.highBidder = notif.args.highBidder;
-            this.highBid = notif.args.highBid;
+            console.log("on updateBids ", notif.args.highBid + " " + notif.args.highBidder);
+            this.gamedatas.highBidder = notif.args.highBidder;
+            this.gamedatas.highBid = notif.args.highBid;
         },
 
         notif_discardCard: function (notif) {

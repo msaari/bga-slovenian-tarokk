@@ -86,7 +86,7 @@ $machinestates = array(
 		'description' => '',
 		'type'        => 'game',
 		'action'      => 'stStartBidding',
-		'transitions' => array( '' => 30 ),
+		'transitions' => array( '' => 21 ),
 	),
 
 	21 => array(
@@ -107,6 +107,7 @@ $machinestates = array(
 	22 => array(
 		'name'        => 'nextBid',
 		'type'        => 'game',
+		'action'      => 'stNextBid',
 		'transitions'       => array(
 			'nextBidder' => 21,
 			'allPass'    => 23,

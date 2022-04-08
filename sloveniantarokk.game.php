@@ -63,10 +63,14 @@ class SlovenianTarokk extends Table {
 				'declarer'          => 13,
 				'declarerPartner'   => 14,
 				'forehand'          => 15,
-				'priorityOrder'     => 16,
-				'highBidder'        => 17,
-				'highBid'           => 18,
-				'outOfBidding'		=> 19,
+				'secondPriority'	=> 16,
+				'thirdPriority'		=> 17,
+				'fourthPriority'	=> 18,
+				'highBidder'        => 19,
+				'highBid'           => 20,
+				'firstPasser'		=> 21,
+				'secondPasser'		=> 22,
+				'thirdPasser'		=> 23,
 			)
 		);
 
@@ -114,10 +118,14 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'declarer', 0 );
 		self::setGameStateInitialValue( 'declarerPartner', 0 );
 		self::setGameStateInitialValue( 'forehand', 0 );
-		self::setGameStateInitialValue( 'priorityOrder', '' );
+		self::setGameStateInitialValue( 'secondPriority', 0 );
+		self::setGameStateInitialValue( 'thirdPriority', 0 );
+		self::setGameStateInitialValue( 'fourthPriority', 0 );
 		self::setGameStateInitialValue( 'highBidder', 0 );
 		self::setGameStateInitialValue( 'highBid', 0 );
-		self::setGameStateInitialValue( 'outOfBidding', '' );
+		self::setGameStateInitialValue( 'firstPasser', 0 );
+		self::setGameStateInitialValue( 'secondPasser', 0 );
+		self::setGameStateInitialValue( 'thirdPasser', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -175,8 +183,12 @@ class SlovenianTarokk extends Table {
 		// Cards in talon
 		$result['cardsintalon'] = $this->cards->getCardsInLocation( 'talon' );
 
-		$result['forehand']      = self::getGameStateValue( 'forehand' );
-		$result['priorityOrder'] = self::getGameStateValue( 'priorityOrder' );
+		$result['forehand']       = self::getGameStateValue( 'forehand' );
+		$result['secondPriority'] = self::getGameStateValue( 'secondPriority' );
+		$result['thirdPriority']  = self::getGameStateValue( 'thirdPriority' );
+		$result['fourthPriority'] = self::getGameStateValue( 'fourthPriority' );
+		$result['highBidder']     = self::getGameStateValue( 'highBidder' );
+		$result['highBid']        = self::getGameStateValue( 'highBid' );
 
 		return $result;
 	}
@@ -299,58 +311,65 @@ class SlovenianTarokk extends Table {
 					'player_name' => self::getActivePlayerName(),
 				)
 			);
-			$outOfBidding  = self::getGameStateValue( 'outOfBidding' );
-			$outOfBidding .= empty( $outOfBidding ) ? $playerId : ',' . $playerId;
-			self::setGameStateValue( 'outOfBidding', $outOfBidding );
+			$firstPasser = self::getGameStateValue( 'firstPasser' );
+			if ( $firstPasser == 0 ) {
+				self::setGameStateValue( 'firstPasser', $playerId );
+			} else {
+				$secondPasser = self::getGameStateValue( 'secondPasser' );
+				if ( $secondPasser == 0 ) {
+					self::setGameStateValue( 'secondPasser', $playerId );
+				} else {
+					self::setGameStateValue( 'thirdPasser', $playerId );
+				}
+			}
 
 			self::trace( 'playerBid->pass' );
-			$this->gameState->nextState( 'pass' );
+			$this->gamestate->nextState( 'pass' );
+		} else {
+			$highBid    = self::getGameStateValue( 'highBid' );
+			$highBidder = self::getGameStateValue( 'highBidder' );
+
+			if ( $highBidder == $playerId ) {
+				throw new BgaUserException( 'You cannot overbid your own bid!' );
+			}
+			if ( $bid < $highBid ) {
+				throw new BgaUserException( 'Your bid is too low!' );
+			}
+
+			self::setGameStateValue( 'highBid', $bid );
+			self::setGameStateValue( 'highBidder', $playerId );
+
+			self::notifyAllPlayers(
+				'updateBids',
+				clienttranslate( '${player_name} bids ${bid_name}' ),
+				array(
+					'highBidder'  => $playerId,
+					'player_name' => self::getActivePlayerName(),
+					'highBid'     => $bid,
+					'bid_name'    => $this->bid_names[ $bid ],
+				)
+			);
+
+			self::trace( 'playerBid->bid' );
+			$this->gamestate->nextState( 'bid' );
 		}
-
-		$highBid    = self::getGameStateValue( 'highBid' );
-		$highBidder = self::getGameStateValue( 'highBidder' );
-
-		if ( $highBidder == $playerId ) {
-			throw new BgaUserException( 'You cannot overbid your own bid!' );
-		}
-		if ( $bid < $highBid ) {
-			throw new BgaUserException( 'Your bid is too low!' );
-		}
-
-		self::notifyAllPlayers(
-			'updateBids',
-			clienttranslate( '${player_name} bids ${bid_name}' ),
-			array(
-				'highBidder'  => $playerId,
-				'player_name' => self::getActivePlayerName(),
-				'highBid'     => $bid,
-				'bid_name'    => $this->bid_names[ $bid ],
-			)
-		);
-
-		self::trace( 'playerBid->bid' );
-		$this->gameState->nextState( 'bid' );
 	}
 
 	function stNextBid() {
-		$players      = self::loadPlayersBasicInfos();
-		$outOfBidding = self::getGameStateValue( 'outOfBidding' );
-		$outOfBidding = explode( ',', $outOfBidding );
+		$firstPasser  = self::getGameStateValue( 'firstPasser' );
+		$secondPasser = self::getGameStateValue( 'secondPasser' );
+		$thirdPasser  = self::getGameStateValue( 'thirdPasser' );
 
-		$playerId = self::activeNextPlayer();
-		while ( in_array( $playerId, $outOfBidding ) ) {
-			$playerId = self::activeNextPlayer();
-		}
+		if ( $thirdPasser != 0 ) {
+			// Three passes, so end the bidding.
+			$highBidder = self::getGameStateValue( 'highBidder' );
+			$highBid    = self::getGameStateValue( 'highBid' );
+			$players    = self::loadPlayersBasicInfos();
 
-		self::giveExtraTime( $playerId );
-
-		$highBidder = self::getGameStateValue( 'highBidder' );
-
-		if ( $highBidder == $playerId ) {
-			// The next player is already the high bidder, all have passed.
 			self::setGameStateValue( 'declarer', $highBidder );
-			self::setGameStateValue( 'outOfBidding', '' );
-			$highBid = self::getGameStateValue( 'highBid' );
+			self::setGameStateValue( 'firstPasser', 0 );
+			self::setGameStateValue( 'secondPasser', 0 );
+			self::setGameStateValue( 'thirdPasser', 0 );
 
 			self::trace( 'stNextBid->allPass' );
 
@@ -358,13 +377,27 @@ class SlovenianTarokk extends Table {
 				'updateBids',
 				clienttranslate( 'All players have passed, ${player_name} is the high bidder.' ),
 				array(
-					'highBidder'  => $playerId,
+					'highBidder'  => $highBidder,
 					'highBid'     => $highBid,
-					'player_name' => $players[ $playerId ]['player_name'],
+					'player_name' => $players[ $highBidder ]['player_name'],
 				)
 			);
+			$this->gamestate->changeActivePlayer( $highBidder );
 			$this->gamestate->nextState('allPass');
 		} else {
+			$passers = array( $firstPasser, $secondPasser, $thirdPasser );
+
+			$activePlayer = self::getActivePlayerId();
+			$nextPlayer   = $this->getPlayerAfter( $activePlayer );
+			while ( in_array( $nextPlayer, $passers ) )	{
+				$nextPlayer = $this->getPlayerAfter( $nextPlayer );
+				self::trace( 'Trying next player: ' . $nextPlayer );
+			}
+			self::trace( "Next player is: " . $nextPlayer );
+
+			$this->gamestate->changeActivePlayer( $nextPlayer );
+			self::giveExtraTime( $nextPlayer );
+
 			self::trace( 'stNextBid->nextBidder' );
 			$this->gamestate->nextState( 'nextBidder' );
 		}
@@ -584,6 +617,20 @@ class SlovenianTarokk extends Table {
 		$this->gamestate->nextState( 'chooseCards' );
 	}
 
+	function fetchHighBid() {
+		$highBid    = self::getGameStateValue( 'highBid' );
+		$highBidder = self::getGameStateValue( 'highBidder' );
+		self::notifyPlayer(
+			self::getActivePlayerId(),
+			'updateBids',
+			'',
+			array(
+				'highBid'    => $highBid,
+				'highBidder' => $highBidder,
+			)
+		);
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Game state arguments
 	////////////
@@ -660,28 +707,33 @@ class SlovenianTarokk extends Table {
 	}
 
 	function stStartBidding() {
+		self::trace( 'stStartBidding' );
 		$dealer   = intval( self::getGameStateValue( 'dealer' ) );
 		$forehand = $this->getPlayerAfter( $dealer );
 		self::setGameStateValue( 'forehand', $forehand );
 		$this->gamestate->changeActivePlayer( $this->getPlayerAfter( $forehand ) );
+		self::trace( 'forehand: ' . $forehand );
 
-		$priorityArray   = array();
-		$priorityArray[] = $forehand;
-		$priorityArray[] = $this->getPlayerAfter( $priorityArray[0] );
-		$priorityArray[] = $this->getPlayerAfter( $priorityArray[1] );
-		$priorityArray[] = $this->getPlayerAfter( $priorityArray[2] );
+		$secondPriority = $this->getPlayerAfter( $forehand );
+		$thirdPriority  = $this->getPlayerAfter( $secondPriority );
+		$fourthPriority = $this->getPlayerAfter( $thirdPriority );
 
+		self::setGameStateValue( 'secondPriority', $secondPriority );
+		self::setGameStateValue( 'thirdPriority', $thirdPriority );
+		self::setGameStateValue( 'fourthPriority', $fourthPriority );
 		self::setGameStateValue( 'highBidder', $forehand );
 		self::setGameStateValue( 'highBid', BID_THREE );
-		self::setGameStateValue( 'consecutivePasses', 0 );
-		self::setGameStateValue( 'priorityOrder', implode( ',', $priorityArray ) );
 
+
+		self::trace( "notifying players" );
 		self::notifyAllPlayers(
 			'setPriorityOrder',
 			'',
 			array(
-				'priorityOrder' => $priorityOrder,
-				'forehand'	    => $forehand,
+				'forehand'	     => $forehand,
+				'secondPriority' => $secondPriority,
+				'thirdPriority'  => $thirdPriority,
+				'fourthPriority' => $fourthPriority,
 			)
 		);
 
