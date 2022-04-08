@@ -70,8 +70,9 @@ class SlovenianTarokk extends Table {
 				'highBidder'        => 19,
 				'highBid'           => 20,
 				'firstPasser'		=> 21,
-				'secondPasser'		=> 22,
-				'thirdPasser'		=> 23,
+				'secondPasser'      => 22,
+				'thirdPasser'       => 23,
+				'trickCount'        => 24,
 			)
 		);
 
@@ -127,6 +128,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'firstPasser', 0 );
 		self::setGameStateInitialValue( 'secondPasser', 0 );
 		self::setGameStateInitialValue( 'thirdPasser', 0 );
+		self::setGameStateInitialValue( 'trickCount', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -388,7 +390,6 @@ class SlovenianTarokk extends Table {
 		if ( $bid >= BID_SOLO_THREE && $bid < BID_BEGGAR ) {
 			// In solo bids, there's no king calling.
 			$transition = 'toExchange';
-			$this->gamestate->changeActivePlayer( $playerId );
 		}
 		self::trace( 'finalBid->' . $transition );
 		$this->gamestate->nextState( $transition );
@@ -583,9 +584,12 @@ class SlovenianTarokk extends Table {
 				throw new BgaUserException( self::_('This card is not in the talon!') );
 			}
 			$this->cards->moveCard( $card['id'], 'hand', $playerId );
+			$cardsTaken[] = $this->getCardDisplayValue( $card['type'], $card['type_arg'] );
 		}
 
 		$this->cards->moveAllCardsInLocation( 'talon', 'opponents' );
+
+		$cardsTaken = implode( ', ', $cardsTaken );
 
 		self::notifyPlayer(
 			$playerId,
@@ -596,11 +600,12 @@ class SlovenianTarokk extends Table {
 
 		self::notifyAllPlayers(
 			'talonChosen',
-			clienttranslate( '${player_name} takes cards from the talon' ),
+			clienttranslate( '${player_name} takes cards from the talon: ${cards}' ),
 			array(
 				'player_id'   => $playerId,
 				'player_name' => self::getActivePlayerName(),
 				'talon_id'    => $talon,
+				'cards'       => $cardsTaken,
 			)
 		);
 
@@ -642,6 +647,7 @@ class SlovenianTarokk extends Table {
 	function stNewHand() {
 		self::setGameStateValue( 'currentHandType', HAND_TYPE_NORMAL );
 		self::setGameStateValue( 'trickColor', 0 );
+		self::setGameStateValue( 'trickCount', 0 );
 
 		$this->cards->moveAllCardsInLocation( null, 'deck' );
 		$this->cards->shuffle('deck');
@@ -768,7 +774,15 @@ class SlovenianTarokk extends Table {
 	}
 
 	function stNewTrick() {
-		self::setGameStateInitialValue( 'trickColor', 0 );
+		self::setGameStateValue( 'trickColor', 0 );
+		if ( self::getGameStateValue( 'trickCount' ) < 1 ) {
+			$bid         = self::getGameStateValue( 'highBid' );
+			$firstPlayer = self::getGameStateValue( 'forehand' );
+			if ( $bid >= BID_BEGGAR ) {
+				$firstPlayer = self::getGameStateValue( 'declarer' );
+			}
+			$this->gamestate->changeActivePlayer( $firstPlayer );
+		}
 		self::trace( 'stNewTrick->playerTurn' );
 		$this->gamestate->nextState();
 	}
@@ -776,6 +790,7 @@ class SlovenianTarokk extends Table {
 	function stNextPlayer() {
 		if ( intval( $this->cards->countCardInLocation( 'cardsontable' ) ) === 4 ) {
 			self::trace('Trick over, determine winner.');
+			self::incGameStateValue( 'trickCount', 1 );
 			$players = self::loadPlayersBasicInfos();
 
 			$cardsOnTable      = $this->cards->getCardsInLocation( 'cardsontable' );
