@@ -119,17 +119,57 @@ function (dojo, declare) {
             switch (stateName) {
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
-                    dojo.place(this.format_block('jstpl_talonexchange_33', {}), 'talonexchange');
+
+                    var talonSplit = 3;
+                    if (this.gamedatas.highBid == this.bids.three || this.gamedatas.highBid == this.bids.solo_three) {
+                        dojo.place(this.format_block('jstpl_talonexchange_33', {}), 'talonexchange');
+                    } else if (this.gamedatas.highBid == this.bids.two || this.gamedatas.highBid == this.bids.solo_two) {
+                        dojo.place(this.format_block('jstpl_talonexchange_222', {}), 'talonexchange');
+                        talonSplit = 2;
+                    } else if (this.gamedatas.highBid == this.bids.one || this.gamedatas.highBid == this.bids.solo_one) {
+                        dojo.place(this.format_block('jstpl_talonexchange_111111', {}), 'talonexchange');
+                        talonSplit = 1;
+                    }
                     var counter = 0;
                     for (i in this.gamedatas.cardsintalon) {
                         counter++;
                         var card = this.gamedatas.cardsintalon[i];
-                        var talon = counter <= 3 ? 'talon_33_1' : 'talon_33_2';
+                        var talon = 'talon_';
+                        console.log(talon);
+                        switch (talonSplit) {
+                            case 3:
+                                talon += '33_' + counter % 3;
+                                break;
+                            case 2:
+                                talon += '222_' + counter % 2;
+                                break;
+                            case 1:
+                                talon += '111111_' + counter % 1;
+                                break;
+                        }
+                        console.log(talon);
                         this.playCardInTalon(talon, card.type, card.type_arg, this.getCardUniqueId(card.type, card.type_arg))
 
                     }
-                    dojo.connect(dojo.byId('talon_33_1'), 'onclick', this, 'onTalonClickChooseCards');
-                    dojo.connect(dojo.byId('talon_33_2'), 'onclick', this, 'onTalonClickChooseCards');
+                    switch (talonSplit) {
+                        case 3:
+                            dojo.connect(dojo.byId('talon_33_1'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_33_2'), 'onclick', this, 'onTalonClickChooseCards');
+                            break;
+                        case 2:
+                            dojo.connect(dojo.byId('talon_222_1'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_222_2'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_222_3'), 'onclick', this, 'onTalonClickChooseCards');
+                            break;
+                        case 1:
+                            dojo.connect(dojo.byId('talon_111111_1'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_111111_2'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_111111_3'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_111111_4'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_111111_5'), 'onclick', this, 'onTalonClickChooseCards');
+                            dojo.connect(dojo.byId('talon_111111_6'), 'onclick', this, 'onTalonClickChooseCards');
+                            break;
+                    }
                     break;
                 case 'playerBid':
                     if (this.gamedatas.highBid == 0) {
