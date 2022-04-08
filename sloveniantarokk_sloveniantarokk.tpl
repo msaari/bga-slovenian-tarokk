@@ -33,6 +33,12 @@ var jstpl_cardintalon =
 var jstpl_talonexchange_33 =
 '<div id="talon_exchange_33" class="talon_exchange_wrapper"><div id="talon_33_1" class="talon_exchange_wrapper cardset"></div><div id="talon_33_2" class="talon_exchange_wrapper cardset"></div></div>';
 
+var jstpl_talonexchange_222 =
+'<div id="talon_exchange_222" class="talon_exchange_wrapper"><div id="talon_222_1" class="talon_exchange_wrapper cardset"></div><div id="talon_222_2" class="talon_exchange_wrapper cardset"></div><div id="talon_222_3" class="talon_exchange_wrapper cardset"></div></div>';
+
+var jstpl_talonexchange_111111 =
+'<div id="talon_exchange_111111" class="talon_exchange_wrapper"><div id="talon_111111_1" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_2" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_3" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_4" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_5" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_6" class="talon_exchange_wrapper cardset"></div></div>';
+
 </script>
 
 {OVERALL_GAME_FOOTER}
