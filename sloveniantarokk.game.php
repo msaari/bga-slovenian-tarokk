@@ -17,8 +17,6 @@
 
 require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
 
-define( 'HAND_TYPE_NORMAL', 1 );
-
 define( 'SUIT_SPADES', 1 );
 define( 'SUIT_CLUBS', 2 );
 define( 'SUIT_HEARTS', 3 );
@@ -58,7 +56,7 @@ class SlovenianTarokk extends Table {
 
 		self::initGameStateLabels(
 			array(
-				'currentHandType'   => 10,
+				'compulsoryKlop'     => 10,
 				'trickColor'        => 11,
 				'dealer'            => 12,
 				'declarer'          => 13,
@@ -114,8 +112,8 @@ class SlovenianTarokk extends Table {
 		self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
 		self::reloadPlayersBasicInfos();
 
+		self::setGameStateInitialValue( 'compulsoryKlop', 0 );
 		self::setGameStateInitialValue( 'dealer', 0 );
-		self::setGameStateInitialValue( 'currentHandType', 0 );
 		self::setGameStateInitialValue( 'trickColor', 0 );
 		self::setGameStateInitialValue( 'declarer', 0 );
 		self::setGameStateInitialValue( 'declarerPartner', 0 );
@@ -292,6 +290,241 @@ class SlovenianTarokk extends Table {
 		self::notifyAllPlayers( 'newScores', '', array( 'newScores' => $newScores ) );
 	}
 
+	function highestValuePlayed( $currentTrickColor ) {
+		$cardsOnTable = $this->cards->getCardsInLocation( 'cardsontable' );
+
+		$highestValuePlayed = 0;
+		foreach ( $cardsOnTable as $card ) {
+			if ( $card['type'] == $currentTrickColor ) {
+				$highestValuePlayed = max( $highestValuePlayed, $card['type_arg'] );
+			}
+			if ( $card['type'] == SUIT_TRUMP ) {
+				$highestValuePlayed = max( $highestValuePlayed, $card['type_arg'] + 14 );
+			}
+		}
+		return $highestValuePlayed;
+	}
+
+	function highestValueInHand( $cardsInHand, $currentTrickColor ) {
+		$highestValueInHand = 0;
+		foreach ( $cardsInHand as $card ) {
+			if ( $card['type'] == $currentTrickColor ) {
+				$highestValueInHand = max( $highestValueInHand, $card['type_arg'] );
+			}
+			if ( $card['type'] == SUIT_TRUMP ) {
+				$highestValueInHand = max( $highestValueInHand, $card['type_arg'] + 14 );
+			}
+		}
+		return $highestValueInHand;
+	}
+
+	function countTrumpsInHand( $playerId ) {
+		$cardsInHand  = $this->cards->getCardsInLocation( 'hand', $playerId );
+		$trumpsInHand = 0;
+		foreach ( $cardsInHand as $card ) {
+			if ( $card['type'] == SUIT_TRUMP ) {
+				$trumpsInHand++;
+			}
+		}
+		return $trumpsInHand;
+	}
+
+	function isCardOnTable( $color, $value ) {
+		$cardsOnTable = $this->cards->getCardsInLocation( 'cardsontable' );
+		foreach ( $cardsOnTable as $card ) {
+			if ( $card['type'] == $color && $card['type_arg'] == $value ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function checkAvoidanceRules( $currentCard, $currentTrickColor, $playerId ) {
+		$cardsInHand = $this->cards->getCardsInLocation( 'hand', $playerId );
+
+		$highestValuePlayed = $this->highestValuePlayed( $currentTrickColor );
+		$highestValueInHand = $this->highestValueInHand( $cardsInHand, $currentTrickColor );
+		$currentCardValue   = $currentCard['type_arg'];
+		if ( $currentCard['type'] == SUIT_TRUMP ) {
+			$currentCardValue += 14;
+		}
+		if ( $highestValueInHand > $highestValuePlayed && $currentCardValue < $highestValuePlayed ) {
+			throw new BgaUserException( 'You must beat the highest card on the table!' );
+		}
+
+		if ( $currentCard['type'] == SUIT_TRUMP && $currentCard['type_arg'] == 1 ) {
+			// You can only play Pagat if:
+			// - It's your only card.
+			// - You have no other trump cards.
+			// - It's an Emperor's trick.
+			$pagatAllowed = false;
+			if ( countTrumpsInHand( $playerId ) == 1 ) {
+				$pagatAllowed = true;
+			}
+			if ( count( $cardsInHand ) == 1 ) {
+				$pagatAllowed = true;
+			}
+			if ( isCardOnTable( SUIT_TRUMP, 22 ) && isCardOnTable( SUIT_TRUMP, 21 ) ) {
+				$pagatAllowed = true;
+			}
+			if ( ! $pagatAllowed ) {
+				throw new BgaUserException( 'You can only play Pagat if you have no other trump cards, or if it\'s an Emperor\'s trick.' );
+			}
+		}
+	}
+
+	function checkNormalRules( $currentCard, $currentTrickColor, $playerId ) {
+		$cardsInHand = $this->cards->getCardsInLocation( 'hand', $playerId );
+
+		if ( $currentTrickColor > 0 ) {
+			if ( $this->haveColorInHand( $currentTrickColor, $cardsInHand )
+				&& intval( $currentCard['type'] ) !== $currentTrickColor ) {
+				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ $currentTrickColor ]['name'] . '.' );
+			}
+			if ( $currentTrickColor !== SUIT_TRUMP
+				&& intval( $currentCard['type'] ) !== SUIT_TRUMP
+				&& ! $this->haveColorInHand( $currentTrickColor, $cardsInHand )
+				&& $this->haveColorInHand( SUIT_TRUMP, $cardsInHand ) ) {
+				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ SUIT_TRUMP ]['name'] . '.' );
+			}
+		}
+	}
+
+	function klopCountingAndScoring() {
+		$players = self::loadPlayersBasicInfos();
+		$winners = array();
+		$loser   = 0;
+		$scores  = array();
+		foreach ( $players as $player_id => $player ) {
+			$playerCards = $this->cards->getCardsInLocation( "cardswon", $player_id );
+			$playerScore = $this->countScores( $playerCards );
+			if ( $playerScore > 35 ) {
+				$loser = $player_id;
+			}
+			if ( $playerScore == 0 ) {
+				$winners[] = $player_id;
+			}
+			$scores[ $player_id ] = $playerScore;
+			self::notifyAllPlayers(
+				'score',
+				clienttranslate( '${player_name} scores {score}' ),
+				array(
+					'player_name' => $player['player_name'],
+					'score'       => $playerScore,
+				)
+			);
+		}
+		if ( $loser ) {
+			$points = 70;
+			$sql    = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$loser'";
+			self::DbQuery($sql);
+			self::notifyAllPlayers(
+				'points',
+				clienttranslate( '${player_name} loses ${points} points' ),
+				array (
+					'player_name' => $players[ $loser ][ 'player_name' ],
+					'points'      => $points,
+				)
+			);
+		}
+		if ( count ( $winners ) > 0 ) {
+			foreach ( $winners as $winner_id ) {
+				$points = 70;
+				$sql    = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$winner_id'";
+				self::DbQuery($sql);
+				self::notifyAllPlayers(
+					'points',
+					clienttranslate( '${player_name} wins ${points} points' ),
+					array (
+						'player_name' => $players[ $winner_id ][ 'player_name' ],
+						'points'      => $points,
+					)
+				);
+			}
+		}
+		if ( ! $loser && count( $winners ) == 0 ) {
+			foreach ( $scores as $player_id => $score ) {
+				$points = $this->roundToNearestFive( $score );
+				$sql    = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$player_id'";
+				self::DbQuery($sql);
+				self::notifyAllPlayers(
+					'points',
+					clienttranslate( '${player_name} loses ${points} points' ),
+					array (
+						'player_name' => $players[ $player_id ][ 'player_name' ],
+						'points'      => $points,
+					)
+				);
+
+			}
+		}
+	}
+
+	function regularCountingAndScoring() {
+		$teamCards       = array();
+		$declarer        = intval( self::getGameStateValue( 'declarer' ) );
+		$declarerTeam    = array( $declarer );
+		$declarerPartner = intval( self::getGameStateValue( 'declarerPartner' ) );
+		if ( $declarerPartner && $declarerPartner !== $declarer ) {
+			$declarerTeam[] = $declarerPartner;
+		}
+
+		$cards = $this->cards->getCardsInLocation( "cardswon" );
+		foreach ( $cards as $card ) {
+			$team = in_array( $card['location_arg'], $declarerTeam ) ? 'Declarer' : 'Opponents';
+
+			$teamCards[ $team ][] = $card;
+		}
+		$opponentCards          = $this->cards->getCardsInLocation('opponents');
+		$teamCards['Opponents'] = array_merge( $teamCards['Opponents'], $opponentCards );
+
+		$teamScores = $this->countScores( $teamCards );
+
+		foreach ( $teamScores as $team => $score ) {
+			self::notifyAllPlayers(
+				'score',
+				clienttranslate( '${team} team scores ${score}' ),
+				array(
+					'team'  => $team,
+					'score' => $score,
+				)
+			);
+		}
+
+		$difference = abs( $teamScores['Declarer'] - 35 );
+		$points     = 10 + $this->roundToNearestFive( $difference );
+
+		if ( $teamScores['Declarer'] > 35 ) {
+			$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarer'";
+			self::DbQuery($sql);
+			if ( $declarerPartner ) {
+				$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarerPartner'";
+				self::DbQuery($sql);
+			}
+			self::notifyAllPlayers(
+				'points',
+				clienttranslate( 'Declarer\'s team gains ${points} points' ),
+				array ( 'points' => $points )
+			);
+		} else {
+			$sql = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarer'";
+			self::DbQuery($sql);
+			if ( $declarerPartner ) {
+				$sql = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarerPartner'";
+				self::DbQuery($sql);
+			}
+			self::notifyAllPlayers(
+				'points',
+				clienttranslate( 'Declarer\'s team lost ${points} points' ),
+				array ( 'points' => $points )
+			);
+		}
+	}
+
+	function roundToNearestFive( $number ) {
+		return floor( $number / 5 ) * 5;
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Player actions
 	////////////
@@ -400,19 +633,11 @@ class SlovenianTarokk extends Table {
 		$playerId          = self::getActivePlayerId();
 		$currentCard       = $this->cards->getCard( $card_id );
 		$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
-		$cardsInHand       = $this->cards->getCardsInLocation( 'hand', $playerId );
+		$currentBid        = self::getGameStateValue( 'highBid' );
 
-		if ( $currentTrickColor > 0 ) {
-			if ( $this->haveColorInHand( $currentTrickColor, $cardsInHand )
-				&& intval( $currentCard['type'] ) !== $currentTrickColor ) {
-				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ $currentTrickColor ]['name'] . '.' );
-			}
-			if ( $currentTrickColor !== SUIT_TRUMP
-				&& intval( $currentCard['type'] ) !== SUIT_TRUMP
-				&& ! $this->haveColorInHand( $currentTrickColor, $cardsInHand )
-				&& $this->haveColorInHand( SUIT_TRUMP, $cardsInHand ) ) {
-				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ SUIT_TRUMP ]['name'] . '.' );
-			}
+		$this->checkNormalRules( $currentCard, $currentTrickColor, $playerId );
+		if ( in_array( $currentBid, array( BID_KLOP, BID_BEGGAR, BID_OPEN_BEGGAR ) ) ) {
+			$this->checkAvoidanceRules( $currentCard, $currentTrickColor, $playerId );
 		}
 
 		$this->cards->moveCard( $card_id, 'cardsontable', $playerId );
@@ -645,7 +870,6 @@ class SlovenianTarokk extends Table {
 	////////////
 
 	function stNewHand() {
-		self::setGameStateValue( 'currentHandType', HAND_TYPE_NORMAL );
 		self::setGameStateValue( 'trickColor', 0 );
 		self::setGameStateValue( 'trickCount', 0 );
 
@@ -669,18 +893,33 @@ class SlovenianTarokk extends Table {
 			);
 		}
 
-		// Deal 12 cards to each player.
-		$players = self::loadPlayersBasicInfos();
-		foreach ( $players as $player_id => $player ) {
-			$cards = $this->cards->pickCards( HAND_SIZE, 'deck', $player_id );
-			self::notifyPlayer(
-				$player_id,
-				'newHand',
-				'',
-				array(
-					'cards' => $cards
-				)
+		$players    = self::loadPlayersBasicInfos();
+		$trumpCount = HAND_SIZE + 1;
+		$dealCount  = 0;
+		do {
+			$dealCount++;
+			// Deal 12 cards to each player.
+			foreach ( $players as $player_id => $player ) {
+				$cards = $this->cards->pickCards( HAND_SIZE, 'deck', $player_id );
+				self::notifyPlayer(
+					$player_id,
+					'newHand',
+					'',
+					array(
+						'cards' => $cards
+					)
+				);
+				$trumpCount = min( $this->countTrumpsInHand( $player_id ), $trumpCount );
+			}
+		} while ( $trumpCount == 0 );
+
+		if ( $dealCount > 1 ) {
+			self::notifyAllPlayers(
+				'newDeal',
+				clienttranslate( 'Someone was dealt a hand with no trump, this round has compulsory klop.' ),
+				array()
 			);
+			self::setGameStateValue( 'compulsoryKlop', 1 );
 		}
 
 		$this->talon = $this->cards->pickCardsForLocation( 6, 'deck', 'talon' );
@@ -736,6 +975,7 @@ class SlovenianTarokk extends Table {
 			$players    = self::loadPlayersBasicInfos();
 
 			self::setGameStateValue( 'declarer', $highBidder );
+			self::setGameStateValue(' declarerPartner', 0 );
 			self::setGameStateValue( 'firstPasser', 0 );
 			self::setGameStateValue( 'secondPasser', 0 );
 			self::setGameStateValue( 'thirdPasser', 0 );
@@ -898,65 +1138,12 @@ class SlovenianTarokk extends Table {
 	function stCountingAndScoring() {
 		$players = self::loadPlayersBasicInfos();
 
-		$teamCards = array();
+		$currentBid = self::getGameStateValue( 'highBid' );
 
-		$declarer        = intval( self::getGameStateValue( 'declarer' ) );
-		$declarerTeam    = array( $declarer );
-		$declarerPartner = intval( self::getGameStateValue( 'declarerPartner' ) );
-		if ( $declarerPartner && $declarerPartner !== $declarer ) {
-			$declarerTeam[] = $declarerPartner;
-		}
-
-		$cards = $this->cards->getCardsInLocation("cardswon");
-		foreach ( $cards as $card ) {
-			$team = in_array( $card['location_arg'], $declarerTeam ) ? 'Declarer' : 'Opponents';
-
-			$teamCards[ $team ][] = $card;
-		}
-		$opponentCards          = $this->cards->getCardsInLocation('opponents');
-		$teamCards['Opponents'] = array_merge( $teamCards['Opponents'], $opponentCards );
-
-		$teamScores = $this->countScores( $teamCards );
-
-		foreach ( $teamScores as $team => $score ) {
-			self::notifyAllPlayers(
-				'score',
-				clienttranslate( '${team} team scores ${score}' ),
-				array(
-					'team'  => $team,
-					'score' => $score,
-				)
-			);
-		}
-
-		$difference = abs( $teamScores['Declarer'] - 35 );
-		$difference = floor( $difference / 5 ) * 5;
-		$points     = 10 + $difference;
-
-		if ( $teamScores['Declarer'] > 35 ) {
-			$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarer'";
-			self::DbQuery($sql);
-			if ( $declarerPartner ) {
-				$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarerPartner'";
-				self::DbQuery($sql);
-			}
-			self::notifyAllPlayers(
-				'points',
-				clienttranslate( 'Declarer\'s team gains ${points} points' ),
-				array ( 'points' => $points )
-			);
+		if ( $currentBid == BID_KLOP ) {
+			$this->klopCountingAndScoring();
 		} else {
-			$sql = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarer'";
-			self::DbQuery($sql);
-			if ( $declarerPartner ) {
-				$sql = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarerPartner'";
-				self::DbQuery($sql);
-			}
-			self::notifyAllPlayers(
-				'points',
-				clienttranslate( 'Declarer\'s team lost ${points} points' ),
-				array ( 'points' => $points )
-			);
+			$this->regularCountingAndScoring();
 		}
 
 		$this->updateScores();
