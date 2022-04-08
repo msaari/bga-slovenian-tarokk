@@ -136,6 +136,7 @@ $this->bid_names = array(
 	9 => clienttranslate( 'Solo without' ),
 	10 => clienttranslate( 'Open beggar' ),
 	11 => clienttranslate( 'Colour valat' ),
-	12 => clienttranslate( 'Valat' ),
+	12 => clienttranslate( 'Colour valat without' ),
+	13 => clienttranslate( 'Valat' ),
 	'pass' => clienttranslate( 'Pass' ),
 );

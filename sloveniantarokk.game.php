@@ -41,8 +41,9 @@ define( 'BID_SOLO_ONE', 7 );
 define( 'BID_BEGGAR', 8 );
 define( 'BID_SOLO_WITHOUT', 9 );
 define( 'BID_OPEN_BEGGAR', 10 );
-define( 'BID_COLOUR_VALAT', 11 );
-define( 'BID_VALAT', 12 );
+define( 'BID_COLOUR_VALAT_WITHOUT', 11 );
+define( 'BID_COLOUR_VALAT', 12 );
+define( 'BID_VALAT', 13 );
 
 
 class SlovenianTarokk extends Table {
