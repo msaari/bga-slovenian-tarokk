@@ -582,10 +582,10 @@ function (dojo, declare) {
 
         notif_setPriorityOrder: function (notif) {
             console.log( "on setPriorityOrder ", notif.args.priorityOrder);
-            this.forehand = notif.args.forehand;
+            this.gamedatas.forehand = notif.args.forehand;
 
             this.priorityOrder = [
-                this.forehand,
+                this.gamedatas.forehand,
                 notif.args.secondPriority,
                 notif.args.thirdPriority,
                 notif.args.fourthPriority
