@@ -291,6 +291,16 @@ function (dojo, declare) {
             }), talon_id);
         },
 
+        playCardInVitamin: function (color, value) {
+            console.log("playing vitamin " + color + " " + value);
+            var card_x_pos = value - 1;
+            dojo.place(this.format_block('jstpl_cardintalon', {
+                x : this.cardwidth * card_x_pos,
+                y: this.cardheight * (color - 1),
+                card_id: 'vitamin'
+            }), 'vitamin');
+        },
+
         possibleBids: function (minimumBid) {
             var bids = [
                 { name: _('Klop'), value: 1, action: 'onBidKlop', id: 'bid_klop' },
@@ -552,6 +562,9 @@ function (dojo, declare) {
             dojo.subscribe('playCard', this, "notif_playCard");
             dojo.subscribe('trickWin', this, "notif_trickWin");
             this.notifqueue.setSynchronous('trickWin', 1000);
+            dojo.subscribe('vitamin', this, "notif_vitamin");
+            this.notifqueue.setSynchronous('vitamin', 1000);
+            dojo.subscribe('giveVitamin', this, "notif_giveVitamin");
             dojo.subscribe('giveAllCardsToPlayer', this, "notif_giveAllCardsToPlayer");
             dojo.subscribe('newScores', this, "notif_newScores");
         },
@@ -613,6 +626,20 @@ function (dojo, declare) {
         notif_trickWin: function (notif) {
             // We do nothing here (just wait in order players can view the 4
             // cards played before they're gone.
+        },
+
+        notif_vitamin: function (notif) {
+            console.log("Playing card to vitamin ", notif.args.color, notif.args.value);
+            this.playCardInVitamin(notif.args.color, notif.args.value);
+        },
+
+        notif_giveVitamin: function (notif) {
+            console.log("Giving vitamin to ", notif.args.player_id);
+            var anim = this.slideToObject('cardontable_vitamin', 'overall_player_board_' + notif.args.player_id);
+            dojo.connect(anim, 'onEnd', function(node) {
+                dojo.destroy(node);
+            });
+            anim.play();
         },
 
         notif_giveAllCardsToPlayer : function(notif) {

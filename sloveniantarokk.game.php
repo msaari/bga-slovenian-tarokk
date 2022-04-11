@@ -1134,13 +1134,25 @@ class SlovenianTarokk extends Table {
 			if ( $currentBid == BID_KLOP ) {
 				if ( $this->cards->countCardsInLocation( 'talon' ) > 0 ) {
 					$vitamin = $this->cards->pickCardForLocation( 'talon', 'cardswon', $bestValuePlayerId );
+					self::trace("NotifyAllPlayers: vitamin");
 					self::notifyAllPlayers(
 						'vitamin',
-						clienttranslate( '${player_name} got some vitamins: ${card_display_value}' ),
+						clienttranslate( '${player_name} got some vitamins: ${card_display_color} ${card_display_value}' ),
 						array(
 							'player_id'          => $bestValuePlayerId,
 							'player_name'        => $players[ $bestValuePlayerId ]['player_name'],
 							'card_display_value' => $this->getCardDisplayValue( $vitamin['type'], $vitamin['type_arg'] ),
+							'card_display_color' => $this->colors[ $vitamin['type'] ]['name'],
+							'color'              => $vitamin['type'],
+							'value'              => $vitamin['type_arg'],
+						)
+					);
+					self::trace("NotifyAllPlayers: giveVitamin to $bestValuePlayerId");
+					self::notifyAllPlayers(
+						'giveVitamin',
+						'',
+						array(
+							'player_id' => $bestValuePlayerId,
 						)
 					);
 				}
