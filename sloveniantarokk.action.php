@@ -90,6 +90,18 @@ class action_sloveniantarokk extends APP_GameAction {
 		self::ajaxResponse();
 	}
 
+	public function upgradeToColourValat() {
+		self::setAjaxMode();
+		$this->game->upgradeToColourValat();
+		self::ajaxResponse();
+	}
+
+	public function keepCurrentBid() {
+		self::setAjaxMode();
+		$this->game->keepCurrentBid();
+		self::ajaxResponse();
+	}
+
 	public function chooseCards() {
 		self::setAjaxMode();
 		self::trace( 'chooseCards' );
