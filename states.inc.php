@@ -169,6 +169,7 @@ $machinestates = array(
 		),
 		'transitions'       => array(
 			'discardCard'    => 41,
+			'toColourValat'  => 42,
 			'doneDiscarding' => 60,
 		)
 	),
@@ -183,8 +184,8 @@ $machinestates = array(
 			'passUpgrade',
 		),
 		'transitions'       => array(
-			'chooseColourValat' => 50,
-			'passUpgrade'       => 50,
+			'chooseColourValat' => 60,
+			'keepCurrentBid'    => 60,
 		),
 	),
 
