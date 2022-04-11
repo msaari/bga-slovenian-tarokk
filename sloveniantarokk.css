@@ -18,7 +18,7 @@
 #playertables {
 	position: relative;
 	width: 810px;
-	height: 440px;
+	height: 500px;
 }
 
 .playertablename {
@@ -29,7 +29,7 @@
 	position: absolute;
 	text-align: center;
 	width: 120px;
-	height: 160px;
+	height: 200px;
 }
 
 .playertable_N {
@@ -53,25 +53,31 @@
 	margin-top: -60px;
 }
 
+#vitamin {
+	left: 52.5%;
+	bottom: 145px;
+	margin-left: -80px;
+}
+
 .playertablecard {
 	display: inline-block;
 	position: relative;
 	margin-top: 5px;
 	width: 100px;
-	height: 137px;
+	height: 175px;
 }
 
 .cardontable {
 	position: absolute;
 	width: 100px;
-	height: 137px;
+	height: 175px;
 	background-image: url("img/cards.png");
 }
 
 #talonexchange {
 	position: absolute;
 	width: 100%;
-	height: 140px;
+	height: 185px;
 	top: 100px;
 	display: none;
 }

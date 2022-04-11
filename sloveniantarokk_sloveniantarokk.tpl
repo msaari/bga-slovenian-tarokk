@@ -12,6 +12,9 @@
     </div>
     <!-- END player -->
 
+    <div id="vitamin" class="playertable">
+    </div>
+
 </div>
 
 <div id="myhand_wrap" class="whiteblock">
