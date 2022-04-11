@@ -236,7 +236,10 @@ function (dojo, declare) {
                             this.addActionButton(bid.id, bid.name, action);
                         }
                         break;
-                    }
+                    case 'upgradeToColourValat':
+                        this.addActionButton('upgrade_to_colour_valat', _('Raise bid to colour valat'), 'onUpgradeToColourValat');
+                        this.addActionButton('keep_current_bid', _('Keep current bid'), 'onKeepCurrentBid');
+                }
             }
         },
 
@@ -501,6 +504,14 @@ function (dojo, declare) {
             this.checkAndAjaxCall('finalBid', { bid: 13 });
         },
 
+        onUpgradeToColourValat: function () {
+            this.checkAndAjaxCall('upgradeToColourValat');
+        },
+
+        onKeepCurrentBid: function () {
+            this.checkAndAjaxCall('keepCurrentBid');
+        },
+
         onTalonClickChooseCards: function (event) {
             if (!this.checkAction('chooseCards')) {
                 return;
@@ -559,6 +570,7 @@ function (dojo, declare) {
             dojo.subscribe('updateBids', this, "notif_updateBids");
             dojo.subscribe('talonChosen', this, "notif_talonChosen");
             dojo.subscribe('discardCard', this, "notif_discardCard");
+            dojo.subscribe('upgradeToColourValat', this, "notif_upgradeToColourValat");
             dojo.subscribe('playCard', this, "notif_playCard");
             dojo.subscribe('trickWin', this, "notif_trickWin");
             this.notifqueue.setSynchronous('trickWin', 1000);
@@ -616,6 +628,10 @@ function (dojo, declare) {
         notif_discardCard: function (notif) {
             console.log("notif_discardCard", notif.args);
             this.playerHand.removeFromStockById(notif.args.card_id)
+        },
+
+        notif_upgradeToColourValat: function (notif) {
+            this.gameDatas.highBid = this.bids.colour_valat;
         },
 
         notif_playCard : function(notif) {
