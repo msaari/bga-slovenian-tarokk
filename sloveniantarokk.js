@@ -27,7 +27,7 @@ function (dojo, declare) {
             console.log('sloveniantarokk constructor');
 
             this.cardwidth = 100;
-            this.cardheight = 137;
+            this.cardheight = 175;
 
             this.bids = {};
             this.bids.klop = 1;
