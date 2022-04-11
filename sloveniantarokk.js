@@ -138,7 +138,6 @@ function (dojo, declare) {
                         counter++;
                         var card = this.gamedatas.cardsintalon[i];
                         var talon = 'talon_';
-                        console.log(talon);
                         switch (talonSplit) {
                             case 3:
                                 talon += '33_' + Math.ceil(counter / 3);
@@ -150,7 +149,6 @@ function (dojo, declare) {
                                 talon += '111111_' + counter;
                                 break;
                         }
-                        console.log(talon);
                         this.playCardInTalon(talon, card.type, card.type_arg, this.getCardUniqueId(card.type, card.type_arg))
 
                     }
