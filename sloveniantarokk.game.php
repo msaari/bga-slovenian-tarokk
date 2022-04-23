@@ -1125,6 +1125,9 @@ class SlovenianTarokk extends Table {
 				'player_name' => self::getActivePlayerName(),
 			)
 		);
+
+		self::trace( 'upgradeToColourValat->newTrick' );
+		$this->gamestate->nextState( 'upgradeToColourValat' );
 	}
 
 	public function keepCurrentBid() {
@@ -1140,6 +1143,9 @@ class SlovenianTarokk extends Table {
 				'player_name' => self::getActivePlayerName(),
 			)
 		);
+
+		self::trace( 'keepCurrentBid->newTrick' );
+		$this->gamestate->nextState( 'keepCurrentBid' );
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
