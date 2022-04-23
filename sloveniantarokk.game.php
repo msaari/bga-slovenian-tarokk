@@ -538,7 +538,7 @@ class SlovenianTarokk extends Table {
 		$declarer        = intval( self::getGameStateValue( 'declarer' ) );
 		$declarerTeam    = array( $declarer );
 		$declarerPartner = intval( self::getGameStateValue( 'declarerPartner' ) );
-		$currentBid      = intval( self::getGameStateValue( 'currentBid' ) );
+		$currentBid      = intval( self::getGameStateValue( 'highBid' ) );
 
 		if ( $declarerPartner && $declarerPartner !== $declarer ) {
 			$declarerTeam[] = $declarerPartner;
@@ -566,7 +566,7 @@ class SlovenianTarokk extends Table {
 			);
 		}
 
-		$points = $this->bidValues[ $currentBid ];
+		$points = $this->bid_point_values[ $currentBid ];
 		if ( $currentBid >= BID_THREE && $currentBid <= BID_SOLO_ONE ) {
 			$difference = abs( $teamScores['Declarer'] - 35 );
 			$points    += $this->roundToNearestFive( $difference );
@@ -768,7 +768,7 @@ class SlovenianTarokk extends Table {
 
 		if ( $currentBid == BID_VALAT ) {
 			if ( $tricksByDeclarer < $trickCount ) {
-				$self::notifyAllPlayers(
+				self::notifyAllPlayers(
 					'valatFailed',
 					clienttranslate( 'The declarer missed a trick! Valat failed!' ),
 					array()
@@ -780,7 +780,7 @@ class SlovenianTarokk extends Table {
 
 		// Beggars:
 		if ( $tricksByDeclarer > 0 ) {
-			$self::notifyAllPlayers(
+			self::notifyAllPlayers(
 				'beggarFailed',
 				clienttranslate( 'The declarer took a trick! Beggar failed!' ),
 				array()
@@ -882,7 +882,7 @@ class SlovenianTarokk extends Table {
 		);
 
 		$transition = 'toKingCalling';
-		if ( $bid == BID_KLOP || $bid > BID_BEGGAR ) {
+		if ( $bid == BID_KLOP || $bid >= BID_BEGGAR ) {
 			// In klop or bids above beggar, no king calling, exchange or announcements.
 			$transition = 'toTrickTaking';
 		}
