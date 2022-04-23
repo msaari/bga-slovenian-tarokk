@@ -631,7 +631,7 @@ function (dojo, declare) {
         },
 
         notif_upgradeToColourValat: function (notif) {
-            this.gameDatas.highBid = this.bids.colour_valat;
+            this.gamedatas.highBid = this.bids.colour_valat;
         },
 
         notif_playCard : function(notif) {
