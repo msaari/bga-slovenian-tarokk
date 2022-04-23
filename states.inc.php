@@ -180,12 +180,12 @@ $machinestates = array(
 		'descriptionmyturn' => clienttranslate( '${you} can raise your bid to colour valat' ),
 		'type'              => 'activeplayer',
 		'possibleactions'   => array(
-			'chooseColourValat',
+			'upgradeToColourValat',
 			'passUpgrade',
 		),
 		'transitions'       => array(
-			'chooseColourValat' => 60,
-			'keepCurrentBid'    => 60,
+			'upgradeToColourValat' => 60,
+			'keepCurrentBid'       => 60,
 		),
 	),
 
