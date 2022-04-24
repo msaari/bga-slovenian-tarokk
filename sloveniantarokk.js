@@ -43,6 +43,20 @@ function (dojo, declare) {
             this.bids.colour_valat_without = 11;
             this.bids.colour_valat = 12;
             this.bids.valat = 13;
+
+            this.suits = {};
+            this.suits.spades = 1;
+            this.suits.clubs = 2;
+            this.suits.hearts = 3;
+            this.suits.diamonds = 4;
+            this.suits.trump = 5;
+
+            this.announcement_values = {}
+            this.announcement_values.basic = 1;
+            this.announcement_values.kontra = 2;
+            this.announcement_values.rekontra = 4;
+            this.announcement_values.subkontra = 8;
+            this.announcement_values.mordkontra = 16;
         },
 
         /*
@@ -239,12 +253,146 @@ function (dojo, declare) {
                     case 'upgradeToColourValat':
                         this.addActionButton('upgrade_to_colour_valat', _('Raise bid to colour valat'), 'onUpgradeToColourValat');
                         this.addActionButton('keep_current_bid', _('Keep current bid'), 'onKeepCurrentBid');
+                        break;
+                    case 'announcements':
+                        var announcement = _('game');
+                        var verb = this.getAnnouncementVerb(this.gamedatas.gameValue);
+
+                        if (this.playerCanKontra('game')) {
+                            this.addActionButton('announce_game', verb + ' ' + announcement, 'onAnnounceGame');
+                        }
+
+                        announcement = _('Trula');
+                        if (!this.gamedatas.trulaTeam) {
+                            this.addActionButton('announce_trula', announcement, 'onAnnounceTrula');
+                        }
+                        if (this.playerCanKontra('Trula')) {
+                            this.addActionButton('announce_trula', verb + ' ' + announcement, 'onAnnounceTrula');
+                        }
+
+                        this.addActionButton('announce_kings', _('Kings'), 'onAnnounceKings');
+                        if (this.gamedatas.calledKing != 0 && this.hasCardInHand(this.gamedatas.calledKing, 14)) {
+                            this.addActionButton('announce_king_ultimo', _('King ultimo'), 'onAnnounceKingUltimo');
+                        }
+                        if (this.hasCardInHand(this.suits.trump, 1)) {
+                            this.addActionButton('announce_pagat_ultimo', _('Pagat ultimo'), 'onAnnouncePagatUltimo');
+                        }
+                        this.addActionButton('announce_valat', _('Valat'), 'onAnnounceValat');
+                        this.addActionButton('announce_pass', _('Pass'), 'onAnnouncePass');
+                        break;
                 }
             }
         },
 
         ///////////////////////////////////////////////////
         //// Utility methods
+
+        hasCardInHand: function (color, value) {
+            var cards = this.gamedatas.hand;
+            for (var i in cards) {
+                var card = cards[i];
+                if (card.color == color && card.value == value) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        getPlayerTeam: function () {
+            return this.gamedatas.players[this.player_id].team;
+        },
+
+        getAnnouncementVerb: function (value) {
+            switch (value) {
+                case this.announcement_values.basic:
+                    return _('Kontra');
+                case this.announcement_values.kontra:
+                    return _('Rekontra');
+                case this.announcement_values.rekontra:
+                    return _('Subkontra');
+                case this.announcement_values.subkontra:
+                    return _('Mordkontra');
+            }
+            return '';
+        },
+
+        playerInTeam: function (team) {
+            return getPlayerTeam().substring(0, team.length) == team;
+        },
+
+        declarerPartnerHidden: function () {
+            for (var player_id in this.gamedatas.players) {
+                if (this.gamedatas.players[player_id].team == 'declarer_hidden') {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        otherOpponentHidden: function () {
+            for (var player_id in this.gamedatas.players) {
+                if (player_id == this.player_id) {
+                    continue;
+                }
+                if (this.gamedatas.players[player_id].team == 'opponent_hidden') {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        playerCanKontra: function (announcement) {
+            var team = '';
+            var value = this.announcement_values.basic;
+            switch (announcement) {
+                case 'game':
+                    team = 'declarer';
+                    value = this.gamedatas.gameValue;
+                    break;
+                case 'Trula':
+                    team = this.gamedatas.trulaTeam;
+                    value = this.gameDatas.trulaValue;
+                    break;
+                default:
+                    team = false;
+            }
+            if (!team) {
+                return false;
+            }
+
+            // Basic level checking:
+            if ((value == this.announcement_values.basic
+                || value == this.announcement_values.rekontra)
+                 && this.playerInTeam(team)) {
+                // Can't kontra or subkontra your own team.
+                return false;
+            }
+            if ((value == this.announcement_values.kontra
+                || value == this.announcement_values.subkontra)
+                 && !this.playerInTeam(team)) {
+                // Can't rekontra or mordkontra the opposing team.
+                return false;
+            }
+
+            if (team == 'opponent') {
+                if (this.player_id = this.gamedatas.highBidder && this.declarerPartnerHidden()) {
+                    // Player is declarer and partner is hidden:
+                    // Declarer can't know the identity of the player who announced the trula.
+                    return false;
+                }
+                // Declarer's partner can kontra, opponent can't.
+                return this.playerInTeam('declarer');
+            } else { // Declarer's team made the announcement.
+                if (this.declarerPartnerHidden() && this.otherOpponentHidden()) {
+                    // The other opponent and the declarer's partner is hidden:
+                    // Player can't know the identity of the player who announced the trula.
+                    return false;
+                }
+                // Player knows either the other opponent or the declarer's partner.
+                return true;
+            }
+            return false; // Shouldn't happen...
+        },
 
         // Get card unique identifier based on its color and value
         getCardUniqueId: function (color, value) {
@@ -579,6 +727,7 @@ function (dojo, declare) {
             dojo.subscribe('giveVitamin', this, "notif_giveVitamin");
             dojo.subscribe('giveAllCardsToPlayer', this, "notif_giveAllCardsToPlayer");
             dojo.subscribe('newScores', this, "notif_newScores");
+            dojo.subscribe('callKing', this, "notif_callKing");
         },
 
         notif_newHand : function(notif) {
@@ -590,6 +739,8 @@ function (dojo, declare) {
                 var value = card.type_arg;
                 this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
             }
+
+            this.gamedatas.calledKing = 0;
         },
 
         notif_newCards: function (notif) {
@@ -691,6 +842,10 @@ function (dojo, declare) {
                 });
                 anim.play();
             }
+        },
+
+        notif_callKing: function (notif) {
+            this.gamedatas.calledKing = notif.args.color;
         },
    });
 });

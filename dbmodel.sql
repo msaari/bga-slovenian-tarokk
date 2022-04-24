@@ -26,3 +26,6 @@ CREATE TABLE IF NOT EXISTS `card` (
   `card_location_arg` int(11) NOT NULL,
   PRIMARY KEY (`card_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+ALTER TABLE `player` ADD `player_identity` VARCHAR(20) NOT NULL DEFAULT '';
+ALTER TABLE `player` ADD `player_radl` SMALLINT NOT NULL DEFAULT 0;

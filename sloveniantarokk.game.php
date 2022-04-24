@@ -43,15 +43,14 @@ define( 'BID_COLOUR_VALAT_WITHOUT', 11 );
 define( 'BID_COLOUR_VALAT', 12 );
 define( 'BID_VALAT', 13 );
 
+define( 'ANNOUNCEMENT_BASIC', 1 );
+define( 'ANNOUNCEMENT_KONTRA', 2 );
+define( 'ANNOUNCEMENT_REKONTRA', 4 );
+define( 'ANNOUNCEMENT_SUBKONTRA', 8 );
+define( 'ANNOUNCEMENT_MORDKONTRA', 16 );
 
 class SlovenianTarokk extends Table {
 	function __construct() {
-		// Your global variables labels:
-		//  Here, you can assign labels to global variables you are using for this game.
-		//  You can use any number of global variables with IDs between 10 and 99.
-		//  If your game has options (variants), you also have to associate here a label to
-		//  the corresponding ID in gameoptions.inc.php.
-		// Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
 		parent::__construct();
 
 		self::initGameStateLabels(
@@ -72,6 +71,15 @@ class SlovenianTarokk extends Table {
 				'thirdPasser'       => 23,
 				'trickCount'        => 24,
 				'tricksByDeclarer'  => 25,
+				'calledKing'        => 26,
+				'trulaTeam'         => 27,
+				'trulaValue'        => 28,
+				'kingsTeam'         => 28,
+				'kingsValue'        => 29,
+				'kingUltimo'        => 30,
+				'pagatUltimo'       => 31,
+				'valat'	            => 32,
+				'gameValue'         => 33,
 			)
 		);
 
@@ -129,6 +137,15 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'thirdPasser', 0 );
 		self::setGameStateInitialValue( 'trickCount', 0 );
 		self::setGameStateInitialValue( 'tricksByDeclarer', 0 );
+		self::setGameStateInitialValue( 'calledKing', 0 );
+		self::setGameStateInitialValue( 'trulaTeam', 0 );
+		self::setGameStateInitialValue( 'trulaValue', 0 );
+		self::setGameStateInitialValue( 'kingsTeam', 0 );
+		self::setGameStateInitialValue( 'kingsValue', 0 );
+		self::setGameStateInitialValue( 'kingUltimo', 0 );
+		self::setGameStateInitialValue( 'pagatUltimo', 0 );
+		self::setGameStateInitialValue( 'valat', 0 );
+		self::setGameStateInitialValue( 'gameValue', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -173,7 +190,7 @@ class SlovenianTarokk extends Table {
 
 		// Get information about players
 		// Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-		$sql = 'SELECT player_id id, player_score score FROM player ';
+		$sql = 'SELECT player_id id, player_score score, player_radl radl, player_identity team FROM player ';
 
 		$result['players'] = self::getCollectionFromDb( $sql );
 
@@ -192,6 +209,14 @@ class SlovenianTarokk extends Table {
 		$result['fourthPriority'] = self::getGameStateValue( 'fourthPriority' );
 		$result['highBidder']     = self::getGameStateValue( 'highBidder' );
 		$result['highBid']        = self::getGameStateValue( 'highBid' );
+		$result['calledKing']     = self::getGameStateValue( 'calledKing' );
+		$result['trulaTeam']      = self::getGameStateValue( 'trulaTeam' );
+		$result['trulaValue']     = self::getGameStateValue( 'trulaValue' );
+		$result['kingsTeam']      = self::getGameStateValue( 'kingsTeam' );
+		$result['kingsValue']     = self::getGameStateValue( 'kingsValue' );
+		$result['kingUltimo']     = self::getGameStateValue( 'kingUltimo' );
+		$result['pagatUltimo']    = self::getGameStateValue( 'pagatUltimo' );
+		$result['valat']          = self::getGameStateValue( 'valat' );
 
 		return $result;
 	}
@@ -868,7 +893,6 @@ class SlovenianTarokk extends Table {
 		}
 
 		self::setGameStateValue( 'highBid', $bid );
-		self::setGameStateValue( 'declarer', $playerId );
 		self::giveExtraTime( $playerId );
 
 		self::notifyAllPlayers(
@@ -1024,6 +1048,8 @@ class SlovenianTarokk extends Table {
 		$players = self::loadPlayersBasicInfos();
 		$partner = $this->getPlayerWithTheKing( $color );
 
+		self::setGameStateValue( 'calledKing', $color );
+
 		self::notifyAllPlayers(
 			'callKing',
 			clienttranslate( '${player_name} calls the ${color_displayed} king' ),
@@ -1035,6 +1061,10 @@ class SlovenianTarokk extends Table {
 				'color_displayed' => $this->colors[ $color ]['name']
 			)
 		);
+
+		$declarer = self::getGameStateValue( 'declarer' );
+		$sql      = "UPDATE player SET player_identity = 'opponent_hidden' WHERE player_id != $declarer";
+		self::DbQuery( $sql );
 
 		if ( $partner !== 'talon' && $partner !== self::getActivePlayerId() ) {
 			self::setGameStateValue( 'declarerPartner', $partner );
@@ -1048,6 +1078,9 @@ class SlovenianTarokk extends Table {
 					'color_displayed' => $this->colors[ $color ]['name']
 				)
 			);
+
+			$sql = "UPDATE player SET player_identity = 'declarer_hidden' WHERE player_id = $partner";
+			self::DbQuery( $sql );
 		}
 
 		self::trace('callKing->kingChosen->newTrick');
@@ -1183,6 +1216,14 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'trickColor', 0 );
 		self::setGameStateValue( 'trickCount', 0 );
 		self::setGameStateValue( 'tricksByDeclarer', 0 );
+		self::setGameStateValue( 'trulaTeam', 0 );
+		self::setGameStateValue( 'trulaValue', 0 );
+		self::setGameStateValue( 'kingsTeam', 0 );
+		self::setGameStateValue( 'kingsValue', 0 );
+		self::setGameStateValue( 'kingUltimo', 0 );
+		self::setGameStateValue( 'pagatUltimo', 0 );
+		self::setGameStateValue( 'valat', 0 );
+		self::setGameStateValue( 'gameValue', 0 );
 
 		$this->cards->moveAllCardsInLocation( null, 'deck' );
 		$this->cards->shuffle('deck');
@@ -1284,6 +1325,9 @@ class SlovenianTarokk extends Table {
 			$highBidder = self::getGameStateValue( 'highBidder' );
 			$highBid    = self::getGameStateValue( 'highBid' );
 			$players    = self::loadPlayersBasicInfos();
+
+			$sql = "UPDATE player SET player_identity = 'declarer' WHERE player_id = $highBidder";
+			self::DbQuery( $sql );
 
 			self::setGameStateValue( 'declarer', $highBidder );
 			self::setGameStateValue( 'declarerPartner', 0 );

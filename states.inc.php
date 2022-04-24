@@ -189,6 +189,22 @@ $machinestates = array(
 		),
 	),
 
+	50 => array(
+		'name'              => 'announcements',
+		'description'       => clienttranslate( '${actplayer} can make announcements' ),
+		'descriptionmyturn' => clienttranslate( '${you} can make announcements' ),
+		'type'              => 'activeplayer',
+		'possibleactions'   => array(
+			'makeAnnouncement',
+			'passAnnouncement',
+		),
+		'transitions'       => array(
+			'makeAnnouncement'       => 51,
+			'passAnnouncement'       => 51,
+			'allAnnouncementsPassed' => 60,
+		),
+	),
+
 	60 => array(
 		'name'        => 'newTrick',
 		'description' => '',
