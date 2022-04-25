@@ -84,16 +84,16 @@ class SlovenianTarokk extends Table {
 				'calledKing'          => 26,
 				'trulaTeam'           => 27,
 				'trulaValue'          => 28,
-				'kingsTeam'           => 28,
-				'kingsValue'          => 29,
-				'kingUltimoTeam'      => 30,
-				'kingUltimoValue'     => 31,
-				'pagatUltimoTeam'     => 32,
-				'pagatUltimoValue'    => 33,
-				'valatTeam'           => 34,
-				'valatValue'          => 35,
-				'gameValue'           => 36,
-				'playerAnnouncements' => 37,
+				'kingsTeam'           => 29,
+				'kingsValue'          => 30,
+				'kingUltimoTeam'      => 31,
+				'kingUltimoValue'     => 32,
+				'pagatUltimoTeam'     => 33,
+				'pagatUltimoValue'    => 34,
+				'valatTeam'           => 35,
+				'valatValue'          => 36,
+				'gameValue'           => 37,
+				'playerAnnouncements' => 38,
 			)
 		);
 
@@ -163,6 +163,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'valatTeam', 0 );
 		self::setGameStateInitialValue( 'valatValue', 0 );
 		self::setGameStateInitialValue( 'gameValue', 0 );
+		self::setGameStateInitialValue( 'playerAnnouncements', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -235,6 +236,7 @@ class SlovenianTarokk extends Table {
 		$result['valatTeam']           = self::getGameStateValue( 'valatTeam' );
 		$result['valatValue']          = self::getGameStateValue( 'valatValue' );
 		$result['playerAnnouncements'] = self::getGameStateValue( 'playerAnnouncements' );
+		$result['gameValue']           = self::getGameStateValue( 'gameValue' );
 
 		return $result;
 	}
@@ -1308,7 +1310,7 @@ class SlovenianTarokk extends Table {
 			$currentValue = $currentValue * 2;
 		}
 		self::setGameStateValue( $this->announcements[ $announcement ]['value'], $currentValue );
-		$playerAnnouncements = self::incGameStateValue( 'playerAnnouncements' );
+		$playerAnnouncements = self::incGameStateValue( 'playerAnnouncements', 1 );
 
 		if ( $this->playerIdentityHidden( $playerId ) ) {
 			$this->maybeRevealIdentity( $announcement, $currentValue, $playerId );
@@ -1334,6 +1336,8 @@ class SlovenianTarokk extends Table {
 	public function passAnnouncement( $type ) {
 		self::checkAction( 'passAnnouncement' );
 		self::trace( 'passAnnouncement' );
+
+		$playerId = self::getActivePlayerId();
 
 		self::setGameStateValue( 'playerAnnouncements', 0 );
 
@@ -1584,7 +1588,8 @@ class SlovenianTarokk extends Table {
 			$this->gamestate->nextState( 'allAnnouncementsPassed' );
 		}
 
-		$this->gamestate->nextPlayer();
+		$player_id = self::activeNextPlayer();
+		self::giveExtraTime( $player_id );
 		self::trace( 'announcementsNextPlayer->announcements' );
 		$this->gamestate->nextState( 'nextPlayer' );
 	}

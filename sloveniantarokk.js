@@ -258,6 +258,7 @@ function (dojo, declare) {
                         var announcement = _('game');
                         var verb = '';
 
+                        console.log(this.gamedatas);
 
                         if (this.gamedatas.valatTeam == "0") {
                             if (this.playerCanKontra('game')) {
@@ -344,7 +345,7 @@ function (dojo, declare) {
         },
 
         getAnnouncementVerb: function (value) {
-            switch (value) {
+            switch (parseInt(value, 10)) {
                 case this.announcement_values.basic:
                     return _('Kontra');
                 case this.announcement_values.kontra:
@@ -382,32 +383,45 @@ function (dojo, declare) {
             return false;
         },
 
+        getTeamName: function (team) {
+            if (team == 1) {
+                return 'declarer';
+            }
+            if (team == 2) {
+                return 'opponent';
+            }
+            return false;
+        },
+
         playerCanKontra: function (announcement) {
             var team = '';
             var value = this.announcement_values.basic;
             switch (announcement) {
                 case 'game':
                     team = 'declarer';
+                    if (this.gamedatas.gameValue == undefined) {
+                        this.gamedatas.gameValue = 1;
+                    }
                     value = this.gamedatas.gameValue;
                     break;
                 case 'Trula':
-                    team = this.gamedatas.trulaTeam;
+                    team = this.getTeamName(this.gamedatas.trulaTeam);
                     value = this.gamedatas.trulaValue;
                     break;
                 case 'Kings':
-                    team = this.gamedatas.kingsTeam;
+                    team = this.getTeamName(this.gamedatas.kingsTeam);
                     value = this.gamedatas.kingsValue;
                     break;
                 case 'King ultimo':
-                    team = this.gamedatas.kingUltimoTeam;
+                    team = this.getTeamName(this.gamedatas.kingUltimoTeam);
                     value = this.gamedatas.kingUltimoValue;
                     break;
                 case 'Pagat ultimo':
-                    team = this.gamedatas.pagatUltimoTeam;
+                    team = this.getTeamName(this.gamedatas.pagatUltimoTeam);
                     value = this.gamedatas.pagatUltimoValue;
                     break;
                 case 'Valat':
-                    team = this.gamedatas.valatTeam;
+                    team = this.getTeamName(this.gamedatas.valatTeam);
                     value = this.gamedatas.valatValue;
                     break;
                 default:
@@ -417,42 +431,54 @@ function (dojo, declare) {
                 return false;
             }
 
+            console.log(announcement, team, value)
             // Basic level checking:
             if (value < this.announcement_values.basic) {
                 // Not announced, can't kontra.
+                console.log(announcement + ' not announced, can\'t kontra.');
                 return false;
             }
             if ((value == this.announcement_values.basic
                 || value == this.announcement_values.rekontra)
-                 && this.playerInTeam(team)) {
+                && this.playerInTeam(team)) {
+                console.log(announcement + ' cannot kontra or subkontra your own team.');
                 // Can't kontra or subkontra your own team.
                 return false;
             }
             if ((value == this.announcement_values.kontra
                 || value == this.announcement_values.subkontra)
                  && !this.playerInTeam(team)) {
+                console.log(announcement + ' cannot rekontra or mordkontra opposing team.');
                 // Can't rekontra or mordkontra the opposing team.
                 return false;
             }
 
+            if (announcement == 'game') {
+                console.log('game announcement can be kontrad.');
+                return true;
+            }
+
             if (team == 'opponent') {
                 if (this.player_id = this.gamedatas.highBidder && this.declarerPartnerHidden()) {
+                    console.log( announcement + ' cannot kontra when partner is hidden.');
                     // Player is declarer and partner is hidden:
                     // Declarer can't know the identity of the player who announced the trula.
                     return false;
                 }
+                console.log(announcement + ' ' + this.playerInTeam('declarer'));
                 // Declarer's partner can kontra, opponent can't.
                 return this.playerInTeam('declarer');
             } else { // Declarer's team made the announcement.
                 if (this.declarerPartnerHidden() && this.otherOpponentHidden()) {
                     // The other opponent and the declarer's partner is hidden:
                     // Player can't know the identity of the player who announced the trula.
+                    console.log(announcement + ' cannot kontra when partner and other opponent are hidden.');
                     return false;
                 }
                 // Player knows either the other opponent or the declarer's partner.
+                console.log(announcement + ' can kontra.');
                 return true;
             }
-            return false; // Shouldn't happen...
         },
 
         // Get card unique identifier based on its color and value
