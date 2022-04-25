@@ -158,34 +158,42 @@ $this->bid_point_values = array(
 );
 
 $this->announcements = array(
-	1 => array(
+	ANNOUNCEMENT_GAME => array(
 		'name'  => clienttranslate( 'game' ),
 		'value' => 'gameValue',
 		'team'  => '',
 	),
-	2 => array(
+	ANNOUNCEMENT_TRULA => array(
 		'name'  => clienttranslate( 'trula' ),
 		'value' => 'trulaValue',
 		'team'  => 'trulaTeam',
 	),
-	3 => array(
+	ANNOUNCEMENT_KINGS => array(
 		'name'  => clienttranslate( 'kings' ),
 		'value' => 'kingsValue',
 		'team'  => 'kingsTeam',
 	),
-	4 => array(
+	ANNOUNCEMENT_KINGULTIMO => array(
 		'name'  => clienttranslate( 'king ultimo' ),
 		'value' => 'kingUltimoValue',
 		'team'  => 'kingUltimoTeam',
 	),
-	5 => array(
+	ANNOUNCEMENT_PAGATULTIMO => array(
 		'name'  => clienttranslate( 'pagat ultimo' ),
 		'value' => 'pagatUltimoValue',
 		'team'  => 'pagatUltimoTeam',
 	),
-	6 => array(
+	ANNOUNCEMENT_VALAT => array(
 		'name'  => clienttranslate( 'valat' ),
 		'value' => 'valatValue',
 		'team'  => 'valatTeam',
 	),
+);
+
+$this->announcement_values = array(
+	ANNOUNCEMENT_BASIC      => '',
+	ANNOUNCEMENT_KONTRA     => clienttranslate('kontra'),
+	ANNOUNCEMENT_REKONTRA   => clienttranslate('rekontra'),
+	ANNOUNCEMENT_SUBKONTRA  => clienttranslate('subkontra'),
+	ANNOUNCEMENT_MORDKONTRA => clienttranslate('mordkontra'),
 );

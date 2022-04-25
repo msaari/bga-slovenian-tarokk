@@ -170,7 +170,7 @@ $machinestates = array(
 		'transitions'       => array(
 			'discardCard'    => 41,
 			'toColourValat'  => 42,
-			'doneDiscarding' => 60,
+			'doneDiscarding' => 50,
 		)
 	),
 
@@ -190,6 +190,14 @@ $machinestates = array(
 	),
 
 	50 => array(
+		'name'        => 'startAnnouncements',
+		'description' => '',
+		'type'		  => 'game',
+		'action'      => 'stStartAnnouncements',
+		'transitions' => array( '' => 51 ),
+	),
+
+	51 => array(
 		'name'              => 'announcements',
 		'description'       => clienttranslate( '${actplayer} can make announcements' ),
 		'descriptionmyturn' => clienttranslate( '${you} can make announcements' ),
@@ -199,8 +207,18 @@ $machinestates = array(
 			'passAnnouncement',
 		),
 		'transitions'       => array(
-			'makeAnnouncement'       => 51,
-			'passAnnouncement'       => 51,
+			'makeAnnouncement' => 51,
+			'passAnnouncement' => 52,
+		),
+	),
+
+	52 => array(
+		'name'        => 'announcementsNextPlayer',
+		'description' => '',
+		'type'        => 'game',
+		'action'      => 'stAnnouncementsNextPlayer',
+		'transitions' => array(
+			'nextPlayer'             => 51,
 			'allAnnouncementsPassed' => 60,
 		),
 	),

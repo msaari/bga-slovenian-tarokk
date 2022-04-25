@@ -258,52 +258,55 @@ function (dojo, declare) {
                         var announcement = _('game');
                         var verb = '';
 
-                        if (this.playerCanKontra('game')) {
-                            verb = this.getAnnouncementVerb(this.gamedatas.gameValue);
-                            this.addActionButton('announce_game', verb + ' ' + announcement, 'onAnnounceGame');
-                        }
 
-                        announcement = _('Trula');
-                        if (!this.gamedatas.trulaTeam) {
-                            this.addActionButton('announce_trula', announcement, 'onAnnounceTrula');
-                        }
-                        if (this.playerCanKontra('Trula')) {
-                            verb = this.getAnnouncementVerb(this.gamedatas.trulaValue);
-                            this.addActionButton('announce_trula', verb + ' ' + announcement, 'onAnnounceTrula');
-                        }
+                        if (this.gamedatas.valatTeam == "0") {
+                            if (this.playerCanKontra('game')) {
+                                verb = this.getAnnouncementVerb(this.gamedatas.gameValue);
+                                this.addActionButton('announce_game', verb + ' ' + announcement, 'onAnnounceGame');
+                            }
 
-                        announcement = _('Kings');
-                        if (!this.gamedatas.kingsTeam) {
-                            this.addActionButton('announce_kings', announcement, 'onAnnounceKings');
-                        }
-                        if (this.playerCanKontra('Kings')) {
-                            verb = this.getAnnouncementVerb(this.gamedatas.kingsValue);
-                            this.addActionButton('announce_kings', verb + ' ' + announcement, 'onAnnounceKings');
-                        }
+                            announcement = _('Trula');
+                            if (this.gamedatas.trulaTeam == "0") {
+                                this.addActionButton('announce_trula', announcement, 'onAnnounceTrula');
+                            }
+                            if (this.playerCanKontra('Trula')) {
+                                verb = this.getAnnouncementVerb(this.gamedatas.trulaValue);
+                                this.addActionButton('announce_trula', verb + ' ' + announcement, 'onAnnounceTrula');
+                            }
 
-                        announcement = _('King ultimo');
-                        if (!this.gamedatas.kingUltimoTeam
-                            && this.gamedatas.calledKing != 0
-                            && this.hasCardInHand(this.gamedatas.calledKing, 14)) {
-                            this.addActionButton('announce_king_ultimo', announcement, 'onAnnounceKingUltimo');
-                        }
-                        if (this.playerCanKontra('King ultimo')) {
-                            verb = this.getAnnouncementVerb(this.gamedatas.kingUltimoValue);
-                            this.addActionButton('announce_king_ultimo', verb + ' ' + announcement, 'onAnnounceKingUltimo');
-                        }
+                            announcement = _('Kings');
+                            if (this.gamedatas.kingsTeam == "0") {
+                                this.addActionButton('announce_kings', announcement, 'onAnnounceKings');
+                            }
+                            if (this.playerCanKontra('Kings')) {
+                                verb = this.getAnnouncementVerb(this.gamedatas.kingsValue);
+                                this.addActionButton('announce_kings', verb + ' ' + announcement, 'onAnnounceKings');
+                            }
 
-                        announcement = _('Pagat ultimo');
-                        if (!this.gamedatas.pagatUltimoTeam
-                            && this.hasCardInHand(this.suits.trump, 1)) {
-                            this.addActionButton('announce_pagat_ultimo', announcement, 'onAnnouncePagatUltimo');
-                        }
-                        if (this.playerCanKontra('Pagat ultimo')) {
-                            verb = this.getAnnouncementVerb(this.gamedatas.pagatUltimoValue);
-                            this.addActionButton('announce_pagat_ultimo', verb + ' ' + announcement, 'onAnnouncePagatUltimo');
+                            announcement = _('King ultimo');
+                            if (this.gamedatas.kingUltimoTeam == "0"
+                                && this.gamedatas.calledKing != 0
+                                && this.hasCardInHand(this.gamedatas.calledKing, 14)) {
+                                this.addActionButton('announce_king_ultimo', announcement, 'onAnnounceKingUltimo');
+                            }
+                            if (this.playerCanKontra('King ultimo')) {
+                                verb = this.getAnnouncementVerb(this.gamedatas.kingUltimoValue);
+                                this.addActionButton('announce_king_ultimo', verb + ' ' + announcement, 'onAnnounceKingUltimo');
+                            }
+
+                            announcement = _('Pagat ultimo');
+                            if (this.gamedatas.pagatUltimoTeam == "0"
+                                && this.hasCardInHand(this.suits.trump, 1)) {
+                                this.addActionButton('announce_pagat_ultimo', announcement, 'onAnnouncePagatUltimo');
+                            }
+                            if (this.playerCanKontra('Pagat ultimo')) {
+                                verb = this.getAnnouncementVerb(this.gamedatas.pagatUltimoValue);
+                                this.addActionButton('announce_pagat_ultimo', verb + ' ' + announcement, 'onAnnouncePagatUltimo');
+                            }
                         }
 
                         announcement = _('Valat');
-                        if (!this.gamedatas.valatTeam) {
+                        if (this.gamedatas.valatTeam == "0") {
                             this.addActionButton('announce_valat', announcement, 'onAnnounceValat');
                         }
                         if (this.playerCanKontra('Valat')) {
@@ -355,7 +358,7 @@ function (dojo, declare) {
         },
 
         playerInTeam: function (team) {
-            return getPlayerTeam().substring(0, team.length) == team;
+            return this.getPlayerTeam().substring(0, team.length) == team;
         },
 
         declarerPartnerHidden: function () {
@@ -389,23 +392,23 @@ function (dojo, declare) {
                     break;
                 case 'Trula':
                     team = this.gamedatas.trulaTeam;
-                    value = this.gameDatas.trulaValue;
+                    value = this.gamedatas.trulaValue;
                     break;
                 case 'Kings':
                     team = this.gamedatas.kingsTeam;
-                    value = this.gameDatas.kingsValue;
+                    value = this.gamedatas.kingsValue;
                     break;
                 case 'King ultimo':
-                    team = this.gameDatas.kingUltimoTeam;
-                    value = this.gameDatas.kingUltimoValue;
+                    team = this.gamedatas.kingUltimoTeam;
+                    value = this.gamedatas.kingUltimoValue;
                     break;
                 case 'Pagat ultimo':
-                    team = this.gameDatas.pagatUltimoTeam;
-                    value = this.gameDatas.pagatUltimoValue;
+                    team = this.gamedatas.pagatUltimoTeam;
+                    value = this.gamedatas.pagatUltimoValue;
                     break;
                 case 'Valat':
                     team = this.gamedatas.valatTeam;
-                    value = this.gameDatas.valatValue;
+                    value = this.gamedatas.valatValue;
                     break;
                 default:
                     team = false;
@@ -415,6 +418,10 @@ function (dojo, declare) {
             }
 
             // Basic level checking:
+            if (value < this.announcement_values.basic) {
+                // Not announced, can't kontra.
+                return false;
+            }
             if ((value == this.announcement_values.basic
                 || value == this.announcement_values.rekontra)
                  && this.playerInTeam(team)) {
@@ -814,6 +821,8 @@ function (dojo, declare) {
             dojo.subscribe('giveAllCardsToPlayer', this, "notif_giveAllCardsToPlayer");
             dojo.subscribe('newScores', this, "notif_newScores");
             dojo.subscribe('callKing', this, "notif_callKing");
+            dojo.subscribe('playerTeamUpdate', this, "notif_playerTeamUpdate");
+            dojo.subscribe('makeAnnouncement', this, "notif_makeAnnouncement");
         },
 
         notif_newHand : function(notif) {
@@ -932,6 +941,42 @@ function (dojo, declare) {
 
         notif_callKing: function (notif) {
             this.gamedatas.calledKing = notif.args.color;
+        },
+
+        notif_playerTeamUpdate: function (notif) {
+            this.gamedatas.players = notif.args.players;
+        },
+
+        notif_makeAnnouncement: function (notif) {
+            var teamName = notif.args.team == 1 ? "declarer" : "opponent";
+
+            switch (notif.args.announcement) {
+                case 1:
+                    this.gamedatas.gameValue = notif.args.newValue;
+                    break;
+                case 2:
+                    this.gamedatas.trulaTeam = teamName;
+                    this.gamedatas.trulaValue = newValue;
+                    break;
+                case 3:
+                    this.gamedatas.kingsTeam = teamName;
+                    this.gamedatas.kingsValue = newValue;
+                    break;
+                case 4:
+                    this.gamedatas.kingUltimoTeam = teamName;
+                    this.gamedatas.kingUltimoValue = newValue;
+                    break;
+                case 5:
+                    this.gamedatas.pagatUltimoTeam = teamName;
+                    this.gamedatas.pagatUltimoValue = newValue;
+                    break;
+                case 6:
+                    this.gamedatas.valatTeam = teamName;
+                    this.gamedatas.valatValue = newValue;
+                    break;
+            }
+
+            this.gamedatas.playerAnnouncements = notif.args.playerAnnouncements;
         },
    });
 });

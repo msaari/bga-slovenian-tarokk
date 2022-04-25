@@ -49,6 +49,16 @@ define( 'ANNOUNCEMENT_REKONTRA', 4 );
 define( 'ANNOUNCEMENT_SUBKONTRA', 8 );
 define( 'ANNOUNCEMENT_MORDKONTRA', 16 );
 
+define( 'ANNOUNCEMENT_GAME', 1 );
+define( 'ANNOUNCEMENT_TRULA', 2 );
+define( 'ANNOUNCEMENT_KINGS', 3 );
+define( 'ANNOUNCEMENT_KINGULTIMO', 4 );
+define( 'ANNOUNCEMENT_PAGATULTIMO', 5 );
+define( 'ANNOUNCEMENT_VALAT', 6 );
+
+define( 'TEAM_DECLARER', 1 );
+define( 'TEAM_OPPONENT', 2 );
+
 class SlovenianTarokk extends Table {
 	function __construct() {
 		parent::__construct();
@@ -80,7 +90,7 @@ class SlovenianTarokk extends Table {
 				'kingUltimoValue'     => 31,
 				'pagatUltimoTeam'     => 32,
 				'pagatUltimoValue'    => 33,
-				'valat'	              => 34,
+				'valatTeam'           => 34,
 				'valatValue'          => 35,
 				'gameValue'           => 36,
 				'playerAnnouncements' => 37,
@@ -196,10 +206,7 @@ class SlovenianTarokk extends Table {
 		$current_player_id = self::getCurrentPlayerId();    // !! We must only return informations visible by this player !!
 
 		// Get information about players
-		// Note: you can retrieve some extra field you added for "player" table in "dbmodel.sql" if you need it.
-		$sql = 'SELECT player_id id, player_score score, player_radl radl, player_identity team FROM player ';
-
-		$result['players'] = self::getCollectionFromDb( $sql );
+		$result['players'] = $this->getPlayerCollection();
 
 		// Cards in player hand
 		$result['hand'] = $this->cards->getCardsInLocation( 'hand', $current_player_id );
@@ -827,6 +834,95 @@ class SlovenianTarokk extends Table {
 		return false;
 	}
 
+	/**
+	 * Checks if player identity should be revealed after an announcement.
+	 *
+	 * Also checks if the revelation causes extra revelations.
+	 */
+	public function maybeRevealIdentity( $announcement, $currentValue, $playerId ) {
+		$reveal = false;
+
+		if ( $currentValue > ANNOUNCEMENT_BASIC ) {
+			// Any kontra announcement reveals identity.
+			$reveal = true;
+		}
+
+		if ( $announcement == ANNOUNCEMENT_KINGULTIMO ) {
+			// King ultimo announcement reveals identity.
+			$reveal = true;
+		}
+
+		if ( $reveal ) {
+			$team = $this->getPlayerTeam( $playerId );
+			$sql  = "UPDATE player SET player_identity = '$team' WHERE player_id = $playerId";
+			self::DbQuery( $sql );
+
+			if ( $team == 'declarer' ) {
+				// Declarer's partner revealed, reveal opponents.
+				$sql = "UPDATE player SET player_identity = 'opponent' WHERE player_identity != 'declarer'";
+				self::DbQuery( $sql );
+			}
+
+			if ( $team == 'opponent' ) {
+				$sql   = "SELECT COUNT(*) FROM player WHERE player_identity = 'opponent_hidden'";
+				$count = self::getUniqueValueFromDb( $sql );
+				if ( $count == 0 ) {
+					// All opponents revealed, reveal declarer's partner.
+					$sql = "UPDATE player SET player_identity = 'declarer' WHERE player_identity = 'declarer_hidden'";
+					self::DbQuery( $sql );
+				}
+			}
+
+			$players = $this->getPlayerCollection();
+
+			self::notifyAllPlayers(
+				'playerTeamUpdate',
+				'',
+				array( 'players' => $players )
+			);
+		}
+	}
+
+	/**
+	 * When valat is announced, lower announcements are cleared.
+	 */
+	public function clearAnnouncements() {
+		self::setGameStateValue( 'gameValue', 1 );
+		self::setGameStateValue( 'trulaValue', 0 );
+		self::setGameStateValue( 'trulaTeam', 0 );
+		self::setGameStateValue( 'kingsValue', 0 );
+		self::setGameStateValue( 'kingsTeam', 0 );
+		self::setGameStateValue( 'kingUltimoValue', 0 );
+		self::setGameStateValue( 'kingUltimoTeam', 0 );
+		self::setGameStateValue( 'pagatUltimoValue', 0 );
+		self::setGameStateValue( 'pagatUltimoTeam', 0 );
+	}
+
+	public function getPlayerTeam( $player_id ) {
+		$sql    = "SELECT player_identity FROM player WHERE player_id = $player_id";
+		$result = self::getUniqueValueFromDB( $sql );
+		return str_replace( '_hidden', '', $result );
+	}
+
+	public function playerIdentityHidden( $player_id ) {
+		$sql    = "SELECT player_identity FROM player WHERE player_id = $player_id";
+		$result = self::getUniqueValueFromDB( $sql );
+		return strpos( $result, '_hidden' ) !== false;
+	}
+
+	public function setPlayerTeam( $player_id, $team, $hidden ) {
+		if ( $hidden ) {
+			$team .= '_hidden';
+		}
+		$sql = "UPDATE player SET player_identity = '$team' WHERE player_id = $player_id";
+		self::DbQuery( $sql );
+	}
+
+	public function getPlayerCollection() {
+		$sql = 'SELECT player_id id, player_score score, player_radl radl, player_identity team FROM player ';
+		return self::getCollectionFromDb( $sql );
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Player actions
 	////////////
@@ -1090,8 +1186,7 @@ class SlovenianTarokk extends Table {
 				)
 			);
 
-			$sql = "UPDATE player SET player_identity = 'declarer_hidden' WHERE player_id = $partner";
-			self::DbQuery( $sql );
+			$this->setPlayerTeam( $partner, 'declarer', true );
 		}
 
 		self::trace('callKing->kingChosen->newTrick');
@@ -1197,29 +1292,84 @@ class SlovenianTarokk extends Table {
 		self::trace( 'makeAnnouncement' );
 
 		$playerId = self::getActivePlayerId();
+		$teamId   = $this->getPlayerTeam( $playerId ) == 'declarer' ? TEAM_DECLARER : TEAM_OPPONENT;
 
 		$currentValue = self::getGameStateValue( $this->announcements[ $announcement ]['value'] );
 		if ( $currentValue == 0 ) {
 			$currentValue = 1;
+			self::setGameStateValue(
+				$this->announcements[ $announcement ]['team'],
+				$teamId
+			);
+			if ( $announcement == ANNOUNCEMENT_VALAT ) {
+				$this->clearAnnouncements();
+			}
 		} else {
 			$currentValue = $currentValue * 2;
 		}
 		self::setGameStateValue( $this->announcements[ $announcement ]['value'], $currentValue );
+		$playerAnnouncements = self::incGameStateValue( 'playerAnnouncements' );
+
+		if ( $this->playerIdentityHidden( $playerId ) ) {
+			$this->maybeRevealIdentity( $announcement, $currentValue, $playerId );
+		}
+
+		$announcedValue = $this->announcement_values[ $currentValue ]
+			. ' ' . $this->announcements[ $announcement ]['name'];
 
 		self::notifyAllPlayers(
 			'makeAnnouncement',
 			clienttranslate( '${player_name} announces ${announcement}' ),
 			array(
-				'player_id'    => $playerId,
-				'player_name'  => self::getActivePlayerName(),
-				'announcement' => $announcement,
-				'newValue'     => $currentValue,
+				'player_id'           => $playerId,
+				'player_name'         => self::getActivePlayerName(),
+				'announcement'        => $announcedValue,
+				'newValue'            => $currentValue,
+				'team'                => $teamId,
+				'playerAnnouncements' => $playerAnnouncements,
 			)
 		);
 	}
 
 	public function passAnnouncement( $type ) {
+		self::checkAction( 'passAnnouncement' );
+		self::trace( 'passAnnouncement' );
 
+		self::setGameStateValue( 'playerAnnouncements', 0 );
+
+		if ( $type == 'pass' ) {
+			$firstPasser = self::getGameStateValue( 'firstPasser' );
+			if ( $firstPasser == 0 ) {
+				self::setGameStateValue( 'firstPasser', $playerId );
+			} else {
+				$secondPasser = self::getGameStateValue( 'secondPasser' );
+				if ( $secondPasser == 0 ) {
+					self::setGameStateValue( 'secondPasser', $playerId );
+				} else {
+					self::setGameStateValue( 'thirdPasser', $playerId );
+				}
+			}
+			self::notifyAllPlayers(
+				'passAnnouncement',
+				clienttranslate( '${player_name} passes' ),
+				array(
+					'player_id'   => $playerId,
+					'player_name' => self::getActivePlayerName(),
+				)
+			);
+		} else {
+			self::notifyAllPlayers(
+				'passAnnouncement',
+				clienttranslate( '${player_name} makes no more announcements' ),
+				array(
+					'player_id'   => $playerId,
+					'player_name' => self::getActivePlayerName(),
+				)
+			);
+		}
+
+		self::trace( 'announcements->announcementsNextPlayer' );
+		$this->gamestate->nextState( 'passAnnouncement' );
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
@@ -1257,17 +1407,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'trickColor', 0 );
 		self::setGameStateValue( 'trickCount', 0 );
 		self::setGameStateValue( 'tricksByDeclarer', 0 );
-		self::setGameStateValue( 'trulaTeam', 0 );
-		self::setGameStateValue( 'trulaValue', 0 );
-		self::setGameStateValue( 'kingsTeam', 0 );
-		self::setGameStateValue( 'kingsValue', 0 );
-		self::setGameStateValue( 'kingUltimoTeam', 0 );
-		self::setGameStateValue( 'kingUltimoValue', 0 );
-		self::setGameStateValue( 'pagatUltimoTeam', 0 );
-		self::setGameStateValue( 'pagatUltimoValue', 0 );
-		self::setGameStateValue( 'valatTeam', 0 );
-		self::setGameStateValue( 'valatValue', 0 );
-		self::setGameStateValue( 'gameValue', 0 );
+		self::setGameStateValue( 'gameValue', 1 );
 
 		$this->cards->moveAllCardsInLocation( null, 'deck' );
 		$this->cards->shuffle('deck');
@@ -1342,7 +1482,6 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'highBidder', $forehand );
 		self::setGameStateValue( 'highBid', BID_THREE );
 
-
 		self::trace( "notifying players" );
 		self::notifyAllPlayers(
 			'setPriorityOrder',
@@ -1360,9 +1499,7 @@ class SlovenianTarokk extends Table {
 	}
 
 	function stNextBid() {
-		$firstPasser  = self::getGameStateValue( 'firstPasser' );
-		$secondPasser = self::getGameStateValue( 'secondPasser' );
-		$thirdPasser  = self::getGameStateValue( 'thirdPasser' );
+		$thirdPasser = self::getGameStateValue( 'thirdPasser' );
 
 		if ( $thirdPasser != 0 ) {
 			// Three passes, so end the bidding.
@@ -1370,8 +1507,7 @@ class SlovenianTarokk extends Table {
 			$highBid    = self::getGameStateValue( 'highBid' );
 			$players    = self::loadPlayersBasicInfos();
 
-			$sql = "UPDATE player SET player_identity = 'declarer' WHERE player_id = $highBidder";
-			self::DbQuery( $sql );
+			$this->setPlayerTeam( $highBidder, 'declarer', false );
 
 			self::setGameStateValue( 'declarer', $highBidder );
 			self::setGameStateValue( 'declarerPartner', 0 );
@@ -1394,6 +1530,9 @@ class SlovenianTarokk extends Table {
 			self::trace( 'stNextBid->allPass' );
 			$this->gamestate->nextState('allPass');
 		} else {
+			$firstPasser  = self::getGameStateValue( 'firstPasser' );
+			$secondPasser = self::getGameStateValue( 'secondPasser' );
+
 			$passers = array( $firstPasser, $secondPasser, $thirdPasser );
 
 			$activePlayer = self::getActivePlayerId();
@@ -1410,6 +1549,44 @@ class SlovenianTarokk extends Table {
 			self::trace( 'stNextBid->nextBidder' );
 			$this->gamestate->nextState( 'nextBidder' );
 		}
+	}
+
+	public function stStartAnnouncements() {
+		self::setGameStateValue( 'trulaTeam', 0 );
+		self::setGameStateValue( 'trulaValue', 0 );
+		self::setGameStateValue( 'kingsTeam', 0 );
+		self::setGameStateValue( 'kingsValue', 0 );
+		self::setGameStateValue( 'kingUltimoTeam', 0 );
+		self::setGameStateValue( 'kingUltimoValue', 0 );
+		self::setGameStateValue( 'pagatUltimoTeam', 0 );
+		self::setGameStateValue( 'pagatUltimoValue', 0 );
+		self::setGameStateValue( 'valatTeam', 0 );
+		self::setGameStateValue( 'valatValue', 0 );
+
+		self::setGameStateValue( 'firstPasser', 0 );
+		self::setGameStateValue( 'secondPasser', 0 );
+		self::setGameStateValue( 'thirdPasser', 0 );
+
+		self::trace( 'stStartAnnouncements->announcements' );
+		$this->gamestate->nextState();
+	}
+
+	public function stAnnouncementsNextPlayer() {
+		if ( self::getGameStateValue( 'thirdPasser' ) > 0 ) {
+			self::notifyAllPlayers(
+				'',
+				clienttranslate( 'Three passes in a row, announcements over' ),
+				array(
+				)
+			);
+
+			self::trace( 'announcementsNextPlayer->newTrick' );
+			$this->gamestate->nextState( 'allAnnouncementsPassed' );
+		}
+
+		$this->gamestate->nextPlayer();
+		self::trace( 'announcementsNextPlayer->announcements' );
+		$this->gamestate->nextState( 'nextPlayer' );
 	}
 
 	function stNewTrick() {
