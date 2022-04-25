@@ -256,9 +256,10 @@ function (dojo, declare) {
                         break;
                     case 'announcements':
                         var announcement = _('game');
-                        var verb = this.getAnnouncementVerb(this.gamedatas.gameValue);
+                        var verb = '';
 
                         if (this.playerCanKontra('game')) {
+                            verb = this.getAnnouncementVerb(this.gamedatas.gameValue);
                             this.addActionButton('announce_game', verb + ' ' + announcement, 'onAnnounceGame');
                         }
 
@@ -267,18 +268,55 @@ function (dojo, declare) {
                             this.addActionButton('announce_trula', announcement, 'onAnnounceTrula');
                         }
                         if (this.playerCanKontra('Trula')) {
+                            verb = this.getAnnouncementVerb(this.gamedatas.trulaValue);
                             this.addActionButton('announce_trula', verb + ' ' + announcement, 'onAnnounceTrula');
                         }
 
-                        this.addActionButton('announce_kings', _('Kings'), 'onAnnounceKings');
-                        if (this.gamedatas.calledKing != 0 && this.hasCardInHand(this.gamedatas.calledKing, 14)) {
-                            this.addActionButton('announce_king_ultimo', _('King ultimo'), 'onAnnounceKingUltimo');
+                        announcement = _('Kings');
+                        if (!this.gamedatas.kingsTeam) {
+                            this.addActionButton('announce_kings', announcement, 'onAnnounceKings');
                         }
-                        if (this.hasCardInHand(this.suits.trump, 1)) {
-                            this.addActionButton('announce_pagat_ultimo', _('Pagat ultimo'), 'onAnnouncePagatUltimo');
+                        if (this.playerCanKontra('Kings')) {
+                            verb = this.getAnnouncementVerb(this.gamedatas.kingsValue);
+                            this.addActionButton('announce_kings', verb + ' ' + announcement, 'onAnnounceKings');
                         }
-                        this.addActionButton('announce_valat', _('Valat'), 'onAnnounceValat');
-                        this.addActionButton('announce_pass', _('Pass'), 'onAnnouncePass');
+
+                        announcement = _('King ultimo');
+                        if (!this.gamedatas.kingUltimoTeam
+                            && this.gamedatas.calledKing != 0
+                            && this.hasCardInHand(this.gamedatas.calledKing, 14)) {
+                            this.addActionButton('announce_king_ultimo', announcement, 'onAnnounceKingUltimo');
+                        }
+                        if (this.playerCanKontra('King ultimo')) {
+                            verb = this.getAnnouncementVerb(this.gamedatas.kingUltimoValue);
+                            this.addActionButton('announce_king_ultimo', verb + ' ' + announcement, 'onAnnounceKingUltimo');
+                        }
+
+                        announcement = _('Pagat ultimo');
+                        if (!this.gamedatas.pagatUltimoTeam
+                            && this.hasCardInHand(this.suits.trump, 1)) {
+                            this.addActionButton('announce_pagat_ultimo', announcement, 'onAnnouncePagatUltimo');
+                        }
+                        if (this.playerCanKontra('Pagat ultimo')) {
+                            verb = this.getAnnouncementVerb(this.gamedatas.pagatUltimoValue);
+                            this.addActionButton('announce_pagat_ultimo', verb + ' ' + announcement, 'onAnnouncePagatUltimo');
+                        }
+
+                        announcement = _('Valat');
+                        if (!this.gamedatas.valatTeam) {
+                            this.addActionButton('announce_valat', announcement, 'onAnnounceValat');
+                        }
+                        if (this.playerCanKontra('Valat')) {
+                            verb = this.getAnnouncementVerb(this.gamedatas.valatValue);
+                            this.addActionButton('announce_valat', verb + ' ' + announcement, 'onAnnounceValat');
+                        }
+
+                        if (this.gamedatas.playerAnnouncements > 0) {
+                            this.addActionButton('announce_done', _('Done'), 'onAnnounceDone');
+                        } else {
+                            this.addActionButton('announce_pass', _('Pass'), 'onAnnouncePass');
+                        }
+
                         break;
                 }
             }
@@ -352,6 +390,22 @@ function (dojo, declare) {
                 case 'Trula':
                     team = this.gamedatas.trulaTeam;
                     value = this.gameDatas.trulaValue;
+                    break;
+                case 'Kings':
+                    team = this.gamedatas.kingsTeam;
+                    value = this.gameDatas.kingsValue;
+                    break;
+                case 'King ultimo':
+                    team = this.gameDatas.kingUltimoTeam;
+                    value = this.gameDatas.kingUltimoValue;
+                    break;
+                case 'Pagat ultimo':
+                    team = this.gameDatas.pagatUltimoTeam;
+                    value = this.gameDatas.pagatUltimoValue;
+                    break;
+                case 'Valat':
+                    team = this.gamedatas.valatTeam;
+                    value = this.gameDatas.valatValue;
                     break;
                 default:
                     team = false;

@@ -55,31 +55,35 @@ class SlovenianTarokk extends Table {
 
 		self::initGameStateLabels(
 			array(
-				'compulsoryKlop'    => 10,
-				'trickColor'        => 11,
-				'dealer'            => 12,
-				'declarer'          => 13,
-				'declarerPartner'   => 14,
-				'forehand'          => 15,
-				'secondPriority'	=> 16,
-				'thirdPriority'		=> 17,
-				'fourthPriority'	=> 18,
-				'highBidder'        => 19,
-				'highBid'           => 20,
-				'firstPasser'		=> 21,
-				'secondPasser'      => 22,
-				'thirdPasser'       => 23,
-				'trickCount'        => 24,
-				'tricksByDeclarer'  => 25,
-				'calledKing'        => 26,
-				'trulaTeam'         => 27,
-				'trulaValue'        => 28,
-				'kingsTeam'         => 28,
-				'kingsValue'        => 29,
-				'kingUltimo'        => 30,
-				'pagatUltimo'       => 31,
-				'valat'	            => 32,
-				'gameValue'         => 33,
+				'compulsoryKlop'      => 10,
+				'trickColor'          => 11,
+				'dealer'              => 12,
+				'declarer'            => 13,
+				'declarerPartner'     => 14,
+				'forehand'            => 15,
+				'secondPriority'	  => 16,
+				'thirdPriority'		  => 17,
+				'fourthPriority'	  => 18,
+				'highBidder'          => 19,
+				'highBid'             => 20,
+				'firstPasser'		  => 21,
+				'secondPasser'        => 22,
+				'thirdPasser'         => 23,
+				'trickCount'          => 24,
+				'tricksByDeclarer'    => 25,
+				'calledKing'          => 26,
+				'trulaTeam'           => 27,
+				'trulaValue'          => 28,
+				'kingsTeam'           => 28,
+				'kingsValue'          => 29,
+				'kingUltimoTeam'      => 30,
+				'kingUltimoValue'     => 31,
+				'pagatUltimoTeam'     => 32,
+				'pagatUltimoValue'    => 33,
+				'valat'	              => 34,
+				'valatValue'          => 35,
+				'gameValue'           => 36,
+				'playerAnnouncements' => 37,
 			)
 		);
 
@@ -142,9 +146,12 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'trulaValue', 0 );
 		self::setGameStateInitialValue( 'kingsTeam', 0 );
 		self::setGameStateInitialValue( 'kingsValue', 0 );
-		self::setGameStateInitialValue( 'kingUltimo', 0 );
-		self::setGameStateInitialValue( 'pagatUltimo', 0 );
-		self::setGameStateInitialValue( 'valat', 0 );
+		self::setGameStateInitialValue( 'kingUltimoTeam', 0 );
+		self::setGameStateInitialValue( 'kingUltimoValue', 0 );
+		self::setGameStateInitialValue( 'pagatUltimoTeam', 0 );
+		self::setGameStateInitialValue( 'pagatUltimoValue', 0 );
+		self::setGameStateInitialValue( 'valatTeam', 0 );
+		self::setGameStateInitialValue( 'valatValue', 0 );
 		self::setGameStateInitialValue( 'gameValue', 0 );
 
 		// Create cards
@@ -203,20 +210,24 @@ class SlovenianTarokk extends Table {
 		// Cards in talon
 		$result['cardsintalon'] = $this->cards->getCardsInLocation( 'talon' );
 
-		$result['forehand']       = self::getGameStateValue( 'forehand' );
-		$result['secondPriority'] = self::getGameStateValue( 'secondPriority' );
-		$result['thirdPriority']  = self::getGameStateValue( 'thirdPriority' );
-		$result['fourthPriority'] = self::getGameStateValue( 'fourthPriority' );
-		$result['highBidder']     = self::getGameStateValue( 'highBidder' );
-		$result['highBid']        = self::getGameStateValue( 'highBid' );
-		$result['calledKing']     = self::getGameStateValue( 'calledKing' );
-		$result['trulaTeam']      = self::getGameStateValue( 'trulaTeam' );
-		$result['trulaValue']     = self::getGameStateValue( 'trulaValue' );
-		$result['kingsTeam']      = self::getGameStateValue( 'kingsTeam' );
-		$result['kingsValue']     = self::getGameStateValue( 'kingsValue' );
-		$result['kingUltimo']     = self::getGameStateValue( 'kingUltimo' );
-		$result['pagatUltimo']    = self::getGameStateValue( 'pagatUltimo' );
-		$result['valat']          = self::getGameStateValue( 'valat' );
+		$result['forehand']            = self::getGameStateValue( 'forehand' );
+		$result['secondPriority']      = self::getGameStateValue( 'secondPriority' );
+		$result['thirdPriority']       = self::getGameStateValue( 'thirdPriority' );
+		$result['fourthPriority']      = self::getGameStateValue( 'fourthPriority' );
+		$result['highBidder']          = self::getGameStateValue( 'highBidder' );
+		$result['highBid']             = self::getGameStateValue( 'highBid' );
+		$result['calledKing']          = self::getGameStateValue( 'calledKing' );
+		$result['trulaTeam']           = self::getGameStateValue( 'trulaTeam' );
+		$result['trulaValue']          = self::getGameStateValue( 'trulaValue' );
+		$result['kingsTeam']           = self::getGameStateValue( 'kingsTeam' );
+		$result['kingsValue']          = self::getGameStateValue( 'kingsValue' );
+		$result['kingUltimoTeam']      = self::getGameStateValue( 'kingUltimoTeam' );
+		$result['kingUltimoValue']     = self::getGameStateValue( 'kingUltimoValue' );
+		$result['pagatUltimoTeam']     = self::getGameStateValue( 'pagatUltimoTeam' );
+		$result['pagatUltimoValue']    = self::getGameStateValue( 'pagatUltimoValue' );
+		$result['valatTeam']           = self::getGameStateValue( 'valatTeam' );
+		$result['valatValue']          = self::getGameStateValue( 'valatValue' );
+		$result['playerAnnouncements'] = self::getGameStateValue( 'playerAnnouncements' );
 
 		return $result;
 	}
@@ -1220,9 +1231,12 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'trulaValue', 0 );
 		self::setGameStateValue( 'kingsTeam', 0 );
 		self::setGameStateValue( 'kingsValue', 0 );
-		self::setGameStateValue( 'kingUltimo', 0 );
-		self::setGameStateValue( 'pagatUltimo', 0 );
-		self::setGameStateValue( 'valat', 0 );
+		self::setGameStateValue( 'kingUltimoTeam', 0 );
+		self::setGameStateValue( 'kingUltimoValue', 0 );
+		self::setGameStateValue( 'pagatUltimoTeam', 0 );
+		self::setGameStateValue( 'pagatUltimoValue', 0 );
+		self::setGameStateValue( 'valatTeam', 0 );
+		self::setGameStateValue( 'valatValue', 0 );
 		self::setGameStateValue( 'gameValue', 0 );
 
 		$this->cards->moveAllCardsInLocation( null, 'deck' );
