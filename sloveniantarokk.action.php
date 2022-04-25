@@ -112,4 +112,18 @@ class action_sloveniantarokk extends APP_GameAction {
 		$this->game->chooseCards( $cards, $talon );
 		self::ajaxResponse();
 	}
+
+	public function makeAnnouncement() {
+		self::setAjaxMode();
+		$announcement = self::getArg( 'announcement', AT_posint, true );
+		$this->game->makeAnnouncement( $announcement );
+		self::ajaxResponse();
+	}
+
+	public function passAnnouncement() {
+		self::setAjaxMode();
+		$announcement = self::getArg( 'announcement', AT_alphanum, true );
+		$this->game->passAnnouncement( $announcement );
+		self::ajaxResponse();
+	}
 }

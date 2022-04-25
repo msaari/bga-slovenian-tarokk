@@ -1192,6 +1192,36 @@ class SlovenianTarokk extends Table {
 		$this->gamestate->nextState( 'keepCurrentBid' );
 	}
 
+	public function makeAnnouncement( $announcement ) {
+		self::checkAction( 'makeAnnouncement' );
+		self::trace( 'makeAnnouncement' );
+
+		$playerId = self::getActivePlayerId();
+
+		$currentValue = self::getGameStateValue( $this->announcements[ $announcement ]['value'] );
+		if ( $currentValue == 0 ) {
+			$currentValue = 1;
+		} else {
+			$currentValue = $currentValue * 2;
+		}
+		self::setGameStateValue( $this->announcements[ $announcement ]['value'], $currentValue );
+
+		self::notifyAllPlayers(
+			'makeAnnouncement',
+			clienttranslate( '${player_name} announces ${announcement}' ),
+			array(
+				'player_id'    => $playerId,
+				'player_name'  => self::getActivePlayerName(),
+				'announcement' => $announcement,
+				'newValue'     => $currentValue,
+			)
+		);
+	}
+
+	public function passAnnouncement( $type ) {
+
+	}
+
 	//////////////////////////////////////////////////////////////////////////////
 	//////////// Game state arguments
 	////////////

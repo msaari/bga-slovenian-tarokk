@@ -743,6 +743,38 @@ function (dojo, declare) {
             );
         },
 
+        onAnnounceGame: function () {
+            this.checkAndAjaxCall('makeAnnouncement', { announcement: 1 });
+        },
+
+        onAnnounceTrula: function () {
+            this.checkAndAjaxCall('makeAnnouncement', { announcement: 2 });
+        },
+
+        onAnnounceKings: function () {
+            this.checkAndAjaxCall('makeAnnouncement', { announcement: 3 });
+        },
+
+        onAnnounceKingUltimo: function () {
+            this.checkAndAjaxCall('makeAnnouncement', { announcement: 4 });
+        },
+
+        onAnnouncePagatUltimo: function () {
+            this.checkAndAjaxCall('makeAnnouncement', { announcement: 5 });
+        },
+
+        onAnnounceValat: function () {
+            this.checkAndAjaxCall('makeAnnouncement', { announcement: 6 });
+        },
+
+        onAnnounceDone: function () {
+            this.checkAndAjaxCall('passAnnouncement', { announcement: 'done' });
+        },
+
+        onAnnouncePass: function () {
+            this.checkAndAjaxCall('passAnnouncement', { announcement: 'pass' });
+        },
+
         checkAndAjaxCall: function (action, parameters) {
             if (!this.checkAction(action)) {
                 return;
