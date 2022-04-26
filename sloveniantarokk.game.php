@@ -659,6 +659,16 @@ class SlovenianTarokk extends Table {
 		return $trulaCards == 3;
 	}
 
+	function hasKings( $cards ) {
+		$kings = 0;
+		foreach ( $cards as $card ) {
+			if ( $card['type_arg'] == '14' ) {
+				$kings++;
+			}
+		}
+		return $kings == 4;
+	}
+
 	function adjustPoints( $points, $declarer, $declarerPartner = 0, $reason = '' ) {
 		if ( $points == 0 ) {
 			return;
@@ -1002,6 +1012,34 @@ class SlovenianTarokk extends Table {
 			$points = $points * self::getGameStateValue( 'trulaValue' );
 
 			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'trula' ) );
+		}
+
+		$declarerHasKings   = $this->hasKings( $teamCards['Declarer'] );
+		$opponentsHaveKings = $this->hasKings( $teamCards['Opponents'] );
+		$kingsTeam          = $kingsPlayer ? $this->getPlayerTeam( $kingsPlayer ) : null;
+
+		if ( $declarerHasKings || $opponentsHaveKings || $kingsPlayer > 0 ) {
+			$points = $this->announcements[ ANNOUNCEMENT_KINGS ]['points'];
+
+			if ( ! $kingsPlayer ) {
+				if ( $opponentsHaveKings ) {
+					$points = -$points;
+				}
+			} else {
+				$points = $points * 2;
+			}
+
+			if ( $opponentsHaveKings ) {
+				$points = -$points;
+			}
+
+			if ( $kingsTeam == 'declarer' && ! $declarerHasKings ) {
+				$points = -$points;
+			}
+
+			$points = $points * self::getGameStateValue( 'kingsValue' );
+
+			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'kings' ) );
 		}
 
 	}
