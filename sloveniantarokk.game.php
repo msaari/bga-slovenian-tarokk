@@ -82,15 +82,15 @@ class SlovenianTarokk extends Table {
 				'trickCount'          => 24,
 				'tricksByDeclarer'    => 25,
 				'calledKing'          => 26,
-				'trulaTeam'           => 27,
+				'trulaPlayer'         => 27,
 				'trulaValue'          => 28,
-				'kingsTeam'           => 29,
+				'kingsPlayer'         => 29,
 				'kingsValue'          => 30,
-				'kingUltimoTeam'      => 31,
+				'kingUltimoPlayer'    => 31,
 				'kingUltimoValue'     => 32,
-				'pagatUltimoTeam'     => 33,
+				'pagatUltimoPlayer'   => 33,
 				'pagatUltimoValue'    => 34,
-				'valatTeam'           => 35,
+				'valatPlayer'         => 35,
 				'valatValue'          => 36,
 				'gameValue'           => 37,
 				'playerAnnouncements' => 38,
@@ -152,15 +152,15 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'trickCount', 0 );
 		self::setGameStateInitialValue( 'tricksByDeclarer', 0 );
 		self::setGameStateInitialValue( 'calledKing', 0 );
-		self::setGameStateInitialValue( 'trulaTeam', 0 );
+		self::setGameStateInitialValue( 'trulaPlayer', 0 );
 		self::setGameStateInitialValue( 'trulaValue', 0 );
-		self::setGameStateInitialValue( 'kingsTeam', 0 );
+		self::setGameStateInitialValue( 'kingsPlayer', 0 );
 		self::setGameStateInitialValue( 'kingsValue', 0 );
-		self::setGameStateInitialValue( 'kingUltimoTeam', 0 );
+		self::setGameStateInitialValue( 'kingUltimoPlayer', 0 );
 		self::setGameStateInitialValue( 'kingUltimoValue', 0 );
-		self::setGameStateInitialValue( 'pagatUltimoTeam', 0 );
+		self::setGameStateInitialValue( 'pagatUltimoPlayer', 0 );
 		self::setGameStateInitialValue( 'pagatUltimoValue', 0 );
-		self::setGameStateInitialValue( 'valatTeam', 0 );
+		self::setGameStateInitialValue( 'valatPlayer', 0 );
 		self::setGameStateInitialValue( 'valatValue', 0 );
 		self::setGameStateInitialValue( 'gameValue', 0 );
 		self::setGameStateInitialValue( 'playerAnnouncements', 0 );
@@ -225,15 +225,15 @@ class SlovenianTarokk extends Table {
 		$result['highBidder']          = self::getGameStateValue( 'highBidder' );
 		$result['highBid']             = self::getGameStateValue( 'highBid' );
 		$result['calledKing']          = self::getGameStateValue( 'calledKing' );
-		$result['trulaTeam']           = self::getGameStateValue( 'trulaTeam' );
+		$result['trulaPlayer']         = self::getGameStateValue( 'trulaPlayer' );
 		$result['trulaValue']          = self::getGameStateValue( 'trulaValue' );
-		$result['kingsTeam']           = self::getGameStateValue( 'kingsTeam' );
+		$result['kingsPlayer']         = self::getGameStateValue( 'kingsPlayer' );
 		$result['kingsValue']          = self::getGameStateValue( 'kingsValue' );
-		$result['kingUltimoTeam']      = self::getGameStateValue( 'kingUltimoTeam' );
+		$result['kingUltimoPlayer']    = self::getGameStateValue( 'kingUltimoPlayer' );
 		$result['kingUltimoValue']     = self::getGameStateValue( 'kingUltimoValue' );
-		$result['pagatUltimoTeam']     = self::getGameStateValue( 'pagatUltimoTeam' );
+		$result['pagatUltimoPlayer']   = self::getGameStateValue( 'pagatUltimoPlayer' );
 		$result['pagatUltimoValue']    = self::getGameStateValue( 'pagatUltimoValue' );
-		$result['valatTeam']           = self::getGameStateValue( 'valatTeam' );
+		$result['valatPlayer']         = self::getGameStateValue( 'valatPlayer' );
 		$result['valatValue']          = self::getGameStateValue( 'valatValue' );
 		$result['playerAnnouncements'] = self::getGameStateValue( 'playerAnnouncements' );
 		$result['gameValue']           = self::getGameStateValue( 'gameValue' );
@@ -373,11 +373,11 @@ class SlovenianTarokk extends Table {
 		return $highestValueInHand;
 	}
 
-	function countTrumpsInHand( $playerId ) {
+	function countSuitInHand( $playerId, $suit ) {
 		$cardsInHand  = $this->cards->getCardsInLocation( 'hand', $playerId );
 		$trumpsInHand = 0;
 		foreach ( $cardsInHand as $card ) {
-			if ( $card['type'] == SUIT_TRUMP ) {
+			if ( $card['type'] == $suit ) {
 				$trumpsInHand++;
 			}
 		}
@@ -414,7 +414,7 @@ class SlovenianTarokk extends Table {
 			// - You have no other trump cards.
 			// - It's an Emperor's trick.
 			$pagatAllowed = false;
-			if ( $this->countTrumpsInHand( $playerId ) == 1 ) {
+			if ( $this->countSuitInHand( $playerId, SUIT_TRUMP ) == 1 ) {
 				$pagatAllowed = true;
 			}
 			if ( count( $cardsInHand ) == 1 ) {
@@ -443,6 +443,29 @@ class SlovenianTarokk extends Table {
 				&& $this->haveColorInHand( SUIT_TRUMP, $cardsInHand ) ) {
 				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ SUIT_TRUMP ]['name'] . '.' );
 			}
+		}
+	}
+
+	function checkUltimo( $currentCard, $playerId ) {
+		$pagatUltimo = self::getGameStateValue( 'pagatUltimoPlayer' );
+
+		if ( $pagatUltimo == $playerId
+			&& $currentCard['type'] == SUIT_TRUMP
+			&& $currentCard['type_arg'] == 1
+			&& $this->countSuitInHand( $playerId, SUIT_TRUMP ) > 1
+			) {
+				throw new BgaUserException( self::_( 'You have announced pagat ultimo. You can only play Pagat if you have no other trump cards.' ) );
+		}
+
+		$kingUltimo = self::getGameStateValue( 'kingUltimoPlayer' );
+		$kingSuit   = self::getGameStateValue( 'calledKing' );
+
+		if ( $kingUltimo == $playerId
+			&& $currentCard['type'] == $kingSuit
+			&& $currentCard['type_arg'] == 14
+			&& $this->countSuitInHand( $playerId, $kingSuit ) > 1
+			) {
+				throw new BgaUserException( self::_( 'You have announced king ultimo. You can only play the king if it\'s your only option.' ) );
 		}
 	}
 
@@ -617,35 +640,61 @@ class SlovenianTarokk extends Table {
 			$points    += $this->roundToNearestFive( $difference );
 		}
 
-		if ( $teamScores['Declarer'] > 35 ) {
+		if ( $teamScores['Declarer'] <= 35 ) {
+			$points = -$points;
+		}
+		$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'game' ) );
+
+		$this->scoreBonuses( $teamCards );
+	}
+
+	function hasTrula( $cards ) {
+		$trulaCards = 0;
+		foreach ( $cards as $card ) {
+			if ( $card['type'] == TYPE_TRUMP
+				&& in_array( intval( $card['type_arg'] ), array( 1, 21, 22 ) ) ) {
+				$trulaCards++;
+			}
+		}
+		return $trulaCards == 3;
+	}
+
+	function adjustPoints( $points, $declarer, $declarerPartner = 0, $reason = '' ) {
+		if ( $points == 0 ) {
+			return;
+		}
+
+		$operator = '+';
+		if ( $points > 0 ) {
 			$notification = clienttranslate( 'Declarer gains ${points} points' );
-			$sql          = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarer'";
-			self::DbQuery($sql);
 			if ( $declarerPartner ) {
 				$notification = clienttranslate( 'Declarer\'s team gains ${points} points' );
-				$sql          = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarerPartner'";
-				self::DbQuery($sql);
 			}
-			self::notifyAllPlayers(
-				'points',
-				$notification,
-				array ( 'points' => $points )
-			);
 		} else {
+			$operator     = '-';
 			$notification = clienttranslate( 'Declarer lost ${points} points' );
-			$sql          = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarer'";
-			self::DbQuery($sql);
 			if ( $declarerPartner ) {
-				$notification = clienttranslate( 'Declarer\'s team lost ${points} points' );
-				$sql          = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$declarerPartner'";
-				self::DbQuery($sql);
+				$notification = clienttranslate( 'Declarer\'s team loses ${points} points' );
 			}
-			self::notifyAllPlayers(
-				'points',
-				$notification,
-				array ( 'points' => $points )
-			);
 		}
+
+		if ( $reason ) {
+			$notification .= ': ' . $reason;
+		}
+
+		$sql = "UPDATE player SET player_score=player_score$operator$points  WHERE player_id='$declarer'";
+		self::DbQuery($sql);
+
+		if ( $declarerPartner ) {
+			$sql = "UPDATE player SET player_score=player_score$operator$points  WHERE player_id='$declarerPartner'";
+			self::DbQuery($sql);
+		}
+
+		self::notifyAllPlayers(
+			'points',
+			$notification,
+			array ( 'points' => $points )
+		);
 	}
 
 	function roundToNearestFive( $number ) {
@@ -723,7 +772,7 @@ class SlovenianTarokk extends Table {
 					$bestValuePlayerId = $card['location_arg'];
 				}
 			}
-			if ( $cardColor === 5 && ! in_array( $currentBid, array( BID_COLOUR_VALAT, BID_COLOUR_VALAT_WITHOUT ) ) ) {
+			if ( $cardColor == SUIT_TRUMP && ! in_array( $currentBid, array( BID_COLOUR_VALAT, BID_COLOUR_VALAT_WITHOUT ) ) ) {
 				if ( ! $bestValueIsTrump ) {
 					$bestValue         = $cardValue;
 					$bestValuePlayerId = $card['location_arg'];
@@ -885,19 +934,91 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
+	public function scoreBonuses( $teamCards ) {
+		$trulaPlayer       = intval( self::getGameStateValue( 'trulaPlayer' ) );
+		$kingsPlayer       = intval( self::getGameStateValue( 'kingsPlayer' ) );
+		$kingUltimoPlayer  = intval( self::getGameStateValue( 'kingUltimoPlayer' ) );
+		$pagatUltimoPlayer = intval( self::getGameStateValue( 'pagatUltimoPlayer' ) );
+		$valatPlayer       = intval( self::getGameStateValue( 'valatPlayer' ) );
+		$tricksWon         = intval( self::getGameStateValue( 'tricksByDeclarer' ) );
+
+		$valatDone = false;
+		$valatTeam = $valatPlayer ? $this->getPlayerTeam( $valatPlayer ) : null;
+
+		if ( $tricksWon == HAND_SIZE || $tricksWon == 0 || $valatPlayer > 0 ) {
+			$points = $this->announcements[ ANNOUNCEMENT_VALAT ]['points'];
+
+			if ( ! $valatPlayer ) {
+				if ( $tricksWon == 0 ) {
+					$points = -$points;
+				}
+			} else {
+				$points = $points * 2;
+			}
+
+			if ( $tricksWon < HAND_SIZE && $valatTeam == 'declarer' ) {
+				$points = -$points;
+			}
+
+			if ( $tricksWon == 0 && $valatTeam == 'opponent' ) {
+				$points = -$points;
+			}
+
+			$points = $points * self::getGameStateValue( 'valatValue' );
+
+			$valatDone = true;
+
+			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'valat' ) );
+		}
+
+		if ( $valatDone ) {
+			// If valat, no more bonuses.
+			return;
+		}
+
+		$declarerHasTrula   = $this->hasTrula( $teamCards['Declarer'] );
+		$opponentsHaveTrula = $this->hasTrula( $teamCards['Opponents'] );
+		$trulaTeam          = $trulaPlayer ? $this->getPlayerTeam( $trulaPlayer ) : null;
+
+		if ( $declarerHasTrula || $opponentsHaveTrula || $trulaPlayer > 0 ) {
+			$points = $this->announcements[ ANNOUNCEMENT_TRULA ]['points'];
+
+			if ( ! $trulaPlayer ) {
+				if ( $opponentsHaveTrula ) {
+					$points = -$points;
+				}
+			} else {
+				$points = $points * 2;
+			}
+
+			if ( $opponentsHaveTrula ) {
+				$points = -$points;
+			}
+
+			if ( $trulaTeam == 'declarer' && ! $declarerHasTrula ) {
+				$points = -$points;
+			}
+
+			$points = $points * self::getGameStateValue( 'trulaValue' );
+
+			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'trula' ) );
+		}
+
+	}
+
 	/**
 	 * When valat is announced, lower announcements are cleared.
 	 */
 	public function clearAnnouncements() {
 		self::setGameStateValue( 'gameValue', 1 );
 		self::setGameStateValue( 'trulaValue', 0 );
-		self::setGameStateValue( 'trulaTeam', 0 );
+		self::setGameStateValue( 'trulaPlayer', 0 );
 		self::setGameStateValue( 'kingsValue', 0 );
-		self::setGameStateValue( 'kingsTeam', 0 );
+		self::setGameStateValue( 'kingsPlayer', 0 );
 		self::setGameStateValue( 'kingUltimoValue', 0 );
-		self::setGameStateValue( 'kingUltimoTeam', 0 );
+		self::setGameStateValue( 'kingUltimoPlayer', 0 );
 		self::setGameStateValue( 'pagatUltimoValue', 0 );
-		self::setGameStateValue( 'pagatUltimoTeam', 0 );
+		self::setGameStateValue( 'pagatUltimoPlayer', 0 );
 	}
 
 	public function getPlayerTeam( $player_id ) {
@@ -1038,6 +1159,8 @@ class SlovenianTarokk extends Table {
 		if ( in_array( $currentBid, array( BID_KLOP, BID_BEGGAR, BID_OPEN_BEGGAR ) ) ) {
 			$this->checkAvoidanceRules( $currentCard, $currentTrickColor, $playerId );
 		}
+
+		$this->checkUltimo( $currentCard, $playerId );
 
 		$this->cards->moveCard( $card_id, 'cardsontable', $playerId );
 
@@ -1294,14 +1417,13 @@ class SlovenianTarokk extends Table {
 		self::trace( 'makeAnnouncement' );
 
 		$playerId = self::getActivePlayerId();
-		$teamId   = $this->getPlayerTeam( $playerId ) == 'declarer' ? TEAM_DECLARER : TEAM_OPPONENT;
 
 		$currentValue = self::getGameStateValue( $this->announcements[ $announcement ]['value'] );
 		if ( $currentValue == 0 ) {
 			$currentValue = 1;
 			self::setGameStateValue(
-				$this->announcements[ $announcement ]['team'],
-				$teamId
+				$this->announcements[ $announcement ]['player'],
+				$playerId
 			);
 			if ( $announcement == ANNOUNCEMENT_VALAT ) {
 				$this->clearAnnouncements();
@@ -1321,16 +1443,19 @@ class SlovenianTarokk extends Table {
 
 		self::notifyAllPlayers(
 			'makeAnnouncement',
-			clienttranslate( '${player_name} announces ${announcement}' ),
+			clienttranslate( '${player_name} announces ${announcementDisplay}' ),
 			array(
 				'player_id'           => $playerId,
 				'player_name'         => self::getActivePlayerName(),
-				'announcement'        => $announcedValue,
+				'announcementDisplay' => $announcedValue,
+				'announcement'        => $announcement,
 				'newValue'            => $currentValue,
-				'team'                => $teamId,
 				'playerAnnouncements' => $playerAnnouncements,
 			)
 		);
+
+		self::trace( 'announcements->announcements' );
+		$this->gamestate->nextState( 'makeAnnouncement' );
 	}
 
 	public function passAnnouncement( $type ) {
@@ -1449,7 +1574,7 @@ class SlovenianTarokk extends Table {
 						'cards' => $cards
 					)
 				);
-				$trumpCount = min( $this->countTrumpsInHand( $player_id ), $trumpCount );
+				$trumpCount = min( $this->countSuitInHand( $player_id, SUIT_TRUMP ), $trumpCount );
 			}
 		} while ( $trumpCount == 0 );
 
@@ -1556,15 +1681,15 @@ class SlovenianTarokk extends Table {
 	}
 
 	public function stStartAnnouncements() {
-		self::setGameStateValue( 'trulaTeam', 0 );
+		self::setGameStateValue( 'trulaPlayer', 0 );
 		self::setGameStateValue( 'trulaValue', 0 );
-		self::setGameStateValue( 'kingsTeam', 0 );
+		self::setGameStateValue( 'kingsPlayer', 0 );
 		self::setGameStateValue( 'kingsValue', 0 );
-		self::setGameStateValue( 'kingUltimoTeam', 0 );
+		self::setGameStateValue( 'kingUltimoPlayer', 0 );
 		self::setGameStateValue( 'kingUltimoValue', 0 );
-		self::setGameStateValue( 'pagatUltimoTeam', 0 );
+		self::setGameStateValue( 'pagatUltimoPlayer', 0 );
 		self::setGameStateValue( 'pagatUltimoValue', 0 );
-		self::setGameStateValue( 'valatTeam', 0 );
+		self::setGameStateValue( 'valatPlayer', 0 );
 		self::setGameStateValue( 'valatValue', 0 );
 
 		self::setGameStateValue( 'firstPasser', 0 );
@@ -1576,6 +1701,8 @@ class SlovenianTarokk extends Table {
 	}
 
 	public function stAnnouncementsNextPlayer() {
+		self::trace( 'stAnnouncementsNextPlayer' );
+
 		if ( self::getGameStateValue( 'thirdPasser' ) > 0 ) {
 			self::notifyAllPlayers(
 				'',
@@ -1586,12 +1713,12 @@ class SlovenianTarokk extends Table {
 
 			self::trace( 'announcementsNextPlayer->newTrick' );
 			$this->gamestate->nextState( 'allAnnouncementsPassed' );
+		} else {
+			$player_id = self::activeNextPlayer();
+			self::giveExtraTime( $player_id );
+			self::trace( 'announcementsNextPlayer->announcements' );
+			$this->gamestate->nextState( 'nextPlayer' );
 		}
-
-		$player_id = self::activeNextPlayer();
-		self::giveExtraTime( $player_id );
-		self::trace( 'announcementsNextPlayer->announcements' );
-		$this->gamestate->nextState( 'nextPlayer' );
 	}
 
 	function stNewTrick() {

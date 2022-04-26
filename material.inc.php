@@ -159,34 +159,39 @@ $this->bid_point_values = array(
 
 $this->announcements = array(
 	ANNOUNCEMENT_GAME => array(
-		'name'  => clienttranslate( 'game' ),
-		'value' => 'gameValue',
-		'team'  => '',
+		'name'   => clienttranslate( 'game' ),
+		'value'  => 'gameValue',
+		'player' => '',
 	),
 	ANNOUNCEMENT_TRULA => array(
-		'name'  => clienttranslate( 'trula' ),
-		'value' => 'trulaValue',
-		'team'  => 'trulaTeam',
+		'name'   => clienttranslate( 'trula' ),
+		'value'  => 'trulaValue',
+		'player' => 'trulaPlayer',
+		'points' => 10,
 	),
 	ANNOUNCEMENT_KINGS => array(
-		'name'  => clienttranslate( 'kings' ),
-		'value' => 'kingsValue',
-		'team'  => 'kingsTeam',
+		'name'   => clienttranslate( 'kings' ),
+		'value'  => 'kingsValue',
+		'player' => 'kingsPlayer',
+		'points' => 10,
 	),
 	ANNOUNCEMENT_KINGULTIMO => array(
-		'name'  => clienttranslate( 'king ultimo' ),
-		'value' => 'kingUltimoValue',
-		'team'  => 'kingUltimoTeam',
+		'name'   => clienttranslate( 'king ultimo' ),
+		'value'  => 'kingUltimoValue',
+		'player' => 'kingUltimoPlayer',
+		'points' => 10,
 	),
 	ANNOUNCEMENT_PAGATULTIMO => array(
-		'name'  => clienttranslate( 'pagat ultimo' ),
-		'value' => 'pagatUltimoValue',
-		'team'  => 'pagatUltimoTeam',
+		'name'   => clienttranslate( 'pagat ultimo' ),
+		'value'  => 'pagatUltimoValue',
+		'player' => 'pagatUltimoPlayer',
+		'points' => 25,
 	),
 	ANNOUNCEMENT_VALAT => array(
-		'name'  => clienttranslate( 'valat' ),
-		'value' => 'valatValue',
-		'team'  => 'valatTeam',
+		'name'   => clienttranslate( 'valat' ),
+		'value'  => 'valatValue',
+		'player' => 'valatPlayer',
+		'points' => 250,
 	),
 );
 

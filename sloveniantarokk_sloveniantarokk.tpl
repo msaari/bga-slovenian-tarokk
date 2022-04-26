@@ -10,6 +10,9 @@
         <div class="playertablecard" id="playertablecard_{PLAYER_ID}">
         </div>
     </div>
+
+    <div class="playerinfo playerinfo_{DIR} whiteblock">
+    </div>
     <!-- END player -->
 
     <div id="vitamin" class="playertable">

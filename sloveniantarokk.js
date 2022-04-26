@@ -260,14 +260,14 @@ function (dojo, declare) {
 
                         console.log(this.gamedatas);
 
-                        if (this.gamedatas.valatTeam == "0") {
+                        if (this.gamedatas.valatPlayer == "0") {
                             if (this.playerCanKontra('game')) {
                                 verb = this.getAnnouncementVerb(this.gamedatas.gameValue);
                                 this.addActionButton('announce_game', verb + ' ' + announcement, 'onAnnounceGame');
                             }
 
                             announcement = _('Trula');
-                            if (this.gamedatas.trulaTeam == "0") {
+                            if (this.gamedatas.trulaPlayer == "0") {
                                 this.addActionButton('announce_trula', announcement, 'onAnnounceTrula');
                             }
                             if (this.playerCanKontra('Trula')) {
@@ -276,7 +276,7 @@ function (dojo, declare) {
                             }
 
                             announcement = _('Kings');
-                            if (this.gamedatas.kingsTeam == "0") {
+                            if (this.gamedatas.kingsPlayer == "0") {
                                 this.addActionButton('announce_kings', announcement, 'onAnnounceKings');
                             }
                             if (this.playerCanKontra('Kings')) {
@@ -285,7 +285,7 @@ function (dojo, declare) {
                             }
 
                             announcement = _('King ultimo');
-                            if (this.gamedatas.kingUltimoTeam == "0"
+                            if (this.gamedatas.kingUltimoPlayer == "0"
                                 && this.gamedatas.calledKing != 0
                                 && this.hasCardInHand(this.gamedatas.calledKing, 14)) {
                                 this.addActionButton('announce_king_ultimo', announcement, 'onAnnounceKingUltimo');
@@ -296,7 +296,7 @@ function (dojo, declare) {
                             }
 
                             announcement = _('Pagat ultimo');
-                            if (this.gamedatas.pagatUltimoTeam == "0"
+                            if (this.gamedatas.pagatUltimoPlayer == "0"
                                 && this.hasCardInHand(this.suits.trump, 1)) {
                                 this.addActionButton('announce_pagat_ultimo', announcement, 'onAnnouncePagatUltimo');
                             }
@@ -307,7 +307,7 @@ function (dojo, declare) {
                         }
 
                         announcement = _('Valat');
-                        if (this.gamedatas.valatTeam == "0") {
+                        if (this.gamedatas.valatPlayer == "0") {
                             this.addActionButton('announce_valat', announcement, 'onAnnounceValat');
                         }
                         if (this.playerCanKontra('Valat')) {
@@ -340,8 +340,11 @@ function (dojo, declare) {
             return false;
         },
 
-        getPlayerTeam: function () {
-            return this.gamedatas.players[this.player_id].team;
+        getPlayerTeam: function (player_id = 0) {
+            if (parseInt(player_id, 10) == 0) {
+                player_id = this.player_id;
+            }
+            return this.gamedatas.players[player_id].team;
         },
 
         getAnnouncementVerb: function (value) {
@@ -405,23 +408,23 @@ function (dojo, declare) {
                     value = this.gamedatas.gameValue;
                     break;
                 case 'Trula':
-                    team = this.getTeamName(this.gamedatas.trulaTeam);
+                    team = this.getPlayerTeam(this.gamedatas.trulaPlayer);
                     value = this.gamedatas.trulaValue;
                     break;
                 case 'Kings':
-                    team = this.getTeamName(this.gamedatas.kingsTeam);
+                    team = this.getPlayerTeam(this.gamedatas.kingsPlayer);
                     value = this.gamedatas.kingsValue;
                     break;
                 case 'King ultimo':
-                    team = this.getTeamName(this.gamedatas.kingUltimoTeam);
+                    team = this.getPlayerTeam(this.gamedatas.kingUltimoPlayer);
                     value = this.gamedatas.kingUltimoValue;
                     break;
                 case 'Pagat ultimo':
-                    team = this.getTeamName(this.gamedatas.pagatUltimoTeam);
+                    team = this.getPlayerTeam(this.gamedatas.pagatUltimoPlayer);
                     value = this.gamedatas.pagatUltimoValue;
                     break;
                 case 'Valat':
-                    team = this.getTeamName(this.gamedatas.valatTeam);
+                    team = this.getPlayerTeam(this.gamedatas.valatPlayer);
                     value = this.gamedatas.valatValue;
                     break;
                 default:
@@ -458,8 +461,8 @@ function (dojo, declare) {
                 return true;
             }
 
-            if (team == 'opponent') {
-                if (this.player_id = this.gamedatas.highBidder && this.declarerPartnerHidden()) {
+            if (team == 'opponent' || team == 'opponent_hidden') {
+                if (this.player_id == this.gamedatas.highBidder && this.declarerPartnerHidden()) {
                     console.log( announcement + ' cannot kontra when partner is hidden.');
                     // Player is declarer and partner is hidden:
                     // Declarer can't know the identity of the player who announced the trula.
@@ -469,15 +472,16 @@ function (dojo, declare) {
                 // Declarer's partner can kontra, opponent can't.
                 return this.playerInTeam('declarer');
             } else { // Declarer's team made the announcement.
-                if (this.declarerPartnerHidden() && this.otherOpponentHidden()) {
+                if (team == 'declarer_hidden' && this.otherOpponentHidden()) {
                     // The other opponent and the declarer's partner is hidden:
                     // Player can't know the identity of the player who announced the trula.
                     console.log(announcement + ' cannot kontra when partner and other opponent are hidden.');
                     return false;
+                } else {
+                    // Announced by declarer, can kontra.
+                    console.log(announcement + ' announced by declarer, can kontra.');
+                    return true;
                 }
-                // Player knows either the other opponent or the declarer's partner.
-                console.log(announcement + ' can kontra.');
-                return true;
             }
         },
 
@@ -970,34 +974,36 @@ function (dojo, declare) {
         },
 
         notif_playerTeamUpdate: function (notif) {
+            console.log("notif_playerTeamUpdate", notif.args);
             this.gamedatas.players = notif.args.players;
         },
 
         notif_makeAnnouncement: function (notif) {
-            var teamName = notif.args.team == 1 ? "declarer" : "opponent";
+            console.log("makeAnnouncement received");
+            console.log(notif.args);
 
             switch (notif.args.announcement) {
                 case 1:
                     this.gamedatas.gameValue = notif.args.newValue;
                     break;
                 case 2:
-                    this.gamedatas.trulaTeam = teamName;
+                    this.gamedatas.trulaPlayer = notif.args.player_id;
                     this.gamedatas.trulaValue = newValue;
                     break;
                 case 3:
-                    this.gamedatas.kingsTeam = teamName;
+                    this.gamedatas.kingsPlayer = notif.args.player_id;
                     this.gamedatas.kingsValue = newValue;
                     break;
                 case 4:
-                    this.gamedatas.kingUltimoTeam = teamName;
+                    this.gamedatas.kingUltimoPlayer = notif.args.player_id;
                     this.gamedatas.kingUltimoValue = newValue;
                     break;
                 case 5:
-                    this.gamedatas.pagatUltimoTeam = teamName;
+                    this.gamedatas.pagatUltimoPlayer = notif.args.player_id;
                     this.gamedatas.pagatUltimoValue = newValue;
                     break;
                 case 6:
-                    this.gamedatas.valatTeam = teamName;
+                    this.gamedatas.valatPlayer = notif.args.player_id;
                     this.gamedatas.valatValue = newValue;
                     break;
             }
