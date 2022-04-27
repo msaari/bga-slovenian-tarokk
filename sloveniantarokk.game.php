@@ -973,10 +973,10 @@ class SlovenianTarokk extends Table {
 		$tricksWon         = intval( self::getGameStateValue( 'tricksByDeclarer' ) );
 
 		$valatDone = false;
-		$valatTeam = $valatPlayer ? $this->getPlayerTeam( $valatPlayer ) : null;
 
 		if ( $tricksWon == HAND_SIZE || $tricksWon == 0 || $valatPlayer > 0 ) {
-			$points = $this->announcements[ ANNOUNCEMENT_VALAT ]['points'];
+			$valatTeam = $valatPlayer ? $this->getPlayerTeam( $valatPlayer ) : null;
+			$points    = $this->announcements[ ANNOUNCEMENT_VALAT ]['points'];
 
 			if ( ! $valatPlayer ) {
 				if ( $tricksWon == 0 ) {
@@ -1008,10 +1008,10 @@ class SlovenianTarokk extends Table {
 
 		$declarerHasTrula   = $this->hasTrula( $teamCards['Declarer'] );
 		$opponentsHaveTrula = $this->hasTrula( $teamCards['Opponents'] );
-		$trulaTeam          = $trulaPlayer ? $this->getPlayerTeam( $trulaPlayer ) : null;
 
 		if ( $declarerHasTrula || $opponentsHaveTrula || $trulaPlayer > 0 ) {
-			$points = $this->announcements[ ANNOUNCEMENT_TRULA ]['points'];
+			$trulaTeam = $trulaPlayer ? $this->getPlayerTeam( $trulaPlayer ) : null;
+			$points    = $this->announcements[ ANNOUNCEMENT_TRULA ]['points'];
 
 			if ( ! $trulaPlayer ) {
 				if ( $opponentsHaveTrula ) {
@@ -1036,10 +1036,10 @@ class SlovenianTarokk extends Table {
 
 		$declarerHasKings   = $this->hasKings( $teamCards['Declarer'] );
 		$opponentsHaveKings = $this->hasKings( $teamCards['Opponents'] );
-		$kingsTeam          = $kingsPlayer ? $this->getPlayerTeam( $kingsPlayer ) : null;
 
 		if ( $declarerHasKings || $opponentsHaveKings || $kingsPlayer > 0 ) {
-			$points = $this->announcements[ ANNOUNCEMENT_KINGS ]['points'];
+			$kingsTeam = $kingsPlayer ? $this->getPlayerTeam( $kingsPlayer ) : null;
+			$points    = $this->announcements[ ANNOUNCEMENT_KINGS ]['points'];
 
 			if ( ! $kingsPlayer ) {
 				if ( $opponentsHaveKings ) {
@@ -1062,6 +1062,47 @@ class SlovenianTarokk extends Table {
 			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'kings' ) );
 		}
 
+		$pagatUltimoStatus = self::getGameStateValue( 'pagatUltimoStatus' );
+
+		if ( $pagatUltimoStatus ) {
+			$pagatUltimoTeam = $pagatUltimoPlayer ? $this->getPlayerTeam( $pagatUltimoPlayer ) : null;
+			$points          = $this->announcements[ ANNOUNCEMENT_PAGAT_ULTIMO ]['points'];
+
+			if ( $pagatUltimoTeam == 'declarer' && $pagatUltimoStatus == BONUS_FAILURE ) {
+				$points = -$points;
+			}
+
+			if ( $pagatUltimoTeam == 'opponent' && $pagatUltimoStatus == BONUS_SUCCESS ) {
+				$points = -$points;
+			}
+
+			if ( $pagatUltimoPlayer ) {
+				$points = $points * 2;
+			}
+
+			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'pagat ultimo' ) );
+		}
+
+		$kingUltimoStatus = self::getGameStateValue( 'kingUltimoStatus' );
+
+		if ( $kingUltimoStatus ) {
+			$kingUltimoTeam = $kingUltimoPlayer ? $this->getPlayerTeam( $kingUltimoPlayer ) : null;
+			$points         = $this->announcements[ ANNOUNCEMENT_KING_ULTIMO ]['points'];
+
+			if ( $kingUltimoTeam == 'declarer' && $kingUltimoStatus == BONUS_FAILURE ) {
+				$points = -$points;
+			}
+
+			if ( $kingUltimoTeam == 'opponent' && $kingUltimoStatus == BONUS_SUCCESS ) {
+				$points = -$points;
+			}
+
+			if ( $kingUltimoPlayer ) {
+				$points = $points * 2;
+			}
+
+			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'king ultimo' ) );
+		}
 	}
 
 	/**
@@ -1132,7 +1173,7 @@ class SlovenianTarokk extends Table {
 				self::setGameStateValue( 'kingUltimoStatus', BONUS_SUCCESS );
 				self::notifyAllPlayers(
 					'kingUltimo',
-					clienttranslate( '${player_name} has won the king ultimo bonus' ),
+					clienttranslate( '${player_name} won the king ultimo bonus' ),
 					array(
 						'player_name' => $players[ $kingPlayer ]['player_name'],
 					)
@@ -1141,7 +1182,7 @@ class SlovenianTarokk extends Table {
 				self::setGameStateValue( 'kingUltimoStatus', BONUS_FAILURE );
 				self::notifyAllPlayers(
 					'kingUltimo',
-					clienttranslate( '${player_name} has lost the king ultimo bonus' ),
+					clienttranslate( '${player_name} lost the king ultimo bonus' ),
 					array(
 						'player_name' => $players[ $kingPlayer ]['player_name'],
 					)
