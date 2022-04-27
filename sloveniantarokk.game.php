@@ -59,6 +59,9 @@ define( 'ANNOUNCEMENT_VALAT', 6 );
 define( 'TEAM_DECLARER', 1 );
 define( 'TEAM_OPPONENT', 2 );
 
+define( 'BONUS_SUCCESS', 1 );
+define( 'BONUS_FAILURE', 2 );
+
 class SlovenianTarokk extends Table {
 	function __construct() {
 		parent::__construct();
@@ -94,6 +97,8 @@ class SlovenianTarokk extends Table {
 				'valatValue'          => 36,
 				'gameValue'           => 37,
 				'playerAnnouncements' => 38,
+				'pagatUltimoStatus'   => 39,
+				'kingUltimoStatus'    => 40,
 			)
 		);
 
@@ -164,6 +169,8 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'valatValue', 0 );
 		self::setGameStateInitialValue( 'gameValue', 0 );
 		self::setGameStateInitialValue( 'playerAnnouncements', 0 );
+		self::setGameStateInitialValue( 'pagatUltimoStatus', 0 );
+		self::setGameStateInitialValue( 'kingUltimoStatus', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -711,7 +718,7 @@ class SlovenianTarokk extends Table {
 		return floor( $number / 5 ) * 5;
 	}
 
-	function determineTrickWinner() {
+	function determineTrickWinner( $trickCount ) {
 		$players = self::loadPlayersBasicInfos();
 
 		$currentBid = self::getGameStateValue( 'highBid' );
@@ -722,10 +729,15 @@ class SlovenianTarokk extends Table {
 			'bestValueIsTrump'  => $bestValueIsTrump,
 			'pagatPlayer'       => $pagatPlayer,
 			'mondPlayer'        => $mondPlayer,
+			'kingPlayer'        => $kingPlayer,
 		) = $this->analyzeTrick( $currentBid );
 
 		$bestValuePlayerId = $this->checkForEmperorsTrick( $pagatPlayer, $mondPlayer, $bestValuePlayerId, $players );
 		$this->checkForMondCapture( $currentBid, $mondPlayer, $bestValuePlayerId, $players );
+
+		if ( $trickCount == HAND_SIZE ) {
+			$this->checkUltimoStatus( $pagatPlayer, $kingPlayer, $bestValuePlayerId, $players );
+		}
 
 		$this->gamestate->changeActivePlayer( $bestValuePlayerId );
 		$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $bestValuePlayerId );
@@ -755,6 +767,8 @@ class SlovenianTarokk extends Table {
 		if ( $currentBid == BID_KLOP ) {
 			$this->dealVitamins( $bestValuePlayerId, $players );
 		}
+
+		return $bestValuePlayerId;
 	}
 
 	function analyzeTrick( $currentBid ) {
@@ -763,9 +777,11 @@ class SlovenianTarokk extends Table {
 		$bestValue         = 0;
 		$bestValuePlayerId = null;
 		$bestValueIsTrump  = false;
+		$kingColor         = intval( self::getGameStateValue( 'calledKing' ) );
 
 		$mondPlayer  = 0;
 		$pagatPlayer = 0;
+		$kingPlayer  = 0;
 
 		foreach ( $cardsOnTable as $card ) {
 			$cardValue = $card['type_arg'];
@@ -775,6 +791,9 @@ class SlovenianTarokk extends Table {
 			}
 			if ( $cardValue == 21 && $cardColor == SUIT_TRUMP ) {
 				$mondPlayer = $card['location_arg'];
+			}
+			if ( $cardValue == 14 && $cardColor == $kingColor ) {
+				$kingPlayer = $card['location_arg'];
 			}
 			if ( $cardColor === $currentTrickColor && ! $bestValueIsTrump ) {
 				if ( $cardValue > $bestValue ) {
@@ -802,6 +821,7 @@ class SlovenianTarokk extends Table {
 			'bestValueIsTrump'  => $bestValueIsTrump,
 			'pagatPlayer'       => $pagatPlayer,
 			'mondPlayer'        => $mondPlayer,
+			'kingPlayer'        => $kingPlayer,
 		);
 	}
 
@@ -1082,6 +1102,52 @@ class SlovenianTarokk extends Table {
 	public function getPlayerCollection() {
 		$sql = 'SELECT player_id id, player_score score, player_radl radl, player_identity team FROM player ';
 		return self::getCollectionFromDb( $sql );
+	}
+
+	public function checkUltimoStatus( $pagatPlayer, $kingPlayer, $bestValuePlayerId, $players ) {
+		self::trace( 'checkUltimoStatus' );
+
+		if ( $pagatPlayer == $bestValuePlayerId ) {
+			self::setGameStateValue( 'pagatUltimoStatus', BONUS_SUCCESS );
+			self::notifyAllPlayers(
+				'pagatUltimo',
+				clienttranslate( '${player_name} won the pagat ultimo bonus' ),
+				array(
+					'player_name' => $players[ $pagatPlayer ]['player_name'],
+				)
+			);
+		} elseif ( $pagatPlayer ) {
+			self::setGameStateValue( 'pagatUltimoStatus', BONUS_FAILURE );
+			self::notifyAllPlayers(
+				'pagatUltimo',
+				clienttranslate( '${player_name} lost the pagat ultimo bonus' ),
+				array(
+					'player_name' => $players[ $pagatPlayer ]['player_name'],
+				)
+			);
+		}
+
+		if ( $kingPlayer ) {
+			if ( $this->getPlayerTeam( $kingPlayer ) == $this->getPlayerTeam( $bestValuePlayerId ) ) {
+				self::setGameStateValue( 'kingUltimoStatus', BONUS_SUCCESS );
+				self::notifyAllPlayers(
+					'kingUltimo',
+					clienttranslate( '${player_name} has won the king ultimo bonus' ),
+					array(
+						'player_name' => $players[ $kingPlayer ]['player_name'],
+					)
+				);
+			} else {
+				self::setGameStateValue( 'kingUltimoStatus', BONUS_FAILURE );
+				self::notifyAllPlayers(
+					'kingUltimo',
+					clienttranslate( '${player_name} has lost the king ultimo bonus' ),
+					array(
+						'player_name' => $players[ $kingPlayer ]['player_name'],
+					)
+				);
+			}
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
@@ -1725,8 +1791,10 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'kingsValue', 0 );
 		self::setGameStateValue( 'kingUltimoPlayer', 0 );
 		self::setGameStateValue( 'kingUltimoValue', 0 );
+		self::setGameStateValue( 'kingUltimoStatus', 0 );
 		self::setGameStateValue( 'pagatUltimoPlayer', 0 );
 		self::setGameStateValue( 'pagatUltimoValue', 0 );
+		self::setGameStateValue( 'pagatUltimoStatus', 0 );
 		self::setGameStateValue( 'valatPlayer', 0 );
 		self::setGameStateValue( 'valatValue', 0 );
 
@@ -1776,9 +1844,13 @@ class SlovenianTarokk extends Table {
 	function stNextPlayer() {
 		if ( intval( $this->cards->countCardInLocation( 'cardsontable' ) ) === 4 ) {
 			self::trace('Trick over, determine winner.');
-			self::incGameStateValue( 'trickCount', 1 );
+			$trickCount = self::incGameStateValue( 'trickCount', 1 );
 
-			$this->determineTrickWinner();
+			$winnerId = $this->determineTrickWinner( $trickCount );
+
+			if ( $trickCount == HAND_SIZE ) {
+				$this->checkUltimoStatus( $winnerId );
+			}
 
 			$handFinished = intval( $this->cards->countCardInLocation( 'hand' ) ) === 0;
 			$currentBid   = self::getGameStateValue( 'highBid' );
