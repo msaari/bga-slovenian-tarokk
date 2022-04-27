@@ -851,7 +851,7 @@ function (dojo, declare) {
             dojo.subscribe('giveAllCardsToPlayer', this, "notif_giveAllCardsToPlayer");
             dojo.subscribe('newScores', this, "notif_newScores");
             dojo.subscribe('callKing', this, "notif_callKing");
-            dojo.subscribe('playerTeamUpdate', this, "notif_playerTeamUpdate");
+            dojo.subscribe('playerDataUpdate', this, "notif_playerDataUpdate");
             dojo.subscribe('makeAnnouncement', this, "notif_makeAnnouncement");
         },
 
@@ -973,8 +973,8 @@ function (dojo, declare) {
             this.gamedatas.calledKing = notif.args.color;
         },
 
-        notif_playerTeamUpdate: function (notif) {
-            console.log("notif_playerTeamUpdate", notif.args);
+        notif_playerDataUpdate: function (notif) {
+            console.log("notif_playerDataUpdate", notif.args);
             this.gamedatas.players = notif.args.players;
         },
 
