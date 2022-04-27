@@ -344,6 +344,11 @@ class SlovenianTarokk extends Table {
 		self::notifyAllPlayers( 'newScores', '', array( 'newScores' => $newScores ) );
 	}
 
+	function updateRadli() {
+		$newRadli = self::getCollectionFromDb( 'SELECT player_id, player_radli FROM player', true );
+		self::notifyAllPlayers( 'newRadli', '', array( 'newRadli' => $newRadli ) );
+	}
+
 	function highestValuePlayed( $currentTrickColor ) {
 		$cardsOnTable = $this->cards->getCardsInLocation( 'cardsontable' );
 
@@ -482,7 +487,7 @@ class SlovenianTarokk extends Table {
 		$failed     = self::getGameStateValue( 'tricksByDeclarer' );
 		$currentBid = self::getGameStateValue( 'highBid' );
 
-		$points = $this->bid_point_values[ $currentBid ];
+		$points = $this->radliAdjustment( $this->bid_point_values[ $currentBid ], $declarer );
 
 		if ( $failed ) {
 			$sql = "UPDATE player SET score = score - $points WHERE player_id = $declarer";
@@ -504,6 +509,8 @@ class SlovenianTarokk extends Table {
 					'points'      => $points,
 				)
 			);
+			$this->removeRadli( $declarer );
+			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $declarer ]['player_name'] );
 		}
 	}
 
@@ -513,7 +520,7 @@ class SlovenianTarokk extends Table {
 		$tricks     = self::getGameStateValue( 'tricksByDeclarer' );
 		$currentBid = self::getGameStateValue( 'highBid' );
 
-		$points = $this->bid_point_values[ $currentBid ];
+		$points = $this->radliAdjustment( $this->bid_point_values[ $currentBid ], $declarer );
 
 		if ( $tricks < HAND_SIZE ) {
 			$sql = "UPDATE player SET score = score - $points WHERE player_id = $declarer";
@@ -535,6 +542,8 @@ class SlovenianTarokk extends Table {
 					'points'      => $points,
 				)
 			);
+			$this->removeRadli( $declarer );
+			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $declarer ]['player_name'] );
 		}
 	}
 
@@ -555,7 +564,7 @@ class SlovenianTarokk extends Table {
 			$scores[ $player_id ] = $playerScore;
 			self::notifyAllPlayers(
 				'score',
-				clienttranslate( '${player_name} scores ${score}' ),
+				clienttranslate( '${player_name} scores ${score} card points.' ),
 				array(
 					'player_name' => $player['player_name'],
 					'score'       => $playerScore,
@@ -563,12 +572,12 @@ class SlovenianTarokk extends Table {
 			);
 		}
 		if ( $loser ) {
-			$points = $this->bid_point_values[ BID_KLOP ];
+			$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ] );
 			$sql    = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$loser'";
 			self::DbQuery($sql);
 			self::notifyAllPlayers(
 				'points',
-				clienttranslate( '${player_name} loses ${points} points' ),
+				clienttranslate( '${player_name} loses ${points} points.' ),
 				array (
 					'player_name' => $players[ $loser ][ 'player_name' ],
 					'points'      => $points,
@@ -577,27 +586,29 @@ class SlovenianTarokk extends Table {
 		}
 		if ( count ( $winners ) > 0 ) {
 			foreach ( $winners as $winner_id ) {
-				$points = $this->bid_point_values[ BID_KLOP ];
+				$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ] );
 				$sql    = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$winner_id'";
 				self::DbQuery($sql);
 				self::notifyAllPlayers(
 					'points',
-					clienttranslate( '${player_name} wins ${points} points' ),
+					clienttranslate( '${player_name} wins ${points} points.' ),
 					array (
 						'player_name' => $players[ $winner_id ][ 'player_name' ],
 						'points'      => $points,
 					)
 				);
+				$this->removeRadli( $declarer );
+				$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $winner_id ][ 'player_name' ] );
 			}
 		}
 		if ( ! $loser && count( $winners ) == 0 ) {
 			foreach ( $scores as $player_id => $score ) {
-				$points = $this->roundToNearestFive( $score );
+				$points = $this->radliAdjustment( $this->roundToNearestFive( $score ) );
 				$sql    = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$player_id'";
 				self::DbQuery($sql);
 				self::notifyAllPlayers(
 					'points',
-					clienttranslate( '${player_name} loses ${points} points' ),
+					clienttranslate( '${player_name} loses ${points} points.' ),
 					array (
 						'player_name' => $players[ $player_id ][ 'player_name' ],
 						'points'      => $points,
@@ -633,7 +644,7 @@ class SlovenianTarokk extends Table {
 		foreach ( $teamScores as $team => $score ) {
 			self::notifyAllPlayers(
 				'score',
-				clienttranslate( '${team} team scores ${score}' ),
+				clienttranslate( '${team} team scores ${score} card points.' ),
 				array(
 					'team'  => $team,
 					'score' => $score,
@@ -647,12 +658,27 @@ class SlovenianTarokk extends Table {
 			$points    += $this->roundToNearestFive( $difference );
 		}
 
+		$points *= intval( self::getGameStateValue( 'gameValue' ) );
+
 		if ( $teamScores['Declarer'] <= 35 ) {
 			$points = -$points;
 		}
-		$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'game' ) );
 
-		$this->scoreBonuses( $teamCards );
+		self::notifyAllPlayers(
+			'gamePoints',
+			clienttranslate( 'The declarer scores ${points} points for game.' ),
+			array( 'points' => $points )
+		);
+		$points = $this->scoreBonuses( $points, $teamCards );
+
+		$points = $this->radliAdjustment( $points );
+
+		if ( $teamScores['Declarer'] > 35 ) {
+			$this->removeRadli( $declarer );
+			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $declarer ][ 'player_name' ] );
+		}
+
+		$this->adjustPoints( $points, $declarer, $declarerPartner );
 	}
 
 	function hasTrula( $cards ) {
@@ -676,7 +702,7 @@ class SlovenianTarokk extends Table {
 		return $kings == 4;
 	}
 
-	function adjustPoints( $points, $declarer, $declarerPartner = 0, $reason = '' ) {
+	function adjustPoints( $points, $declarer, $declarerPartner = 0 ) {
 		if ( $points == 0 ) {
 			return;
 		}
@@ -685,18 +711,14 @@ class SlovenianTarokk extends Table {
 		if ( $points > 0 ) {
 			$notification = clienttranslate( 'Declarer gains ${points} points' );
 			if ( $declarerPartner ) {
-				$notification = clienttranslate( 'Declarer\'s team gains ${points} points' );
+				$notification = clienttranslate( 'Declarer\'s team gains ${points} points in total' );
 			}
 		} else {
 			$operator     = '-';
-			$notification = clienttranslate( 'Declarer lost ${points} points' );
+			$notification = clienttranslate( 'Declarer loses ${points} points' );
 			if ( $declarerPartner ) {
-				$notification = clienttranslate( 'Declarer\'s team loses ${points} points' );
+				$notification = clienttranslate( 'Declarer\'s team loses ${points} points in total' );
 			}
-		}
-
-		if ( $reason ) {
-			$notification .= ': ' . $reason;
 		}
 
 		$sql = "UPDATE player SET player_score=player_score$operator$points  WHERE player_id='$declarer'";
@@ -889,12 +911,25 @@ class SlovenianTarokk extends Table {
 		$declarer         = self::getGameStateValue( 'declarer' );
 		$trickCount       = self::getGameStateValue( 'trickCount' );
 		$tricksByDeclarer = self::getGameStateValue( 'tricksByDeclarer' );
+		$valatPlayer      = self::getGameStateValue( 'valatPlayer' );
 
-		if ( $currentBid == BID_VALAT ) {
+		if ( $currentBid == BID_VALAT || $valatPlayer == $declarer ) {
 			if ( $tricksByDeclarer < $trickCount ) {
 				self::notifyAllPlayers(
 					'valatFailed',
 					clienttranslate( 'The declarer missed a trick! Valat failed!' ),
+					array()
+				);
+				return true;
+			}
+			return false;
+		}
+
+		if ( $valatPlayer ) {
+			if ( $tricksByDeclarer > 0 ) {
+				self::notifyAllPlayers(
+					'valatFailed',
+					clienttranslate( 'The valat player missed a trick! Valat failed!' ),
 					array()
 				);
 				return true;
@@ -909,7 +944,7 @@ class SlovenianTarokk extends Table {
 				clienttranslate( 'The declarer took a trick! Beggar failed!' ),
 				array()
 			);
-		return true;
+			return true;
 		}
 
 		return false;
@@ -954,17 +989,24 @@ class SlovenianTarokk extends Table {
 				}
 			}
 
-			$players = $this->getPlayerCollection();
-
-			self::notifyAllPlayers(
-				'playerTeamUpdate',
-				'',
-				array( 'players' => $players )
-			);
+			$this->updatePlayerData();
 		}
 	}
 
-	public function scoreBonuses( $teamCards ) {
+	public function updatePlayerData( $message = '', $player_name = '' ) {
+		$players   = $this->getPlayerCollection();
+		$arguments = array( 'players' => $players );
+		if ( $player_name ) {
+			$arguments['player_name'] = $player_name;
+		}
+		self::notifyAllPlayers(
+			'playerDataUpdate',
+			$message,
+			$arguments
+		);
+	}
+
+	public function scoreBonuses( $gamePoints, $teamCards ) {
 		$trulaPlayer       = intval( self::getGameStateValue( 'trulaPlayer' ) );
 		$kingsPlayer       = intval( self::getGameStateValue( 'kingsPlayer' ) );
 		$kingUltimoPlayer  = intval( self::getGameStateValue( 'kingUltimoPlayer' ) );
@@ -972,7 +1014,7 @@ class SlovenianTarokk extends Table {
 		$valatPlayer       = intval( self::getGameStateValue( 'valatPlayer' ) );
 		$tricksWon         = intval( self::getGameStateValue( 'tricksByDeclarer' ) );
 
-		$valatDone = false;
+		$points    = 0;
 
 		if ( $tricksWon == HAND_SIZE || $tricksWon == 0 || $valatPlayer > 0 ) {
 			$valatTeam = $valatPlayer ? $this->getPlayerTeam( $valatPlayer ) : null;
@@ -996,113 +1038,137 @@ class SlovenianTarokk extends Table {
 
 			$points = $points * self::getGameStateValue( 'valatValue' );
 
-			$valatDone = true;
+			self::notifyAllPlayers(
+				'bonusPoints',
+				clienttranslate( 'The declarer gets ${points} points for valat.' ),
+				array( 'points' => $points )
+			);
 
-			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'valat' ) );
-		}
-
-		if ( $valatDone ) {
-			// If valat, no more bonuses.
-			return;
+			// If valat, no more bonuses and discard the game points.
+			return $points;
 		}
 
 		$declarerHasTrula   = $this->hasTrula( $teamCards['Declarer'] );
 		$opponentsHaveTrula = $this->hasTrula( $teamCards['Opponents'] );
 
 		if ( $declarerHasTrula || $opponentsHaveTrula || $trulaPlayer > 0 ) {
-			$trulaTeam = $trulaPlayer ? $this->getPlayerTeam( $trulaPlayer ) : null;
-			$points    = $this->announcements[ ANNOUNCEMENT_TRULA ]['points'];
+			$trulaTeam   = $trulaPlayer ? $this->getPlayerTeam( $trulaPlayer ) : null;
+			$trulaPoints = $this->announcements[ ANNOUNCEMENT_TRULA ]['points'];
 
 			if ( ! $trulaPlayer ) {
 				if ( $opponentsHaveTrula ) {
-					$points = -$points;
+					$trulaPoints = -$trulaPoints;
 				}
 			} else {
-				$points = $points * 2;
+				$trulaPoints = $trulaPoints * 2;
 			}
 
 			if ( $opponentsHaveTrula ) {
-				$points = -$points;
+				$trulaPoints = -$trulaPoints;
 			}
 
 			if ( $trulaTeam == 'declarer' && ! $declarerHasTrula ) {
-				$points = -$points;
+				$trulaPoints = -$trulaPoints;
 			}
 
-			$points = $points * self::getGameStateValue( 'trulaValue' );
+			$trulaPoints = $trulaPoints * self::getGameStateValue( 'trulaValue' );
+			$points     += $trulaPoints;
 
-			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'trula' ) );
+			self::notifyAllPlayers(
+				'bonusPoints',
+				clienttranslate( 'The declarer gets ${points} points for trula.' ),
+				array( 'points' => $trulaPoints	)
+			);
 		}
 
 		$declarerHasKings   = $this->hasKings( $teamCards['Declarer'] );
 		$opponentsHaveKings = $this->hasKings( $teamCards['Opponents'] );
 
 		if ( $declarerHasKings || $opponentsHaveKings || $kingsPlayer > 0 ) {
-			$kingsTeam = $kingsPlayer ? $this->getPlayerTeam( $kingsPlayer ) : null;
-			$points    = $this->announcements[ ANNOUNCEMENT_KINGS ]['points'];
+			$kingsTeam   = $kingsPlayer ? $this->getPlayerTeam( $kingsPlayer ) : null;
+			$kingsPoints = $this->announcements[ ANNOUNCEMENT_KINGS ]['points'];
 
 			if ( ! $kingsPlayer ) {
 				if ( $opponentsHaveKings ) {
-					$points = -$points;
+					$kingsPoints = -$kingsPoints;
 				}
 			} else {
-				$points = $points * 2;
+				$kingsPoints = $kingsPoints * 2;
 			}
 
 			if ( $opponentsHaveKings ) {
-				$points = -$points;
+				$kingsPoints = -$kingsPoints;
 			}
 
 			if ( $kingsTeam == 'declarer' && ! $declarerHasKings ) {
-				$points = -$points;
+				$kingsPoints = -$kingsPoints;
 			}
 
-			$points = $points * self::getGameStateValue( 'kingsValue' );
+			$kingsPoints = $kingsPoints * self::getGameStateValue( 'kingsValue' );
+			$points     += $kingsPoints;
 
-			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'kings' ) );
+			self::notifyAllPlayers(
+				'bonusPoints',
+				clienttranslate( 'The declarer gets ${points} points for kings.' ),
+				array( 'points' => $kingsPoints	)
+			);
 		}
 
 		$pagatUltimoStatus = self::getGameStateValue( 'pagatUltimoStatus' );
 
 		if ( $pagatUltimoStatus ) {
 			$pagatUltimoTeam = $pagatUltimoPlayer ? $this->getPlayerTeam( $pagatUltimoPlayer ) : null;
-			$points          = $this->announcements[ ANNOUNCEMENT_PAGAT_ULTIMO ]['points'];
+			$pagatPoints     = $this->announcements[ ANNOUNCEMENT_PAGAT_ULTIMO ]['points'];
 
 			if ( $pagatUltimoTeam == 'declarer' && $pagatUltimoStatus == BONUS_FAILURE ) {
-				$points = -$points;
+				$pagatPoints = -$pagatPoints;
 			}
 
 			if ( $pagatUltimoTeam == 'opponent' && $pagatUltimoStatus == BONUS_SUCCESS ) {
-				$points = -$points;
+				$pagatPoints = -$pagatPoints;
 			}
 
 			if ( $pagatUltimoPlayer ) {
-				$points = $points * 2;
+				$pagatPoints = $pagatPoints * 2;
 			}
 
-			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'pagat ultimo' ) );
+			$points += $pagatPoints;
+
+			self::notifyAllPlayers(
+				'bonusPoints',
+				clienttranslate( 'The declarer gets ${points} points for pagat ultimo.' ),
+				array( 'points' => $pagatPoints	)
+			);
 		}
 
 		$kingUltimoStatus = self::getGameStateValue( 'kingUltimoStatus' );
 
 		if ( $kingUltimoStatus ) {
 			$kingUltimoTeam = $kingUltimoPlayer ? $this->getPlayerTeam( $kingUltimoPlayer ) : null;
-			$points         = $this->announcements[ ANNOUNCEMENT_KING_ULTIMO ]['points'];
+			$kingPoints     = $this->announcements[ ANNOUNCEMENT_KING_ULTIMO ]['points'];
 
 			if ( $kingUltimoTeam == 'declarer' && $kingUltimoStatus == BONUS_FAILURE ) {
-				$points = -$points;
+				$kingPoints = -$kingPoints;
 			}
 
 			if ( $kingUltimoTeam == 'opponent' && $kingUltimoStatus == BONUS_SUCCESS ) {
-				$points = -$points;
+				$kingPoints = -$kingPoints;
 			}
 
 			if ( $kingUltimoPlayer ) {
-				$points = $points * 2;
+				$kingPoints = $kingPoints * 2;
 			}
 
-			$this->adjustPoints( $points, $declarer, $declarerPartner, clienttranslate( 'king ultimo' ) );
+			$points += $kingPoints;
+
+			self::notifyAllPlayers(
+				'bonusPoints',
+				clienttranslate( 'The declarer gets ${points} points for king ultimo.' ),
+				array( 'points' => $kingPoints )
+			);
 		}
+
+		return $gamePoints + $points;
 	}
 
 	/**
@@ -1189,6 +1255,29 @@ class SlovenianTarokk extends Table {
 				);
 			}
 		}
+	}
+
+	public function addRadli() {
+		$sql = "UPDATE player SET player_radl = player_radl + 1";
+		self::DbQuery( $sql );
+	}
+
+	public function getRadli( $playerId ) {
+		$sql    = "SELECT player_radl FROM player WHERE player_id = $playerId";
+		$result = intval( self::getUniqueValueFromDB( $sql ) );
+		return $result;
+	}
+
+	public function removeRadli( $playerId ) {
+		$sql = "UPDATE player SET player_radl = player_radl - 1 WHERE player_id = $playerId";
+		self::DbQuery( $sql );
+	}
+
+	public function radliAdjustment( $points, $playerId ) {
+		if ( $this->getRadli( $playerId ) ) {
+			$points = $points * 2;
+		}
+		return $points;
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
@@ -1935,6 +2024,11 @@ class SlovenianTarokk extends Table {
 				break;
 		}
 
+		$valatActive = self::getGameStateValue( 'valatPlayer' );
+		if ( $currentBid == BID_KLOP || $currentBid >= BID_BEGGAR || $valatActive ) {
+			$this->addRadli();
+			$this->updatePlayerData( clienttranslate( 'Everybody gets a radlc' ) );
+		}
 		$this->updateScores();
 
 		self::trace( 'stCountingAndScoring->endHand' );
