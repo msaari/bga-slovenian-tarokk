@@ -2004,7 +2004,11 @@ class SlovenianTarokk extends Table {
 
 			$handFinished = intval( $this->cards->countCardInLocation( 'hand' ) ) === 0;
 			$currentBid   = self::getGameStateValue( 'highBid' );
-			if ( ! $handFinished && in_array( $currentBid, array( BID_BEGGAR, BID_OPEN_BEGGAR, BID_VALAT ) ) ) {
+			$valatPlayer  = self::getGameStateValue( 'valatPlayer' );
+			if ( ! $handFinished
+				&& (in_array( $currentBid, array( BID_BEGGAR, BID_OPEN_BEGGAR, BID_VALAT ) )
+					|| $valatPlayer)
+				) {
 				$handFinished = $this->checkBeggarAndValat( $currentBid );
 			}
 
