@@ -108,7 +108,7 @@ $machinestates = array(
 		'name'        => 'nextBid',
 		'type'        => 'game',
 		'action'      => 'stNextBid',
-		'transitions'       => array(
+		'transitions' => array(
 			'nextBidder' => 21,
 			'allPass'    => 23,
 		),
@@ -146,6 +146,15 @@ $machinestates = array(
 	),
 
 	40 => array(
+		'name'        => 'stExchange',
+		'type'        => 'game',
+		'action'      => 'stExchange',
+		'transitions' => array(
+			'exchange' => 41,
+		),
+	),
+
+	41 => array(
 		'name'              => 'exchange',
 		'description'       => clienttranslate( '${actplayer} must take cards from the talon' ),
 		'descriptionmyturn' => clienttranslate( '${you} must take cards from the talon' ),
@@ -154,11 +163,11 @@ $machinestates = array(
 			'chooseCards',
 		),
 		'transitions'       => array(
-			'chooseCards' => 41
+			'chooseCards' => 42
 		),
 	),
 
-	41 => array(
+	42 => array(
 		'name'              => 'discardCards',
 		'description'       => clienttranslate( '${actplayer} must discard extra cards' ),
 		'descriptionmyturn' => clienttranslate( '${you} must discard extra cards from your hand' ),
@@ -168,13 +177,13 @@ $machinestates = array(
 			'doneDiscarding',
 		),
 		'transitions'       => array(
-			'discardCard'    => 41,
-			'toColourValat'  => 42,
+			'discardCard'    => 42,
+			'toColourValat'  => 43,
 			'doneDiscarding' => 50,
 		)
 	),
 
-	42 => array(
+	43 => array(
 		'name'              => 'upgradeToColourValat',
 		'description'       => clienttranslate( '${actplayer} can raise bid to colour valat' ),
 		'descriptionmyturn' => clienttranslate( '${you} can raise your bid to colour valat' ),
@@ -185,7 +194,7 @@ $machinestates = array(
 		),
 		'transitions'       => array(
 			'upgradeToColourValat' => 60,
-			'keepCurrentBid'       => 60,
+			'keepCurrentBid'       => 50,
 		),
 	),
 
