@@ -661,11 +661,6 @@ class SlovenianTarokk extends Table {
 			$points = -$points;
 		}
 
-		self::notifyAllPlayers(
-			'gamePoints',
-			clienttranslate( 'The declarer scores ${points} points for game.' ),
-			array( 'points' => $points )
-		);
 		$points = $this->scoreBonuses( $points, $teamCards );
 
 		$points = $this->radliAdjustment( $points, $declarer );
@@ -1043,6 +1038,12 @@ class SlovenianTarokk extends Table {
 			// If valat, no more bonuses and discard the game points.
 			return $points;
 		}
+
+		self::notifyAllPlayers(
+			'gamePoints',
+			clienttranslate( 'The declarer scores ${points} points for game.' ),
+			array( 'points' => $gamePoints )
+		);
 
 		$declarerHasTrula   = $this->hasTrula( $teamCards['Declarer'] );
 		$opponentsHaveTrula = $this->hasTrula( $teamCards['Opponents'] );
