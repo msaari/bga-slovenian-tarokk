@@ -1921,6 +1921,21 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
+	public function stExchange() {
+		self::trace( 'stExchange' );
+
+		self::notifyAllPlayers(
+			'newTalon',
+			'',
+			array(
+				'talon' => $this->talon
+			)
+		);
+
+		self::trace( 'stExchange->exchange' );
+		$this->gamestate->nextState( 'exchange' );
+	}
+
 	public function stStartAnnouncements() {
 		self::setGameStateValue( 'trulaPlayer', 0 );
 		self::setGameStateValue( 'trulaValue', 0 );
