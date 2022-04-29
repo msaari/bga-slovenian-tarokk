@@ -509,8 +509,7 @@ class SlovenianTarokk extends Table {
 					'points'      => $points,
 				)
 			);
-			$this->removeRadli( $declarer );
-			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $declarer ]['player_name'] );
+			$this->removeRadli( $declarer, $players[ $declarer ]['player_name'] );
 		}
 	}
 
@@ -542,8 +541,7 @@ class SlovenianTarokk extends Table {
 					'points'      => $points,
 				)
 			);
-			$this->removeRadli( $declarer );
-			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $declarer ]['player_name'] );
+			$this->removeRadli( $declarer, $players[ $declarer ]['player_name'] );
 		}
 	}
 
@@ -572,7 +570,7 @@ class SlovenianTarokk extends Table {
 			);
 		}
 		if ( $loser ) {
-			$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ] );
+			$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ], $loser );
 			$sql    = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$loser'";
 			self::DbQuery($sql);
 			self::notifyAllPlayers(
@@ -586,7 +584,7 @@ class SlovenianTarokk extends Table {
 		}
 		if ( count ( $winners ) > 0 ) {
 			foreach ( $winners as $winner_id ) {
-				$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ] );
+				$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ], $winner_id );
 				$sql    = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$winner_id'";
 				self::DbQuery($sql);
 				self::notifyAllPlayers(
@@ -597,13 +595,12 @@ class SlovenianTarokk extends Table {
 						'points'      => $points,
 					)
 				);
-				$this->removeRadli( $declarer );
-				$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $winner_id ][ 'player_name' ] );
+				$this->removeRadli( $declarer, $players[ $winner_id ][ 'player_name' ] );
 			}
 		}
 		if ( ! $loser && count( $winners ) == 0 ) {
 			foreach ( $scores as $player_id => $score ) {
-				$points = $this->radliAdjustment( $this->roundToNearestFive( $score ) );
+				$points = $this->radliAdjustment( $this->roundToNearestFive( $score ), $player_id );
 				$sql    = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$player_id'";
 				self::DbQuery($sql);
 				self::notifyAllPlayers(
@@ -671,10 +668,9 @@ class SlovenianTarokk extends Table {
 		);
 		$points = $this->scoreBonuses( $points, $teamCards );
 
-		$points = $this->radliAdjustment( $points );
+		$points = $this->radliAdjustment( $points, $declarer );
 
 		if ( $teamScores['Declarer'] > 35 ) {
-			$this->removeRadli( $declarer );
 			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $declarer ][ 'player_name' ] );
 		}
 
@@ -1268,9 +1264,12 @@ class SlovenianTarokk extends Table {
 		return $result;
 	}
 
-	public function removeRadli( $playerId ) {
-		$sql = "UPDATE player SET player_radl = player_radl - 1 WHERE player_id = $playerId";
-		self::DbQuery( $sql );
+	public function removeRadli( $playerId, $playerName ) {
+		if ( $this->getRadli( $playerId ) > 0 ) {
+			$sql = "UPDATE player SET player_radl = player_radl - 1 WHERE player_id = $playerId";
+			self::DbQuery( $sql );
+			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $playerName );
+		}
 	}
 
 	public function radliAdjustment( $points, $playerId ) {
