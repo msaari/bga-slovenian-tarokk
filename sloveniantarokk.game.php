@@ -666,7 +666,7 @@ class SlovenianTarokk extends Table {
 		$points = $this->radliAdjustment( $points, $declarer );
 
 		if ( $teamScores['Declarer'] > 35 ) {
-			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $players[ $declarer ][ 'player_name' ] );
+			$this->removeRadli( $declarer, $players[ $declarer ][ 'player_name' ] );
 		}
 
 		$this->adjustPoints( $points, $declarer, $declarerPartner );
@@ -675,7 +675,7 @@ class SlovenianTarokk extends Table {
 	function hasTrula( $cards ) {
 		$trulaCards = 0;
 		foreach ( $cards as $card ) {
-			if ( $card['type'] == TYPE_TRUMP
+			if ( $card['type'] == SUIT_TRUMP
 				&& in_array( intval( $card['type_arg'] ), array( 1, 21, 22 ) ) ) {
 				$trulaCards++;
 			}
@@ -899,11 +899,14 @@ class SlovenianTarokk extends Table {
 	}
 
 	function checkBeggarAndValat( $currentBid ) {
+		self::trace( 'checkBeggarAndValat' );
+
 		$declarer         = self::getGameStateValue( 'declarer' );
 		$trickCount       = self::getGameStateValue( 'trickCount' );
 		$tricksByDeclarer = self::getGameStateValue( 'tricksByDeclarer' );
 		$valatPlayer      = self::getGameStateValue( 'valatPlayer' );
 
+		self::trace( "checkBeggarAndValat: declarer=$declarer, trickCount=$trickCount, tricksByDeclarer=$tricksByDeclarer, valatPlayer=$valatPlayer " );
 		if ( $currentBid == BID_VALAT || $valatPlayer == $declarer ) {
 			if ( $tricksByDeclarer < $trickCount ) {
 				self::notifyAllPlayers(
@@ -985,6 +988,8 @@ class SlovenianTarokk extends Table {
 	}
 
 	public function updatePlayerData( $message = '', $player_name = '' ) {
+		self::trace( "updatePlayerData: '$message' - '$player_name' " );
+
 		$players   = $this->getPlayerCollection();
 		$arguments = array( 'players' => $players );
 		if ( $player_name ) {
@@ -1005,7 +1010,7 @@ class SlovenianTarokk extends Table {
 		$valatPlayer       = intval( self::getGameStateValue( 'valatPlayer' ) );
 		$tricksWon         = intval( self::getGameStateValue( 'tricksByDeclarer' ) );
 
-		$points    = 0;
+		$points = 0;
 
 		if ( $tricksWon == HAND_SIZE || $tricksWon == 0 || $valatPlayer > 0 ) {
 			$valatTeam = $valatPlayer ? $this->getPlayerTeam( $valatPlayer ) : null;
@@ -1115,7 +1120,7 @@ class SlovenianTarokk extends Table {
 
 		if ( $pagatUltimoStatus ) {
 			$pagatUltimoTeam = $pagatUltimoPlayer ? $this->getPlayerTeam( $pagatUltimoPlayer ) : null;
-			$pagatPoints     = $this->announcements[ ANNOUNCEMENT_PAGAT_ULTIMO ]['points'];
+			$pagatPoints     = $this->announcements[ ANNOUNCEMENT_PAGATULTIMO ]['points'];
 
 			if ( $pagatUltimoTeam == 'declarer' && $pagatUltimoStatus == BONUS_FAILURE ) {
 				$pagatPoints = -$pagatPoints;
@@ -1142,7 +1147,7 @@ class SlovenianTarokk extends Table {
 
 		if ( $kingUltimoStatus ) {
 			$kingUltimoTeam = $kingUltimoPlayer ? $this->getPlayerTeam( $kingUltimoPlayer ) : null;
-			$kingPoints     = $this->announcements[ ANNOUNCEMENT_KING_ULTIMO ]['points'];
+			$kingPoints     = $this->announcements[ ANNOUNCEMENT_KINGULTIMO ]['points'];
 
 			if ( $kingUltimoTeam == 'declarer' && $kingUltimoStatus == BONUS_FAILURE ) {
 				$kingPoints = -$kingPoints;
@@ -1210,6 +1215,8 @@ class SlovenianTarokk extends Table {
 
 	public function checkUltimoStatus( $pagatPlayer, $kingPlayer, $bestValuePlayerId, $players ) {
 		self::trace( 'checkUltimoStatus' );
+
+		self::trace( "pagatPlayer: $pagatPlayer - kingPlayer: $kingPlayer - bestValuePlayerId: $bestValuePlayerId " );
 
 		if ( $pagatPlayer == $bestValuePlayerId ) {
 			self::setGameStateValue( 'pagatUltimoStatus', BONUS_SUCCESS );
@@ -1943,8 +1950,7 @@ class SlovenianTarokk extends Table {
 			self::notifyAllPlayers(
 				'',
 				clienttranslate( 'Three passes in a row, announcements over' ),
-				array(
-				)
+				array()
 			);
 
 			self::trace( 'announcementsNextPlayer->newTrick' );
