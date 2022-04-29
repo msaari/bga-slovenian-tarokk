@@ -342,9 +342,10 @@ function (dojo, declare) {
 
         hasCardInHand: function (color, value) {
             var cards = this.gamedatas.hand;
+            console.log("Looking for " + color + ", " + value + " in ", cards);
             for (var i in cards) {
                 var card = cards[i];
-                if (card.color == color && card.value == value) {
+                if (card.type == color && card.type_arg == value) {
                     return true;
                 }
             }
@@ -444,6 +445,8 @@ function (dojo, declare) {
             if (!team) {
                 return false;
             }
+
+            console.log("player in team " + team + ": " + this.playerInTeam(team));
 
             console.log(announcement, team, value)
             // Basic level checking:
@@ -848,6 +851,7 @@ function (dojo, declare) {
 
             dojo.subscribe('newHand', this, "notif_newHand");
             dojo.subscribe('newCards', this, "notif_newCards");
+            dojo.subscribe('newTalon', this, "notif_newTalon");
             dojo.subscribe('setPriorityOrder', this, "notif_setPriorityOrder");
             dojo.subscribe('updateBids', this, "notif_updateBids");
             dojo.subscribe('talonChosen', this, "notif_talonChosen");
@@ -864,6 +868,7 @@ function (dojo, declare) {
             dojo.subscribe('callKing', this, "notif_callKing");
             dojo.subscribe('playerDataUpdate', this, "notif_playerDataUpdate");
             dojo.subscribe('makeAnnouncement', this, "notif_makeAnnouncement");
+            dojo.subscribe('passAnnouncement', this, "notif_passAnnouncement");
         },
 
         notif_newHand : function(notif) {
@@ -888,6 +893,11 @@ function (dojo, declare) {
                 this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
                 console.log("new card " + this.getCardUniqueId(color, value) + " " + color + " " + value);
             }
+        },
+
+        notif_newTalon: function (notif) {
+            console.log( "on newTalon ", notif.args.talon);
+            this.gamedatas.talon = notif.args.talon;
         },
 
         notif_setPriorityOrder: function (notif) {
@@ -994,32 +1004,37 @@ function (dojo, declare) {
             console.log(notif.args);
 
             switch (notif.args.announcement) {
-                case 1:
+                case "1":
                     this.gamedatas.gameValue = notif.args.newValue;
                     break;
-                case 2:
+                case "2":
                     this.gamedatas.trulaPlayer = notif.args.player_id;
-                    this.gamedatas.trulaValue = newValue;
+                    this.gamedatas.trulaValue = notif.args.newValue;
                     break;
-                case 3:
+                case "3":
                     this.gamedatas.kingsPlayer = notif.args.player_id;
-                    this.gamedatas.kingsValue = newValue;
+                    this.gamedatas.kingsValue = notif.args.newValue;
                     break;
-                case 4:
+                case "4":
                     this.gamedatas.kingUltimoPlayer = notif.args.player_id;
-                    this.gamedatas.kingUltimoValue = newValue;
+                    this.gamedatas.kingUltimoValue = notif.args.newValue;
                     break;
-                case 5:
+                case "5":
                     this.gamedatas.pagatUltimoPlayer = notif.args.player_id;
-                    this.gamedatas.pagatUltimoValue = newValue;
+                    this.gamedatas.pagatUltimoValue = notif.args.newValue;
                     break;
-                case 6:
+                case "6":
                     this.gamedatas.valatPlayer = notif.args.player_id;
-                    this.gamedatas.valatValue = newValue;
+                    this.gamedatas.valatValue = notif.args.newValue;
                     break;
             }
 
             this.gamedatas.playerAnnouncements = notif.args.playerAnnouncements;
+        },
+
+        notif_passAnnouncement: function (notif) {
+            console.log("passAnnouncement received");
+            this.gamedatas.playerAnnouncements = 0;
         },
    });
 });
