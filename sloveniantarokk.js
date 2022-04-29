@@ -133,6 +133,17 @@ function (dojo, declare) {
             switch (stateName) {
                 case 'newHand':
                     this.gamedatas.highBid = 2;
+                    this.gamedatas.gamevalue = 1;
+                    this.gamedatas.trulaPlayer = 0;
+                    this.gamedatas.trulaValue = 0;
+                    this.gamedatas.kingsPlayer = 0;
+                    this.gamedatas.kingsValue = 0;
+                    this.gamedatas.kingUltimoPlayer = 0;
+                    this.gamedatas.kingUltimoValue = 0;
+                    this.gamedatas.pagatUltimoPlayer = 0;
+                    this.gamedatas.pagatUltimoValue = 0;
+                    this.gamedatas.valatPlayer = 0;
+                    this.gamedatas.valatValue = 0;
                     break;
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
