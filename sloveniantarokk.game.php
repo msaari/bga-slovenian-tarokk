@@ -2002,10 +2002,6 @@ class SlovenianTarokk extends Table {
 
 			$winnerId = $this->determineTrickWinner( $trickCount );
 
-			if ( $trickCount == HAND_SIZE ) {
-				$this->checkUltimoStatus( $winnerId );
-			}
-
 			$handFinished = intval( $this->cards->countCardInLocation( 'hand' ) ) === 0;
 			$currentBid   = self::getGameStateValue( 'highBid' );
 			if ( ! $handFinished && in_array( $currentBid, array( BID_BEGGAR, BID_OPEN_BEGGAR, BID_VALAT ) ) ) {
