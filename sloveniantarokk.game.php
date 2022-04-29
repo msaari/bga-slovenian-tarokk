@@ -1851,6 +1851,9 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'fourthPriority', $fourthPriority );
 		self::setGameStateValue( 'highBidder', $forehand );
 		self::setGameStateValue( 'highBid', BID_THREE );
+		self::setGameStateValue( 'firstPasser', 0 );
+		self::setGameStateValue( 'secondPasser', 0 );
+		self::setGameStateValue( 'thirdPasser', 0 );
 
 		self::trace( "notifying players" );
 		self::notifyAllPlayers(
