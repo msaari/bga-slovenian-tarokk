@@ -1932,7 +1932,7 @@ class SlovenianTarokk extends Table {
 			'newTalon',
 			'',
 			array(
-				'talon' => $this->talon
+				'talon' => $this->cards->getCardsInLocation( 'talon' )
 			)
 		);
 
