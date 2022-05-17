@@ -659,8 +659,7 @@ function (dojo, declare) {
                             break;
                     }
                     game_class = 'declarer';
-                }
-                if (this.getPlayerTeam(player_id) == 'declarer') {
+                } else if (this.getPlayerTeam(player_id) == 'declarer') {
                     game_class = 'partner';
                     game_note = 'K';
                 }
