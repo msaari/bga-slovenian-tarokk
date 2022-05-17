@@ -80,6 +80,19 @@
 	margin-top: -60px;
 }
 
+.game.declarer, .game.partner {
+	position: absolute;
+    right: 0px;
+    background-color: yellowgreen;
+    width: 35px;
+    height: 35px;
+    color: white;
+    text-align: center;
+    font-size: 20px;
+    top: 0px;
+    line-height: 35px;
+}
+
 #vitamin {
 	left: 52.5%;
 	bottom: 145px;
