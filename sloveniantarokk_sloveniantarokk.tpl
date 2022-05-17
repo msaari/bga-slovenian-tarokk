@@ -11,7 +11,9 @@
         </div>
     </div>
 
-    <div class="playerinfo playerinfo_{DIR} whiteblock">
+    <div class="playerinfo whiteblock playerinfo_{DIR}">
+        <div id="playerradl_{PLAYER_ID}">
+        </div>
     </div>
     <!-- END player -->
 
@@ -44,6 +46,9 @@ var jstpl_talonexchange_222 =
 
 var jstpl_talonexchange_111111 =
 '<div id="talon_exchange_111111" class="talon_exchange_wrapper"><div id="talon_111111_1" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_2" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_3" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_4" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_5" class="talon_exchange_wrapper cardset"></div><div id="talon_111111_6" class="talon_exchange_wrapper cardset"></div></div>';
+
+var jstpl_radl =
+'<div class="radl">${player_radl}</div>';
 
 </script>
 

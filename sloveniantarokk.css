@@ -53,6 +53,33 @@
 	margin-top: -60px;
 }
 
+.playerinfo {
+	position: absolute;
+	width: 80px;
+	height: 80px;
+}
+
+.playerinfo_N {
+	margin-left: 70px;
+	left: 50%;
+	top: 0px;
+}
+.playerinfo_S {
+	margin-left: 70px;
+	left: 50%;
+	bottom: 120px;
+}
+.playerinfo_W {
+	left: 200px;
+	top: 50%;
+	margin-top: -60px;
+}
+.playerinfo_E {
+	right: -60px;
+	top: 50%;
+	margin-top: -60px;
+}
+
 #vitamin {
 	left: 52.5%;
 	bottom: 145px;
