@@ -1966,7 +1966,7 @@ class SlovenianTarokk extends Table {
 
 		if ( self::getGameStateValue( 'thirdPasser' ) > 0 ) {
 			self::notifyAllPlayers(
-				'',
+				'allAnnouncementsPassed',
 				clienttranslate( 'Three passes in a row, announcements over' ),
 				array()
 			);
