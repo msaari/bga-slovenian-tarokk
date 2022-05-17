@@ -115,6 +115,9 @@ function (dojo, declare) {
                 this.playCardOnTable(player_id, color, value, card.id);
             }
 
+            this.updateRadli();
+            this.updatePlayerGame();
+
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
@@ -600,6 +603,75 @@ function (dojo, declare) {
             return false;
         },
 
+        updateRadli: function () {
+            for (var player_id in this.gamedatas.players) {
+                var radl_count = parseInt(this.gamedatas.players[player_id].radl, 10);
+                var radl_note = _('Radl') + ':<br />' + '⚬'.repeat(radl_count);
+
+                if (radl_count < 1) {
+                    radl_note += '–';
+                }
+                dojo.place(this.format_block('jstpl_radl', {
+                    player_radl: radl_note
+                }), 'playerradl_' + player_id, "replace");
+            }
+        },
+
+        updatePlayerGame: function () {
+            for (var player_id in this.gamedatas.players) {
+                var game_note = '';
+                var game_class = '';
+                if (player_id == this.gamedatas.highBidder) {
+                    switch (parseInt(this.gamedatas.highBid)) {
+                        case this.bids.three:
+                            game_note = "3";
+                            break;
+                        case this.bids.two:
+                            console.log("game note");
+                            game_note = "2";
+                            break;
+                        case this.bids.one:
+                            game_note = "1";
+                            break;
+                        case this.bids.soloThree:
+                            game_note = "S3";
+                            break;
+                        case this.bids.soloTwo:
+                            game_note = "S2";
+                            break;
+                        case this.bids.soloOne:
+                            game_note = "S1";
+                            break;
+                        case this.bids.beggar:
+                            game_note = "B";
+                            break;
+                        case this.bids.soloWithout:
+                            game_note = "S0";
+                            break;
+                        case this.bids.openBeggar:
+                            game_note = "OB";
+                            break;
+                        case this.bids.colourValat:
+                            game_note = "CV";
+                            break;
+                        case this.bids.valat:
+                            game_note = "V";
+                            break;
+                    }
+                    game_class = 'declarer';
+                }
+                if (this.getPlayerTeam(player_id) == 'declarer') {
+                    game_class = 'partner';
+                    game_note = 'K';
+                }
+
+                dojo.place(this.format_block('jstpl_game', {
+                    player_game: game_note,
+                    game_class: game_class,
+                }), 'playergame_' + player_id, "replace");
+            }
+        },
+
         // /////////////////////////////////////////////////
         // // Player's action
 
@@ -997,6 +1069,7 @@ function (dojo, declare) {
         notif_playerDataUpdate: function (notif) {
             console.log("notif_playerDataUpdate", notif.args);
             this.gamedatas.players = notif.args.players;
+            this.updateRadli();
         },
 
         notif_makeAnnouncement: function (notif) {
