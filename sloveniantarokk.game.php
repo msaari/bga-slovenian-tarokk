@@ -1586,7 +1586,8 @@ class SlovenianTarokk extends Table {
 				throw new BgaUserException( self::_('This card is not in the talon!') );
 			}
 			$this->cards->moveCard( $card['id'], 'hand', $playerId );
-			$cardsTaken[] = $this->getCardDisplayValue( $card['type'], $card['type_arg'] );
+			$cardsTaken[] = $this->colors[ $card['type'] ]['name'] . ' ' .
+				$this->getCardDisplayValue( $card['type'], $card['type_arg'] );
 		}
 
 		$this->cards->moveAllCardsInLocation( 'talon', 'opponents' );
