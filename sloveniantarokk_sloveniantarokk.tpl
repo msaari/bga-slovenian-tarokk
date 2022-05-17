@@ -12,8 +12,8 @@
     </div>
 
     <div class="playerinfo whiteblock playerinfo_{DIR}">
-        <div id="playerradl_{PLAYER_ID}">
-        </div>
+        <div id="playergame_{PLAYER_ID}"></div>
+        <div id="playerradl_{PLAYER_ID}"></div>
     </div>
     <!-- END player -->
 
@@ -49,6 +49,9 @@ var jstpl_talonexchange_111111 =
 
 var jstpl_radl =
 '<div class="radl">${player_radl}</div>';
+
+var jstpl_game =
+'<div class="game ${game_class}">${player_game}</div>';
 
 </script>
 
