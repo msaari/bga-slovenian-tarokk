@@ -576,6 +576,9 @@ function (dojo, declare) {
                 { name: _('Valat without'), value: 13, action: 'onBidValat', id: 'bid_valat' },
                 { name: _('Pass'), value: 14, action: 'onPass', id: 'pass' },
             ];
+            if (this.gamedatas.compulsoryKlop) {
+                bids = bids.filter(bid => bid.value == 1 && bid.value >= 9);
+            }
             return bids.filter(bid => bid.value >= minimumBid);
         },
 
@@ -920,7 +923,9 @@ function (dojo, declare) {
         setupNotifications : function() {
             console.log('notifications subscriptions setup');
 
+            dojo.subscribe('newDealer', this, "notif_checkCompulsoryKlop");
             dojo.subscribe('newHand', this, "notif_newHand");
+            dojo.subscribe('newDeal', this, "notif_checkCompulsoryKlop");
             dojo.subscribe('newCards', this, "notif_newCards");
             dojo.subscribe('newTalon', this, "notif_newTalon");
             dojo.subscribe('setPriorityOrder', this, "notif_setPriorityOrder");
@@ -940,6 +945,10 @@ function (dojo, declare) {
             dojo.subscribe('playerDataUpdate', this, "notif_playerDataUpdate");
             dojo.subscribe('makeAnnouncement', this, "notif_makeAnnouncement");
             dojo.subscribe('passAnnouncement', this, "notif_passAnnouncement");
+        },
+
+        notif_checkCompulsoryKlop: function (notif) {
+            this.gamedatas.compulsoryKlop = notif.args.compulsoryKlop;
         },
 
         notif_newHand : function(notif) {
