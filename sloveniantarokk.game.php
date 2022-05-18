@@ -244,6 +244,7 @@ class SlovenianTarokk extends Table {
 		$result['valatValue']          = self::getGameStateValue( 'valatValue' );
 		$result['playerAnnouncements'] = self::getGameStateValue( 'playerAnnouncements' );
 		$result['gameValue']           = self::getGameStateValue( 'gameValue' );
+		$result['compulsoryKlop']      = self::getGameStateValue( 'compulsoryKlop' );
 
 		return $result;
 	}
@@ -715,9 +716,19 @@ class SlovenianTarokk extends Table {
 		$sql = "UPDATE player SET player_score=player_score$operator$points  WHERE player_id='$declarer'";
 		self::DbQuery($sql);
 
+		$declarerScore = self::getUniqueValueFromDb(
+			"SELECT player_score FROM player WHERE player_id='$declarer'"
+		);
+
+		$partnerScore = -1;
+
 		if ( $declarerPartner ) {
 			$sql = "UPDATE player SET player_score=player_score$operator$points  WHERE player_id='$declarerPartner'";
 			self::DbQuery($sql);
+
+			$partnerScore = self::getUniqueValueFromDb(
+				"SELECT player_score FROM player WHERE player_id='$declarerPartner'"
+			);
 		}
 
 		self::notifyAllPlayers(
@@ -725,6 +736,15 @@ class SlovenianTarokk extends Table {
 			$notification,
 			array ( 'points' => $points )
 		);
+
+		if ( intval( $declarerScore ) === 0 || intval( $partnerScore ) === 0 ) {
+			self::notifyAllPlayers(
+				'points',
+				clienttranslate( 'Next round is a compulsory klop because a score is exactly 0.', ),
+				array()
+			);
+			self::setGameStateValue( 'compulsoryKlop', 1 );
+		}
 	}
 
 	function roundToNearestFive( $number ) {
@@ -1789,13 +1809,15 @@ class SlovenianTarokk extends Table {
 			$playerTable = $this->getNextPlayerTable();
 			$dealer      = $this->getPlayerBefore( $playerTable[0] );
 			$players     = self::loadPlayersBasicInfos();
+			$klop        = self::getGameStateValue( 'compulsoryKlop' );
 
 			self::notifyAllPlayers(
 				'newDealer',
 				clienttranslate( '${player_name} is the first dealer' ),
 				array(
-					'player_id'   => $dealer,
-					'player_name' => $players[ $dealer ]['player_name'],
+					'player_id'      => $dealer,
+					'player_name'    => $players[ $dealer ]['player_name'],
+					'compulsoryKlop' => $klop,
 				)
 			);
 		}
@@ -1824,7 +1846,7 @@ class SlovenianTarokk extends Table {
 			self::notifyAllPlayers(
 				'newDeal',
 				clienttranslate( 'Someone was dealt a hand with no trump, this round has compulsory klop.' ),
-				array()
+				array( 'compulsoryKlop' => 1 )
 			);
 			self::setGameStateValue( 'compulsoryKlop', 1 );
 		}
