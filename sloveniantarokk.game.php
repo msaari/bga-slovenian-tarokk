@@ -62,6 +62,8 @@ define( 'TEAM_OPPONENT', 2 );
 define( 'BONUS_SUCCESS', 1 );
 define( 'BONUS_FAILURE', 2 );
 
+define( 'GAME_DURATION', 100 );
+
 class SlovenianTarokk extends Table {
 	function __construct() {
 		parent::__construct();
