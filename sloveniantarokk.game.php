@@ -901,12 +901,12 @@ class SlovenianTarokk extends Table {
 			self::trace("NotifyAllPlayers: vitamin");
 			self::notifyAllPlayers(
 				'vitamin',
-				clienttranslate( '${player_name} got some vitamins: ${card_display_color} ${card_display_value}' ),
+				clienttranslate( '${player_name} got some vitamins: ${card_suit_symbol}${card_display_value}' ),
 				array(
 					'player_id'          => $bestValuePlayerId,
 					'player_name'        => $players[ $bestValuePlayerId ]['player_name'],
 					'card_display_value' => $this->getCardDisplayValue( $vitamin['type'], $vitamin['type_arg'] ),
-					'card_display_color' => $this->colors[ $vitamin['type'] ]['name'],
+					'card_suit_symbol'   => $this->getCardSuitSymbol( $vitamin['type'] ),
 					'color'              => $vitamin['type'],
 					'value'              => $vitamin['type_arg'],
 				)
@@ -1435,16 +1435,16 @@ class SlovenianTarokk extends Table {
 
 		self::notifyAllPlayers(
 			'playCard',
-			clienttranslate( '${player_name} plays ${color_displayed} ${value_displayed}' ),
+			clienttranslate( '${player_name} plays ${color_displayed}${value_displayed}' ),
 			array(
-				'i18n'            => array( 'color_displayed','value_displayed' ),
+				'i18n'            => array( 'value_displayed' ),
 				'card_id'         => $card_id,
 				'player_id'       => $playerId,
 				'player_name'     => self::getActivePlayerName(),
 				'value'           => $currentCard['type_arg'],
 				'value_displayed' => $this->getCardDisplayValue( $currentCard['type'], $currentCard['type_arg'] ),
 				'color'           => $currentCard['type'],
-				'color_displayed' => $this->colors[ $currentCard['type'] ]['name']
+				'color_displayed' => $this->getCardSuitSymbol( $currentCard['type'] ),
 			),
 		);
 
@@ -1467,16 +1467,16 @@ class SlovenianTarokk extends Table {
 		if ( $currentCard['type'] == SUIT_TRUMP ) {
 			self::notifyAllPlayers(
 				'discardTrump',
-				clienttranslate( '${player_name} discards ${color_displayed} ${value_displayed}' ),
+				clienttranslate( '${player_name} discards ${color_displayed}${value_displayed}' ),
 				array(
-					'i18n'            => array( 'color_displayed','value_displayed' ),
+					'i18n'            => array( 'value_displayed' ),
 					'card_id'         => $card_id,
 					'player_id'       => $playerId,
 					'player_name'     => self::getActivePlayerName(),
 					'value'           => $currentCard['type_arg'],
 					'value_displayed' => $this->getCardDisplayValue( $currentCard['type'], $currentCard['type_arg'] ),
 					'color'           => $currentCard['type'],
-					'color_displayed' => $this->colors[ $currentCard['type'] ]['name']
+					'color_displayed' => $this->getCardSuitSymbol( $currentCard['type'] ),
 				),
 			);
 		} else {
