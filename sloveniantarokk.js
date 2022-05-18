@@ -153,12 +153,12 @@ function (dojo, declare) {
 
                     var talonSplit = 3;
                     if (this.gamedatas.highBid == this.bids.three || this.gamedatas.highBid == this.bids.solo_three) {
-                        dojo.place(this.format_block('jstpl_talonexchange_33', {}), 'talonexchange');
+                        dojo.place(this.format_block('jstpl_talonexchange_33', {}), "talonexchange", "replace");
                     } else if (this.gamedatas.highBid == this.bids.two || this.gamedatas.highBid == this.bids.solo_two) {
-                        dojo.place(this.format_block('jstpl_talonexchange_222', {}), 'talonexchange');
+                        dojo.place(this.format_block('jstpl_talonexchange_222', {}), "talonexchange", "replace");
                         talonSplit = 2;
                     } else if (this.gamedatas.highBid == this.bids.one || this.gamedatas.highBid == this.bids.solo_one) {
-                        dojo.place(this.format_block('jstpl_talonexchange_111111', {}), 'talonexchange');
+                        dojo.place(this.format_block('jstpl_talonexchange_111111', {}), "talonexchange", "replace");
                         talonSplit = 1;
                     }
                     var counter = 0;
@@ -968,7 +968,7 @@ function (dojo, declare) {
 
         notif_newTalon: function (notif) {
             console.log( "on newTalon ", notif.args.talon);
-            this.gamedatas.talon = notif.args.talon;
+            this.gamedatas.cardsintalon = notif.args.talon;
         },
 
         notif_setPriorityOrder: function (notif) {
