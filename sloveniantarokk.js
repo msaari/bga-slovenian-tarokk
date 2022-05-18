@@ -1017,8 +1017,7 @@ function (dojo, declare) {
         },
 
         notif_trickWin: function (notif) {
-            // We do nothing here (just wait in order players can view the 4
-            // cards played before they're gone.
+            this.updatePlayerGame();
         },
 
         notif_vitamin: function (notif) {
