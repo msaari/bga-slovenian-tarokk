@@ -280,6 +280,10 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
+	function getCardSuitSymbol( $suit ) {
+		return $this->colors[ $suit ]['symbol'];
+	}
+
 	function getCardPointValue( $card ) {
 		return $card['type'] == SUIT_TRUMP
 			? $this->trump_point_values[ intval( $card['type_arg'] ) ]
@@ -1606,7 +1610,7 @@ class SlovenianTarokk extends Table {
 				throw new BgaUserException( self::_('This card is not in the talon!') );
 			}
 			$this->cards->moveCard( $card['id'], 'hand', $playerId );
-			$cardsTaken[] = $this->colors[ $card['type'] ]['name'] . ' ' .
+			$cardsTaken[] = $this->getCardSuitSymbol( $card['type'] ) .
 				$this->getCardDisplayValue( $card['type'], $card['type_arg'] );
 		}
 
