@@ -278,32 +278,17 @@ $machinestates = array(
 		'action'      => 'stEndHand',
 		'transitions' => array(
 			'nextHand' => 10,
-			'gameEnd'  => 99,
+			'gameEnd'  => 90,
 		),
 	),
 
-	/*
-	Examples:
-
-	2 => array(
-		"name" => "nextPlayer",
-		"description" => '',
-		"type" => "game",
-		"action" => "stNextPlayer",
-		"updateGameProgression" => true,
-		"transitions" => array( "endGame" => 99, "nextPlayer" => 10 )
+	90 => array(
+		'name'        => 'radliScoring',
+		'description' => '',
+		'type'        => 'game',
+		'action'      => 'stRadliScoring',
+		'transitions' => array( '' => 99 ),
 	),
-
-	10 => array(
-		"name" => "playerTurn",
-		"description" => clienttranslate('${actplayer} must play a card or pass'),
-		"descriptionmyturn" => clienttranslate('${you} must play a card or pass'),
-		"type" => "activeplayer",
-		"possibleactions" => array( "playCard", "pass" ),
-		"transitions" => array( "playCard" => 2, "pass" => 2 )
-	),
-
-*/
 
 	// Final state.
 	99 => array(

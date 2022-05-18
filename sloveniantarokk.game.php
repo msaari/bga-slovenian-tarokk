@@ -63,6 +63,7 @@ define( 'BONUS_SUCCESS', 1 );
 define( 'BONUS_FAILURE', 2 );
 
 define( 'GAME_LENGTH', 100 );
+define( 'RADLI_VALUE', 101 );
 
 class SlovenianTarokk extends Table {
 	function __construct() {
@@ -101,7 +102,9 @@ class SlovenianTarokk extends Table {
 				'playerAnnouncements' => 38,
 				'pagatUltimoStatus'   => 39,
 				'kingUltimoStatus'    => 40,
+				'handsPlayed'         => 41,
 				'gameLength'          => GAME_LENGTH,
+				'radliValue'          => RADLI_VALUE,
 			)
 		);
 
@@ -174,6 +177,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'playerAnnouncements', 0 );
 		self::setGameStateInitialValue( 'pagatUltimoStatus', 0 );
 		self::setGameStateInitialValue( 'kingUltimoStatus', 0 );
+		self::setGameStateInitialValue( 'handsPlayed', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -2090,22 +2094,53 @@ class SlovenianTarokk extends Table {
 	}
 
 	function stEndHand() {
-		$players = self::loadPlayersBasicInfos();
-		$dealer  = intval( self::getGameStateValue( 'dealer' ) );
+		$handsPlayed = intval( self::incGameStateValue( 'handsPlayed', 1 ) );
+		$gameLength  = intval( self::getGameStateValue( 'gameLength' ) );
 
-		$nextDealer = $this->getPlayerAfter( $dealer );
-		self::notifyAllPlayers(
-			'newDealer',
-			clienttranslate( '${player_name} is the new dealer' ),
-			array(
-				'player_id'   => $nextDealer,
-				'player_name' => $players[ $nextDealer ]['player_name'],
-			)
-		);
-		self::setGameStateValue( 'dealer', $nextDealer );
+		if ( $handsPlayed == $gameLength ) {
+			self::trace( 'stEndHand->radlScoring' );
+			$this->gamestate->nextState( 'gameEnd' );
+		} else {
+			$players = self::loadPlayersBasicInfos();
+			$dealer  = intval( self::getGameStateValue( 'dealer' ) );
 
-		self::trace( 'stEndHand->nextHand' );
-		$this->gamestate->nextState( 'nextHand' );
+			$nextDealer = $this->getPlayerAfter( $dealer );
+			self::notifyAllPlayers(
+				'newDealer',
+				clienttranslate( '${player_name} is the new dealer' ),
+				array(
+					'player_id'   => $nextDealer,
+					'player_name' => $players[ $nextDealer ]['player_name'],
+				)
+			);
+			self::setGameStateValue( 'dealer', $nextDealer );
+
+			self::trace( 'stEndHand->nextHand' );
+			$this->gamestate->nextState( 'nextHand' );
+		}
+	}
+
+	function stRadliScoring() {
+		$players    = self::loadPlayersBasicInfos();
+		$radliValue = intval( self::getGameStateValue( 'radliValue' ) );
+		foreach( $players as $player_id => $player ) {
+			$radli = $this->getRadli( $player_id );
+			if ( $radli > 0 ) {
+				$points = $radli * $radliValue;
+				$sql    = "UPDATE player SET player_score=player_score-$points WHERE player_id='$player_id'";
+				self::DbQuery($sql);
+				self::notifyAllPlayers(
+					'points',
+					clienttranslate( '${player_name} loses ${points} points for having ${radli} radli' ),
+					array(
+						'player_id'   => $player_id,
+						'player_name' => $player['player_name'],
+						'points'      => $points,
+						'radli'       => $radli,
+					)
+				);
+			}
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////////

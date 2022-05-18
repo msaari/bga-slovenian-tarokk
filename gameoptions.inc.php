@@ -24,14 +24,22 @@
  */
 
 $game_options = array(
-	GAME_DURATION => array(
+	GAME_LENGTH => array(
 		'name'   => totranslate( 'Game length' ),
 		'values' => array(
-			1 => array( 'name' => totranslate( '4 deals' ) ),
-			2 => array( 'name' => totranslate( '8 deals' ) ),
-			3 => array( 'name' => totranslate( '12 deals' ) ),
-			4 => array( 'name' => totranslate( '16 deals' ) ),
-			5 => array( 'name' => totranslate( '32 deals' ) ),
+			4 => array( 'name' => totranslate( '4 deals' ) ),
+			8 => array( 'name' => totranslate( '8 deals' ) ),
+			12 => array( 'name' => totranslate( '12 deals' ) ),
+			16 => array( 'name' => totranslate( '16 deals' ) ),
+			32 => array( 'name' => totranslate( '32 deals' ) ),
+		)
+	),
+
+	RADLI_VALUE => array(
+		'name'   => totranslate( 'Radli point value' ),
+		'values' => array(
+			100 => array( 'name' => totranslate( '-100 points' ) ),
+			40 => array( 'name' => totranslate( '-40 points' ) ),
 		)
 	),
 );
