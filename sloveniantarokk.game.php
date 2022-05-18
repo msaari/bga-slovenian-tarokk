@@ -62,7 +62,7 @@ define( 'TEAM_OPPONENT', 2 );
 define( 'BONUS_SUCCESS', 1 );
 define( 'BONUS_FAILURE', 2 );
 
-define( 'GAME_DURATION', 100 );
+define( 'GAME_LENGTH', 100 );
 
 class SlovenianTarokk extends Table {
 	function __construct() {
@@ -101,6 +101,7 @@ class SlovenianTarokk extends Table {
 				'playerAnnouncements' => 38,
 				'pagatUltimoStatus'   => 39,
 				'kingUltimoStatus'    => 40,
+				'gameLength'          => GAME_LENGTH,
 			)
 		);
 

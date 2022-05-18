@@ -21,12 +21,11 @@
  *        with the same ID (see "initGameStateLabels" in sloveniantarokk.game.php)
  *
  * !! It is not a good idea to modify this file when a game is running !!
- *
  */
 
 $game_options = array(
 	GAME_DURATION => array(
-		'name'   => totranslate( 'Game duration' ),
+		'name'   => totranslate( 'Game length' ),
 		'values' => array(
 			1 => array( 'name' => totranslate( '4 deals' ) ),
 			2 => array( 'name' => totranslate( '8 deals' ) ),
