@@ -202,7 +202,7 @@ $machinestates = array(
 		'type'              => 'activeplayer',
 		'possibleactions'   => array(
 			'upgradeToColourValat',
-			'passUpgrade',
+			'keepCurrentBid',
 		),
 		'transitions'       => array(
 			'upgradeToColourValat' => 60,
