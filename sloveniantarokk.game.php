@@ -1060,6 +1060,8 @@ class SlovenianTarokk extends Table {
 	public function updatePlayerData( $message = '', $player_name = '' ) {
 		self::trace( "updatePlayerData: '$message' - '$player_name' " );
 
+		// TODO: Bad data gets transmitted here.
+
 		$players   = $this->getPlayerCollection();
 		$arguments = array( 'players' => $players );
 		if ( $player_name ) {
@@ -1745,23 +1747,25 @@ class SlovenianTarokk extends Table {
 
 	public function makeAnnouncement( $announcement ) {
 		self::checkAction( 'makeAnnouncement' );
-		self::trace( 'makeAnnouncement' );
+		self::trace( 'makeAnnouncement: ' . $announcement );
 
 		$playerId = self::getActivePlayerId();
 
 		$currentValue = self::getGameStateValue( $this->announcements[ $announcement ]['value'] );
 		if ( $currentValue == 0 ) {
 			$currentValue = 1;
+		}
+		$currentValue = $currentValue * 2;
+		if ( $announcement != ANNOUNCEMENT_GAME ) {
 			self::setGameStateValue(
 				$this->announcements[ $announcement ]['player'],
 				$playerId
 			);
-			if ( $announcement == ANNOUNCEMENT_VALAT ) {
-				$this->clearAnnouncements();
-			}
-		} else {
-			$currentValue = $currentValue * 2;
 		}
+		if ( $announcement == ANNOUNCEMENT_VALAT ) {
+			$this->clearAnnouncements();
+		}
+
 		self::setGameStateValue( $this->announcements[ $announcement ]['value'], $currentValue );
 		$playerAnnouncements = self::incGameStateValue( 'playerAnnouncements', 1 );
 
@@ -2024,7 +2028,7 @@ class SlovenianTarokk extends Table {
 	}
 
 	public function stNoFinalBid() {
-		$highBid = self::getGameStateValue( 'highBid' );
+		$bid = self::getGameStateValue( 'highBid' );
 
 		$transition = 'toKingCalling';
 		if ( $bid == BID_KLOP || $bid >= BID_BEGGAR ) {
