@@ -27,6 +27,9 @@ define( 'OPTION_GAME_LENGTH', 100 );
 define( 'OPTION_RADLI_VALUE', 101 );
 define( 'OPTION_ALLOW_UPGRADES', 102 );
 
+define( 'VALUE_YES', 1 );
+define( 'VALUE_NO', 2 );
+
 $game_options = array(
 	OPTION_GAME_LENGTH => array(
 		'name'   => totranslate( 'Game length' ),
