@@ -2216,24 +2216,28 @@ class SlovenianTarokk extends Table {
 	//////////// Zombie
 	////////////
 
-	/*
-		zombieTurn:
-
-		This method is called each time it is the turn of a player who has quit the game (= "zombie" player).
-		You can do whatever you want in order to make sure the turn of this player ends appropriately
-		(ex: pass).
-
-		Important: your zombie code will be called when the player leaves the game. This action is triggered
-		from the main site and propagated to the gameserver from a server, not from a browser.
-		As a consequence, there is no current player associated to this action. In your zombieTurn function,
-		you must _never_ use getCurrentPlayerId() or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message.
-	*/
-
 	function zombieTurn( $state, $active_player ) {
 		$statename = $state['name'];
 
-		if ($state['type'] === "activeplayer") {
-			switch ($statename) {
+		if ( $state['type'] === 'activeplayer' ) {
+			switch ( $statename ) {
+				case 'playerBid':
+					// In bidding, zombie will pass.
+					$this->gamestate->nextState( 'pass' );
+					break;
+				case 'finalBid':
+					// Zombie forehand plays klop.
+					self::setGameStateValue( 'highBid', BID_KLOP );
+					$this->gamestate->nextState( 'toTrickTaking' );
+					break;
+				case 'announcements':
+					// Zombie never makes announcements.
+					$this->gamestate->nextState( 'passAnnouncement' );
+					break;
+				case 'playerTurn':
+					// Zombie plays a random legal card.
+					$this->playZombieCard( $zombieCard, $active_player );
+					break;
 				default:
 					$this->gamestate->nextState( "zombiePass" );
 					break;
@@ -2250,6 +2254,36 @@ class SlovenianTarokk extends Table {
 		}
 
 		throw new feException( "Zombie mode not supported at this game state: ".$statename );
+	}
+
+	function playZombieCard( $card, $playerId ) {
+		$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
+		$currentBid        = self::getGameStateValue( 'highBid' );
+
+		$cardPlayed = false;
+
+		$cards = array_rand( $this->cards->getCardsInLocation( 'hand', $playerId ) );
+		foreach ( $cards as $card ) {
+			if ( $currentTrickColor === 0 ) {
+				$cardPlayed = $card;
+				break;
+			}
+			$card_ok = $this->checkNormalRules( $card, $currentTrickColor, $playerId, true );
+			if ( in_array( $currentBid, array( BID_KLOP, BID_BEGGAR, BID_OPEN_BEGGAR ) ) ) {
+				$card_ok = $this->checkAvoidanceRules( $card, $currentTrickColor, $playerId, true );
+			}
+			if ( $card_ok ) {
+				$cardPlayed = $card;
+				break;
+			}
+		}
+
+		$cardId = $this->getCardUniqueId( $card['type'], $card['type_arg'] );
+		$this->doPlayCard( $currentCard, $playerId, $cardId );
+	}
+
+	function getCardUniqueId( $color, $value ) {
+		return ($color - 1) * 22 + ($value - 1);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////:
