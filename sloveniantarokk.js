@@ -155,12 +155,12 @@ function (dojo, declare) {
 
                     var talonSplit = 3;
                     if (this.gamedatas.highBid == this.bids.three || this.gamedatas.highBid == this.bids.solo_three) {
-                        dojo.place(this.format_block('jstpl_talonexchange_33', {}), "talonexchange", "replace");
+                        dojo.place(this.format_block('jstpl_talonexchange_33', {}), "talonexchange");
                     } else if (this.gamedatas.highBid == this.bids.two || this.gamedatas.highBid == this.bids.solo_two) {
-                        dojo.place(this.format_block('jstpl_talonexchange_222', {}), "talonexchange", "replace");
+                        dojo.place(this.format_block('jstpl_talonexchange_222', {}), "talonexchange");
                         talonSplit = 2;
                     } else if (this.gamedatas.highBid == this.bids.one || this.gamedatas.highBid == this.bids.solo_one) {
-                        dojo.place(this.format_block('jstpl_talonexchange_111111', {}), "talonexchange", "replace");
+                        dojo.place(this.format_block('jstpl_talonexchange_111111', {}), "talonexchange");
                         talonSplit = 1;
                     }
                     var counter = 0;
