@@ -23,6 +23,10 @@
  * !! It is not a good idea to modify this file when a game is running !!
  */
 
+define( 'OPTION_GAME_LENGTH', 100 );
+define( 'OPTION_RADLI_VALUE', 101 );
+define( 'OPTION_ALLOW_UPGRADES', 102 );
+
 $game_options = array(
 	OPTION_GAME_LENGTH => array(
 		'name'   => totranslate( 'Game length' ),
