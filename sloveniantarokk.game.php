@@ -799,6 +799,9 @@ class SlovenianTarokk extends Table {
 		$this->gamestate->changeActivePlayer( $bestValuePlayerId );
 		$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $bestValuePlayerId );
 
+		if ( $kingPlayer ) {
+			$this->maybeRevealIdentity( 'King', '', $kingPlayer );
+		}
 		$kingChosen = intval( self::getGameStateValue( 'calledKingChosen' ) );
 		if ( $bestValuePlayerId === $kingPlayer && $kingChosen ) {
 			$this->cards->moveAllCardsInLocation( 'talon', 'cardswon', null, $bestValuePlayerId );
@@ -1013,6 +1016,11 @@ class SlovenianTarokk extends Table {
 	 */
 	public function maybeRevealIdentity( $announcement, $currentValue, $playerId ) {
 		$reveal = false;
+
+		if ( $announcement == 'King' ) {
+			// Playing the called king reveals identity.
+			$reveal = true;
+		}
 
 		if ( $currentValue > ANNOUNCEMENT_BASIC ) {
 			// Any kontra announcement reveals identity.
