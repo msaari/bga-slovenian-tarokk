@@ -692,6 +692,7 @@ class SlovenianTarokk extends Table {
 		$points = $this->radliAdjustment( $points, $declarer );
 
 		if ( $teamScores['Declarer'] > 35 ) {
+			$players = self::loadPlayersBasicInfos();
 			$this->removeRadli( $declarer, $players[ $declarer ][ 'player_name' ] );
 		}
 
