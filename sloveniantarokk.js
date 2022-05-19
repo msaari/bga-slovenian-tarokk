@@ -138,15 +138,16 @@ function (dojo, declare) {
                     this.gamedatas.highBid = 2;
                     this.gamedatas.gamevalue = 1;
                     this.gamedatas.trulaPlayer = 0;
-                    this.gamedatas.trulaValue = 0;
+                    this.gamedatas.trulaValue = 1;
                     this.gamedatas.kingsPlayer = 0;
-                    this.gamedatas.kingsValue = 0;
+                    this.gamedatas.kingsValue = 1;
                     this.gamedatas.kingUltimoPlayer = 0;
-                    this.gamedatas.kingUltimoValue = 0;
+                    this.gamedatas.kingUltimoValue = 1;
                     this.gamedatas.pagatUltimoPlayer = 0;
-                    this.gamedatas.pagatUltimoValue = 0;
+                    this.gamedatas.pagatUltimoValue = 1;
                     this.gamedatas.valatPlayer = 0;
                     this.gamedatas.valatValue = 0;
+                    dojo.empty("talonexchange");
                     this.emptyPlayerGame();
                     break;
                 case 'exchange':
