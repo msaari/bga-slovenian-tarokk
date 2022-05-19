@@ -616,9 +616,10 @@ function (dojo, declare) {
                 if (radl_count < 1) {
                     radl_note += '–';
                 }
+                dojo.empty('playerradl_' + player_id);
                 dojo.place(this.format_block('jstpl_radl', {
                     player_radl: radl_note
-                }), 'playerradl_' + player_id, "replace");
+                }), 'playerradl_' + player_id);
             }
         },
 
@@ -627,36 +628,39 @@ function (dojo, declare) {
                 var game_note = '';
                 var game_class = '';
                 if (player_id == this.gamedatas.highBidder) {
+                    console.log("highbid is " + this.gamedatas.highBid);
                     switch (parseInt(this.gamedatas.highBid)) {
                         case this.bids.three:
                             game_note = "3";
                             break;
                         case this.bids.two:
-                            console.log("game note");
                             game_note = "2";
                             break;
                         case this.bids.one:
                             game_note = "1";
                             break;
-                        case this.bids.soloThree:
+                        case this.bids.solo_three:
                             game_note = "S3";
                             break;
-                        case this.bids.soloTwo:
+                        case this.bids.solo_two:
                             game_note = "S2";
                             break;
-                        case this.bids.soloOne:
+                        case this.bids.solo_one:
                             game_note = "S1";
                             break;
                         case this.bids.beggar:
                             game_note = "B";
                             break;
-                        case this.bids.soloWithout:
+                        case this.bids.solo_without:
                             game_note = "S0";
                             break;
-                        case this.bids.openBeggar:
+                        case this.bids.open_beggar:
                             game_note = "OB";
                             break;
-                        case this.bids.colourValat:
+                        case this.bids.colour_valat_without:
+                            game_note = "CV0";
+                            break;
+                        case this.bids.colour_valat:
                             game_note = "CV";
                             break;
                         case this.bids.valat:
@@ -995,7 +999,7 @@ function (dojo, declare) {
         },
 
         notif_setPriorityOrder: function (notif) {
-            console.log( "on setPriorityOrder ", notif.args.priorityOrder);
+            console.log( "on setPriorityOrder ");
             this.gamedatas.forehand = notif.args.forehand;
 
             this.priorityOrder = [
@@ -1007,13 +1011,14 @@ function (dojo, declare) {
 
             this.gamedatas.highBidder = 0;
 
-            console.log("received forehand ", this.forehand);
+            console.log("received forehand ", this.gamedatas.forehand);
         },
 
         notif_updateBids: function (notif) {
             console.log("on updateBids ", notif.args.highBid + " " + notif.args.highBidder);
             this.gamedatas.highBidder = notif.args.highBidder;
             this.gamedatas.highBid = notif.args.highBid;
+            this.updatePlayerGame();
         },
 
         notif_discardCard: function (notif) {
@@ -1089,7 +1094,9 @@ function (dojo, declare) {
 
         notif_playerDataUpdate: function (notif) {
             console.log("notif_playerDataUpdate", notif.args);
+            console.log("before: ", this.gamedatas.players);
             this.gamedatas.players = notif.args.players;
+            console.log("after: ", this.gamedatas.players);
             this.updateRadli();
         },
 
