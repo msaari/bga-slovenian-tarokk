@@ -2245,7 +2245,7 @@ class SlovenianTarokk extends Table {
 					break;
 				case 'playerTurn':
 					// Zombie plays a random legal card.
-					$this->playZombieCard( $zombieCard, $active_player );
+					$this->playZombieCard( $active_player );
 					break;
 				default:
 					$this->gamestate->nextState( "zombiePass" );
@@ -2265,13 +2265,14 @@ class SlovenianTarokk extends Table {
 		throw new feException( "Zombie mode not supported at this game state: ".$statename );
 	}
 
-	function playZombieCard( $card, $playerId ) {
+	function playZombieCard( $playerId ) {
 		$currentTrickColor = intval( self::getGameStateValue( 'trickColor' ) );
 		$currentBid        = self::getGameStateValue( 'highBid' );
 
 		$cardPlayed = false;
 
-		$cards = array_rand( $this->cards->getCardsInLocation( 'hand', $playerId ) );
+		$cards = $this->cards->getCardsInLocation( 'hand', $playerId );
+		shuffle( $cards );
 		foreach ( $cards as $card ) {
 			if ( $currentTrickColor === 0 ) {
 				$cardPlayed = $card;
@@ -2287,8 +2288,8 @@ class SlovenianTarokk extends Table {
 			}
 		}
 
-		$cardId = $this->getCardUniqueId( $card['type'], $card['type_arg'] );
-		$this->doPlayCard( $currentCard, $playerId, $cardId );
+		$cardId = $this->getCardId( $cardPlayed['type'], $cardPlayed['type_arg'] );
+		$this->doPlayCard( $cardPlayed, $playerId, $cardId, $currentTrickColor );
 	}
 
 	function getCardUniqueId( $color, $value ) {
