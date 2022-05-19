@@ -1473,10 +1473,10 @@ class SlovenianTarokk extends Table {
 
 		$this->checkUltimo( $currentCard, $playerId );
 
-		$this->doPlayCard( $currentCard, $playerId, $card_id );
+		$this->doPlayCard( $currentCard, $playerId, $card_id, $currentTrickColor );
 	}
 
-	function doPlayCard( $currentCard, $playerId, $card_id ) {
+	function doPlayCard( $currentCard, $playerId, $card_id, $currentTrickColor ) {
 		$this->cards->moveCard( $card_id, 'cardsontable', $playerId );
 
 		if ( $currentTrickColor === 0 ) {
