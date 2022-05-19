@@ -147,6 +147,7 @@ function (dojo, declare) {
                     this.gamedatas.pagatUltimoValue = 0;
                     this.gamedatas.valatPlayer = 0;
                     this.gamedatas.valatValue = 0;
+                    this.emptyPlayerGame();
                     break;
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
@@ -671,6 +672,11 @@ function (dojo, declare) {
                     player_game: game_note,
                     game_class: game_class,
                 }), 'playergame_' + player_id, "replace");
+        emptyPlayerGame: function () {
+            console.log("empty player game");
+            for (var player_id in this.gamedatas.players) {
+                console.log("empty playergame_" + player_id);
+                dojo.empty('playergame_' + player_id);
             }
         },
 
