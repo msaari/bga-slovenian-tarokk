@@ -669,10 +669,17 @@ function (dojo, declare) {
                     game_note = 'K';
                 }
 
-                dojo.place(this.format_block('jstpl_game', {
-                    player_game: game_note,
-                    game_class: game_class,
-                }), 'playergame_' + player_id, "replace");
+                if (game_note == '') {
+                    dojo.empty('playergame_' + player_id);
+                } else {
+                    dojo.place(this.format_block('jstpl_game', {
+                        player_game: game_note,
+                        game_class: game_class,
+                    }), 'playergame_' + player_id);
+                }
+            }
+        },
+
         emptyPlayerGame: function () {
             console.log("empty player game");
             for (var player_id in this.gamedatas.players) {
