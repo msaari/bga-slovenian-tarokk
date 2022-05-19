@@ -62,8 +62,12 @@ define( 'TEAM_OPPONENT', 2 );
 define( 'BONUS_SUCCESS', 1 );
 define( 'BONUS_FAILURE', 2 );
 
-define( 'GAME_LENGTH', 100 );
-define( 'RADLI_VALUE', 101 );
+define( 'OPTION_GAME_LENGTH', 100 );
+define( 'OPTION_RADLI_VALUE', 101 );
+define( 'OPTION_ALLOW_UPGRADES', 102 );
+
+define( 'VALUE_YES', 1 );
+define( 'VALUE_NO', 2 );
 
 class SlovenianTarokk extends Table {
 	function __construct() {
@@ -103,8 +107,10 @@ class SlovenianTarokk extends Table {
 				'pagatUltimoStatus'   => 39,
 				'kingUltimoStatus'    => 40,
 				'handsPlayed'         => 41,
-				'gameLength'          => GAME_LENGTH,
-				'radliValue'          => RADLI_VALUE,
+				'calledKingChosen'    => 42,
+				'gameLength'          => OPTION_GAME_LENGTH,
+				'radliValue'          => OPTION_RADLI_VALUE,
+				'allowUpgrades'       => OPTION_ALLOW_UPGRADES,
 			)
 		);
 
@@ -178,6 +184,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'pagatUltimoStatus', 0 );
 		self::setGameStateInitialValue( 'kingUltimoStatus', 0 );
 		self::setGameStateInitialValue( 'handsPlayed', 0 );
+		self::setGameStateInitialValue( 'calledKingChosen', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -256,20 +263,15 @@ class SlovenianTarokk extends Table {
 		return $result;
 	}
 
-	/*
-		getGameProgression:
-
-		Compute and return the current game progression.
-		The number returned must be an integer beween 0 (=the game just started) and
-		100 (= the game is finished or almost finished).
-
-		This method is called each time we are in a game state with the "updateGameProgression" property set to true
-		(see states.inc.php)
-	*/
 	function getGameProgression() {
-		// TODO: compute and return the game progression
+		$handsPlayed = self::getGameStateValue( 'handsPlayed' );
+		$totalHands  = self::getGameStateValue( 'gameLength' );
 
-		return 0;
+		if ( $handsPlayed >= $totalHands ) {
+			return 100;
+		} else {
+			return round( $handsPlayed * 100 / $totalHands, 0 );
+		}
 	}
 
 
@@ -453,21 +455,31 @@ class SlovenianTarokk extends Table {
 		}
 	}
 
-	function checkNormalRules( $currentCard, $currentTrickColor, $playerId ) {
+	function checkNormalRules( $currentCard, $currentTrickColor, $playerId, $zombie = false ) {
 		$cardsInHand = $this->cards->getCardsInLocation( 'hand', $playerId );
 
 		if ( $currentTrickColor > 0 ) {
 			if ( $this->haveColorInHand( $currentTrickColor, $cardsInHand )
 				&& intval( $currentCard['type'] ) !== $currentTrickColor ) {
-				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ $currentTrickColor ]['name'] . '.' );
+				if ( $zombie ) {
+					return false;
+				} else {
+					throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ $currentTrickColor ]['name'] . '.' );
+				}
 			}
 			if ( $currentTrickColor !== SUIT_TRUMP
 				&& intval( $currentCard['type'] ) !== SUIT_TRUMP
 				&& ! $this->haveColorInHand( $currentTrickColor, $cardsInHand )
 				&& $this->haveColorInHand( SUIT_TRUMP, $cardsInHand ) ) {
-				throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ SUIT_TRUMP ]['name'] . '.' );
+				if ( $zombie ) {
+					return false;
+				} else {
+					throw new BgaUserException( self::_( 'You must play a ' ) . $this->colors[ SUIT_TRUMP ]['name'] . '.' );
+				}
 			}
 		}
+
+		return true;
 	}
 
 	function checkUltimo( $currentCard, $playerId ) {
@@ -785,6 +797,24 @@ class SlovenianTarokk extends Table {
 
 		$this->gamestate->changeActivePlayer( $bestValuePlayerId );
 		$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $bestValuePlayerId );
+
+		$kingChosen = intval( self::getGameStateValue( 'calledKingChosen' ) );
+		if ( $bestValuePlayerId === $kingPlayer && $kingChosen ) {
+			$this->cards->moveAllCardsInLocation( 'talon', 'cardswon', null, $bestValuePlayerId );
+			self::notifyAllPlayers(
+				'calledKingWon',
+				clienttranslate( '${player_name} collects the talon cards for winning the trick with the called king.' ),
+				array ( 'player_name' => $players[ $bestValuePlayerId ][ 'player_name' ] )
+			);
+		}
+		if ( $kingPlayer && $kingPlayer !== $bestValuePlayerId && $kingChosen ) {
+			$this->cards->moveAllCardsInLocation( 'talon', 'opponents' );
+			self::notifyAllPlayers(
+				'calledKingLost',
+				clienttranslate( '${player_name} loses the trick with the called king, talon cards go to the opponent.' ),
+				array ( 'player_name' => $players[ $kingPlayer ][ 'player_name' ] )
+			);
+		}
 
 		$declarer = intval( self::getGameStateValue( 'declarer' ) );
 		if ( $declarer == $bestValuePlayerId ) {
@@ -1434,6 +1464,10 @@ class SlovenianTarokk extends Table {
 
 		$this->checkUltimo( $currentCard, $playerId );
 
+		$this->doPlayCard( $currentCard, $playerId, $card_id );
+	}
+
+	function doPlayCard( $currentCard, $playerId, $card_id ) {
 		$this->cards->moveCard( $card_id, 'cardsontable', $playerId );
 
 		if ( $currentTrickColor === 0 ) {
@@ -1612,16 +1646,31 @@ class SlovenianTarokk extends Table {
 			throw new BgaUserException( self::_( 'All cards were not found in the talon' ) );
 		}
 
+		$calledKing       = self::getGameStateValue( 'calledKing' );
+		$calledKingChosen = false;
+
 		foreach ( $cardObjects as $card ) {
 			if ( $card['location'] !== 'talon' ) {
 				throw new BgaUserException( self::_('This card is not in the talon!') );
+			}
+			if ( $card['type'] == $calledKing && $card['type_arg'] == '14' ) {
+				$calledKingChosen = true;
+				self::setGameStateValue( 'calledKingChosen', 1 );
 			}
 			$this->cards->moveCard( $card['id'], 'hand', $playerId );
 			$cardsTaken[] = $this->getCardSuitSymbol( $card['type'] ) .
 				$this->getCardDisplayValue( $card['type'], $card['type_arg'] );
 		}
 
-		$this->cards->moveAllCardsInLocation( 'talon', 'opponents' );
+		if ( ! $calledKingChosen ) {
+			$this->cards->moveAllCardsInLocation( 'talon', 'opponents' );
+		} else {
+			self::notifyAllPlayers(
+				'calledKingChosen',
+				clienttranslate( '${player_name} chooses the called king from the talon. The talon is set aside.' ),
+				array( 'player_name'     => self::getActivePlayerName() )
+			);
+		}
 
 		$cardsTaken = implode( ', ', $cardsTaken );
 
@@ -1922,8 +1971,6 @@ class SlovenianTarokk extends Table {
 			self::setGameStateValue( 'secondPasser', 0 );
 			self::setGameStateValue( 'thirdPasser', 0 );
 
-			self::trace( 'stNextBid->allPass' );
-
 			self::notifyAllPlayers(
 				'updateBids',
 				clienttranslate( 'All players have passed, ${player_name} is the high bidder.' ),
@@ -1934,8 +1981,14 @@ class SlovenianTarokk extends Table {
 				)
 			);
 			$this->gamestate->changeActivePlayer( $highBidder );
-			self::trace( 'stNextBid->allPass' );
-			$this->gamestate->nextState('allPass');
+
+			$nextState = 'allPass';
+			if ( $highBid > BID_THREE && intval( self::getGameStateValue( 'allowUpgrade' ) ) == VALUE_NO ) {
+				// Forehand can still upgrade a bid of three, even if upgrading is not allowed.
+				$nextState = 'allPassNoUpgrade';
+			}
+			self::trace( 'stNextBid->' . $nextState );
+			$this->gamestate->nextState( $nextState );
 		} else {
 			$firstPasser  = self::getGameStateValue( 'firstPasser' );
 			$secondPasser = self::getGameStateValue( 'secondPasser' );
@@ -1956,6 +2009,22 @@ class SlovenianTarokk extends Table {
 			self::trace( 'stNextBid->nextBidder' );
 			$this->gamestate->nextState( 'nextBidder' );
 		}
+	}
+
+	public function stNoFinalBid() {
+		$highBid = self::getGameStateValue( 'highBid' );
+
+		$transition = 'toKingCalling';
+		if ( $bid == BID_KLOP || $bid >= BID_BEGGAR ) {
+			// In klop or bids above beggar, no king calling, exchange or announcements.
+			$transition = 'toTrickTaking';
+		}
+		if ( $bid >= BID_SOLO_THREE && $bid < BID_BEGGAR ) {
+			// In solo bids, there's no king calling.
+			$transition = 'toExchange';
+		}
+		self::trace( 'noFinalBid->' . $transition );
+		$this->gamestate->nextState( $transition );
 	}
 
 	public function stExchange() {

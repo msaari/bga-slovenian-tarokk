@@ -24,7 +24,7 @@
  */
 
 $game_options = array(
-	GAME_LENGTH => array(
+	OPTION_GAME_LENGTH => array(
 		'name'   => totranslate( 'Game length' ),
 		'values' => array(
 			4 => array( 'name' => totranslate( '4 deals' ) ),
@@ -35,11 +35,19 @@ $game_options = array(
 		)
 	),
 
-	RADLI_VALUE => array(
+	OPTION_RADLI_VALUE => array(
 		'name'   => totranslate( 'Radli point value' ),
 		'values' => array(
 			100 => array( 'name' => totranslate( '-100 points' ) ),
 			40 => array( 'name' => totranslate( '-40 points' ) ),
+		)
+	),
+
+	OPTION_ALLOW_UPGRADES => array(
+		'name'   => totranslate( 'Allow upgrading contract' ),
+		'values' => array(
+			VALUE_YES => array( 'name' => totranslate( 'Yes' ) ),
+			VALUE_NO  => array( 'name' => totranslate( 'No' ) ),
 		)
 	),
 );

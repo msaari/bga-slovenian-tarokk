@@ -109,8 +109,9 @@ $machinestates = array(
 		'type'        => 'game',
 		'action'      => 'stNextBid',
 		'transitions' => array(
-			'nextBidder' => 21,
-			'allPass'    => 23,
+			'nextBidder'       => 21,
+			'allPass'          => 23,
+			'allPassNoUpgrade' => 24,
 		),
 	),
 
@@ -123,6 +124,17 @@ $machinestates = array(
 			'finalBid',
 		),
 		'transitions'       => array(
+			'toKingCalling'   => 30,
+			'toExchange'      => 40,
+			'toTrickTaking'   => 60,
+		),
+	),
+
+	24 => array(
+		'name'        => 'noFinalBid',
+		'type'  	  => 'game',
+		'action'      => 'stNoFinalBid',
+		'transitions' => array(
 			'toKingCalling'   => 30,
 			'toExchange'      => 40,
 			'toTrickTaking'   => 60,
@@ -272,14 +284,15 @@ $machinestates = array(
 	),
 
 	80 => array(
-		'name'        => 'endHand',
-		'description' => '',
-		'type'        => 'game',
-		'action'      => 'stEndHand',
-		'transitions' => array(
+		'name'                  => 'endHand',
+		'description'           => '',
+		'type'                  => 'game',
+		'action'                => 'stEndHand',
+		'transitions'           => array(
 			'nextHand' => 10,
 			'gameEnd'  => 90,
 		),
+		'updateGameProgression' => true,
 	),
 
 	90 => array(
