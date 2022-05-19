@@ -2292,8 +2292,9 @@ class SlovenianTarokk extends Table {
 		$this->doPlayCard( $cardPlayed, $playerId, $cardId, $currentTrickColor );
 	}
 
-	function getCardUniqueId( $color, $value ) {
-		return ($color - 1) * 22 + ($value - 1);
+	function getCardId( $color, $value ) {
+		$sql = "SELECT card_id FROM cards WHERE card_type='$color' AND card_type_arg='$value'";
+		return self::getUniqueValueFromDB( $sql );
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////:
