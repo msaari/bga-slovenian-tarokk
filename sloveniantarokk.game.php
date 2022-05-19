@@ -724,21 +724,19 @@ class SlovenianTarokk extends Table {
 			return;
 		}
 
-		$operator = '+';
 		if ( $points > 0 ) {
 			$notification = clienttranslate( 'Declarer gains ${points} points' );
 			if ( $declarerPartner ) {
 				$notification = clienttranslate( 'Declarer\'s team gains ${points} points in total' );
 			}
 		} else {
-			$operator     = '-';
 			$notification = clienttranslate( 'Declarer loses ${points} points' );
 			if ( $declarerPartner ) {
 				$notification = clienttranslate( 'Declarer\'s team loses ${points} points in total' );
 			}
 		}
 
-		$sql = "UPDATE player SET player_score=player_score$operator$points  WHERE player_id='$declarer'";
+		$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarer'";
 		self::DbQuery($sql);
 
 		$declarerScore = self::getUniqueValueFromDb(
@@ -748,7 +746,7 @@ class SlovenianTarokk extends Table {
 		$partnerScore = -1;
 
 		if ( $declarerPartner ) {
-			$sql = "UPDATE player SET player_score=player_score$operator$points  WHERE player_id='$declarerPartner'";
+			$sql = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$declarerPartner'";
 			self::DbQuery($sql);
 
 			$partnerScore = self::getUniqueValueFromDb(
