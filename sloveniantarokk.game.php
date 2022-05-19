@@ -1869,6 +1869,9 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'tricksByDeclarer', 0 );
 		self::setGameStateValue( 'gameValue', 1 );
 
+		$sql = "UPDATE player SET player_identity = ''";
+		self::DbQuery( $sql );
+
 		$this->cards->moveAllCardsInLocation( null, 'deck' );
 		$this->cards->shuffle('deck');
 
