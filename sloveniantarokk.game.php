@@ -1995,7 +1995,7 @@ class SlovenianTarokk extends Table {
 			$this->gamestate->changeActivePlayer( $highBidder );
 
 			$nextState = 'allPass';
-			if ( $highBid > BID_THREE && intval( self::getGameStateValue( 'allowUpgrade' ) ) == VALUE_NO ) {
+			if ( $highBid > BID_THREE && intval( self::getGameStateValue( 'allowUpgrades' ) ) == VALUE_NO ) {
 				// Forehand can still upgrade a bid of three, even if upgrading is not allowed.
 				$nextState = 'allPassNoUpgrade';
 			}
