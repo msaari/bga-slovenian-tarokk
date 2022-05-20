@@ -213,6 +213,39 @@ class SlovenianTarokk extends Table {
 		}
 
 		$this->cards->createCards( $cards, 'deck' );
+
+		$this->initStat( 'player', 'games_declared', 0 );
+		$this->initStat( 'player', 'games_as_partner', 0 );
+		$this->initStat( 'player', 'hands_won', 0 );
+		$this->initStat( 'player', 'hands_lost', 0 );
+		$this->initStat( 'player', 'monds_captured', 0 );
+		$this->initStat( 'player', 'monds_lost', 0 );
+		$this->initStat( 'player', 'emperor_tricks_taken', 0 );
+		$this->initStat( 'player', 'tricks_taken', 0 );
+		$this->initStat( 'player', 'radli_cleared', 0 );
+		$this->initStat( 'player', 'kings_in_talon', 0 );
+		$this->initStat( 'player', 'beggars_played', 0 );
+		$this->initStat( 'player', 'beggars_won', 0 );
+		$this->initStat( 'player', 'solos_played', 0 );
+		$this->initStat( 'player', 'solos_won', 0 );
+		$this->initStat( 'player', 'valats_played', 0 );
+		$this->initStat( 'player', 'valats_won', 0 );
+		$this->initStat( 'player', 'announcements_made', 0 );
+		$this->initStat( 'player', 'announcements_kontrad', 0 );
+
+		$this->initStat( 'table', 'bid_klop', 0 );
+		$this->initStat( 'table', 'bid_three', 0 );
+		$this->initStat( 'table', 'bid_two', 0 );
+		$this->initStat( 'table', 'bid_one', 0 );
+		$this->initStat( 'table', 'bid_solo_three', 0 );
+		$this->initStat( 'table', 'bid_solo_two', 0 );
+		$this->initStat( 'table', 'bid_solo_one', 0 );
+		$this->initStat( 'table', 'bid_beggar', 0 );
+		$this->initStat( 'table', 'bid_solo_without', 0 );
+		$this->initStat( 'table', 'bid_open_beggar', 0 );
+		$this->initStat( 'table', 'bid_colour_valat_without', 0 );
+		$this->initStat( 'table', 'bid_colour_valat', 0 );
+		$this->initStat( 'table', 'bid_valat', 0 );
 	}
 
 	/*
@@ -525,6 +558,7 @@ class SlovenianTarokk extends Table {
 					'points'      => $points,
 				)
 			);
+			$this->incStat( 1, 'hands_lost', $declarer );
 		} else {
 			$sql = "UPDATE player SET score + score - $points WHERE player_id = $declarer";
 			self::notifyAllPlayers(
@@ -536,6 +570,8 @@ class SlovenianTarokk extends Table {
 				)
 			);
 			$this->removeRadli( $declarer, $players[ $declarer ]['player_name'] );
+			$this->incStat( 1, 'beggars_won', $declarer );
+			$this->incStat( 1, 'hands_won', $declarer );
 		}
 	}
 
@@ -557,6 +593,7 @@ class SlovenianTarokk extends Table {
 					'points'      => $points,
 				)
 			);
+			$this->incStat( 1, 'hands_lost', $declarer );
 		} else {
 			$sql = "UPDATE player SET score + score - $points WHERE player_id = $declarer";
 			self::notifyAllPlayers(
@@ -568,6 +605,8 @@ class SlovenianTarokk extends Table {
 				)
 			);
 			$this->removeRadli( $declarer, $players[ $declarer ]['player_name'] );
+			$this->incStat( 1, 'valats_won', $declarer );
+			$this->incStat( 1, 'hands_won', $declarer );
 		}
 	}
 
@@ -607,6 +646,7 @@ class SlovenianTarokk extends Table {
 					'points'      => $points,
 				)
 			);
+			$this->incStat( 1, 'hands_lost', $loser );
 		}
 		if ( count ( $winners ) > 0 ) {
 			foreach ( $winners as $winner_id ) {
@@ -622,6 +662,7 @@ class SlovenianTarokk extends Table {
 					)
 				);
 				$this->removeRadli( $declarer, $players[ $winner_id ][ 'player_name' ] );
+				$this->incStat( 1, 'hands_won', $winner_id );
 			}
 		}
 		if ( ! $loser && count( $winners ) == 0 ) {
@@ -685,6 +726,7 @@ class SlovenianTarokk extends Table {
 
 		if ( $teamScores['Declarer'] <= 35 ) {
 			$points = -$points;
+			$this->incStat( 1, 'hands_lost', $declarer );
 		}
 
 		$points = $this->scoreBonuses( $points, $teamCards );
@@ -694,6 +736,10 @@ class SlovenianTarokk extends Table {
 		if ( $teamScores['Declarer'] > 35 ) {
 			$players = self::loadPlayersBasicInfos();
 			$this->removeRadli( $declarer, $players[ $declarer ][ 'player_name' ] );
+			$this->incStat( 1, 'hands_won', $declarer );
+			if ( $currentBid >= BID_SOLO_THREE && $currentBid <= BID_SOLO_ONE ) {
+				$this->incStat( 1, 'solos_won', $declarer );
+			}
 		}
 
 		$this->adjustPoints( $points, $declarer, $declarerPartner );
@@ -788,6 +834,8 @@ class SlovenianTarokk extends Table {
 			'mondPlayer'        => $mondPlayer,
 			'kingPlayer'        => $kingPlayer,
 		) = $this->analyzeTrick( $currentBid );
+
+		$this->incStat( 1, 'tricks_taken', $bestValuePlayerId );
 
 		$bestValuePlayerId = $this->checkForEmperorsTrick( $pagatPlayer, $mondPlayer, $bestValuePlayerId, $players );
 		$this->checkForMondCapture( $currentBid, $mondPlayer, $bestValuePlayerId, $players );
@@ -914,6 +962,7 @@ class SlovenianTarokk extends Table {
 					'player_name' => $players[ $bestValuePlayerId ]['player_name'],
 				)
 			);
+			$this->incStat( 1, 'emperor_tricks_taken', $bestValuePlayerId );
 		}
 		return $bestValuePlayerId;
 	}
@@ -933,6 +982,8 @@ class SlovenianTarokk extends Table {
 				)
 			);
 			$this->updateScores();
+			$this->incStat( 1, 'monds_captured', $bestValuePlayerId );
+			$this->incStat( 1, 'monds_lost', $mondPlayer );
 		}
 	}
 
@@ -1007,6 +1058,54 @@ class SlovenianTarokk extends Table {
 		}
 
 		return false;
+	}
+
+	function increaseBidStat( $highBid ) {
+		$statToInc = '';
+		switch ( intval( $highBid ) ) {
+			case BID_KLOP:
+				$statToInc = 'bid_klop';
+				break;
+			case BID_THREE:
+				$statToInc = 'bid_three';
+				break;
+			case BID_TWO:
+				$statToInc = 'bid_two';
+				break;
+			case BID_ONE:
+				$statToInc = 'bid_one';
+				break;
+			case BID_SOLO_THREE:
+				$statToInc = 'bid_solo_three';
+				break;
+			case BID_SOLO_TWO:
+				$statToInc = 'bid_solo_two';
+				break;
+			case BID_SOLO_ONE:
+				$statToInc = 'bid_solo_one';
+				break;
+			case BID_BEGGAR:
+				$statToInc = 'bid_beggar';
+				break;
+			case BID_SOLO_WITHOUT:
+				$statToInc = 'bid_solo_without';
+				break;
+			case BID_OPEN_BEGGAR:
+				$statToInc = 'bid_open_beggar';
+				break;
+			case BID_COLOUR_VALAT_WITHOUT:
+				$statToInc = 'bid_colour_valat_without';
+				break;
+			case BID_COLOUR_VALAT:
+				$statToInc = 'bid_colour_valat';
+				break;
+			case BID_VALAT:
+				$statToInc = 'bid_valat';
+				break;
+		}
+		if ( $statToInc ) {
+			$this->incStat( 1, $statToInc );
+		}
 	}
 
 	/**
@@ -1349,6 +1448,7 @@ class SlovenianTarokk extends Table {
 			$sql = "UPDATE player SET player_radl = player_radl - 1 WHERE player_id = $playerId";
 			self::DbQuery( $sql );
 			$this->updatePlayerData( clienttranslate( '${player_name} cancels one radlc.' ), $playerName );
+			$this->incStat( 1, 'radli_cleared', $playerId );
 		}
 	}
 
@@ -1438,6 +1538,8 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'highBid', $bid );
 		self::giveExtraTime( $playerId );
 
+		$this->increaseBidStat( $bid );
+
 		self::notifyAllPlayers(
 			'declarer',
 			clienttranslate( '${player_name} is the declarer and chooses to play ${contract}.' ),
@@ -1447,6 +1549,15 @@ class SlovenianTarokk extends Table {
 				'contract'    => $this->bid_names[ $bid ],
 			)
 		);
+		$this->incStat( 1, 'games_declared', $playerId );
+
+		if ( $bid == BID_BEGGAR || $bid == BID_OPEN_BEGGAR ) {
+			$this->incStat( 1, 'beggars_played', $playerId );
+		}
+
+		if ( $bid >= BID_COLOUR_VALAT ) {
+			$this->incStat( 1, 'valats_played', $playerId );
+		}
 
 		$transition = 'toKingCalling';
 		if ( $bid == BID_KLOP || $bid >= BID_BEGGAR ) {
@@ -1456,6 +1567,7 @@ class SlovenianTarokk extends Table {
 		if ( $bid >= BID_SOLO_THREE && $bid < BID_BEGGAR ) {
 			// In solo bids, there's no king calling.
 			$transition = 'toExchange';
+			$this->incStat( 1, 'solos_played', $playerId );
 		}
 		self::trace( 'finalBid->' . $transition );
 		$this->gamestate->nextState( $transition );
@@ -1629,6 +1741,11 @@ class SlovenianTarokk extends Table {
 			);
 
 			$this->setPlayerTeam( $partner, 'declarer', true );
+			$this->incStat( 1, 'games_as_partner', $partner );
+		}
+
+		if ( $partner == 'talon' ) {
+			$this->incStat( 1, 'kings_in_talon', $declarer );
 		}
 
 		self::trace('callKing->kingChosen->newTrick');
@@ -1987,6 +2104,7 @@ class SlovenianTarokk extends Table {
 			self::setGameStateValue( 'secondPasser', 0 );
 			self::setGameStateValue( 'thirdPasser', 0 );
 
+
 			self::notifyAllPlayers(
 				'updateBids',
 				clienttranslate( 'All players have passed, ${player_name} is the high bidder.' ),
@@ -2029,6 +2147,8 @@ class SlovenianTarokk extends Table {
 
 	public function stNoFinalBid() {
 		$bid = self::getGameStateValue( 'highBid' );
+
+		$this->increaseBidStat( $bid );
 
 		$transition = 'toKingCalling';
 		if ( $bid == BID_KLOP || $bid >= BID_BEGGAR ) {
