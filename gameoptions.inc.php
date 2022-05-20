@@ -47,16 +47,16 @@ $game_options = array(
 	OPTION_RADLI_VALUE => array(
 		'name'   => totranslate( 'Radli point value' ),
 		'values' => array(
-			100 => array( 'name' => totranslate( '-100 points' ) ),
-			40 => array( 'name' => totranslate( '-40 points' ) ),
+			100 => array( 'name' => totranslate( '-100 points (good for longer games)' ) ),
+			40 => array( 'name' => totranslate( '-40 points (good for shorter games)' ) ),
 		)
 	),
 
 	OPTION_ALLOW_UPGRADES => array(
 		'name'   => totranslate( 'Allow upgrading contract' ),
 		'values' => array(
-			VALUE_YES => array( 'name' => totranslate( 'Yes' ) ),
-			VALUE_NO  => array( 'name' => totranslate( 'No' ) ),
+			VALUE_YES => array( 'name' => totranslate( 'Yes (makes the game easier)' ) ),
+			VALUE_NO  => array( 'name' => totranslate( 'No (makes the game harder)' ) ),
 		)
 	),
 );
