@@ -1159,8 +1159,6 @@ class SlovenianTarokk extends Table {
 	public function updatePlayerData( $message = '', $player_name = '' ) {
 		self::trace( "updatePlayerData: '$message' - '$player_name' " );
 
-		// TODO: Bad data gets transmitted here.
-
 		$players   = $this->getPlayerCollection();
 		$arguments = array( 'players' => $players );
 		if ( $player_name ) {

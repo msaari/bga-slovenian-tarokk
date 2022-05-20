@@ -1095,7 +1095,11 @@ function (dojo, declare) {
         notif_playerDataUpdate: function (notif) {
             console.log("notif_playerDataUpdate", notif.args);
             console.log("before: ", this.gamedatas.players);
-            this.gamedatas.players = notif.args.players;
+            for (var player in notif.args.players) {
+                this.gamedatas.players[player].score = notif.args.players[player].score;
+                this.gamedatas.players[player].radl = notif.args.players[player].radl;
+                this.gamedatas.players[player].team = notif.args.players[player].team;
+            }
             console.log("after: ", this.gamedatas.players);
             this.updateRadli();
         },
