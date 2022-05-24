@@ -150,6 +150,9 @@ function (dojo, declare) {
                     dojo.empty("talonexchange");
                     this.emptyPlayerGame();
                     this.emptyBeggarHand();
+                    for (var player_id in this.gamedatas.players) {
+                        this.gamedatas.players[player_id].team = '';
+                    }
                     break;
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
