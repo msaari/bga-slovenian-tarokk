@@ -2348,6 +2348,11 @@ class SlovenianTarokk extends Table {
 				);
 			}
 		}
+
+		$this->updateScores();
+
+		self::trace( 'stRadliScoring->gameEnd' );
+		$this->gamestate->nextState();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////
