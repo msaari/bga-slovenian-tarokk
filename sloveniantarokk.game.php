@@ -549,7 +549,8 @@ class SlovenianTarokk extends Table {
 		$points = $this->radliAdjustment( $this->bid_point_values[ $currentBid ], $declarer );
 
 		if ( $failed ) {
-			$sql = "UPDATE player SET score = score - $points WHERE player_id = $declarer";
+			$sql = "UPDATE player SET player_score=player_score-$points WHERE player_id = $declarer";
+			self::DbQuery( $sql );
 			self::notifyAllPlayers(
 				'score',
 				clienttranslate( '${player_name} failed and lost ${points} points.' ),
@@ -560,7 +561,8 @@ class SlovenianTarokk extends Table {
 			);
 			$this->incStat( 1, 'hands_lost', $declarer );
 		} else {
-			$sql = "UPDATE player SET score + score - $points WHERE player_id = $declarer";
+			$sql = "UPDATE player SET player_score=player_score-$points WHERE player_id = $declarer";
+			self::DbQuery( $sql );
 			self::notifyAllPlayers(
 				'score',
 				clienttranslate( '${player_name} succeeded and won ${points} points.' ),
@@ -584,7 +586,8 @@ class SlovenianTarokk extends Table {
 		$points = $this->radliAdjustment( $this->bid_point_values[ $currentBid ], $declarer );
 
 		if ( $tricks < HAND_SIZE ) {
-			$sql = "UPDATE player SET score = score - $points WHERE player_id = $declarer";
+			$sql = "UPDATE player SET player_score=player_score-$points WHERE player_id = $declarer";
+			self::DbQuery( $sql );
 			self::notifyAllPlayers(
 				'score',
 				clienttranslate( '${player_name} failed and lost ${points} points.' ),
@@ -595,7 +598,8 @@ class SlovenianTarokk extends Table {
 			);
 			$this->incStat( 1, 'hands_lost', $declarer );
 		} else {
-			$sql = "UPDATE player SET score + score - $points WHERE player_id = $declarer";
+			$sql = "UPDATE player SET player_score=player_score-$points WHERE player_id = $declarer";
+			self::DbQuery( $sql );
 			self::notifyAllPlayers(
 				'score',
 				clienttranslate( '${player_name} succeeded and won ${points} points.' ),
