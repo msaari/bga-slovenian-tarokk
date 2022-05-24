@@ -2311,6 +2311,8 @@ class SlovenianTarokk extends Table {
 			$players = self::loadPlayersBasicInfos();
 			$dealer  = intval( self::getGameStateValue( 'dealer' ) );
 
+			self::setGameStateValue( 'compulsoryKlop', 0 );
+
 			$nextDealer = $this->getPlayerAfter( $dealer );
 			self::notifyAllPlayers(
 				'newDealer',
