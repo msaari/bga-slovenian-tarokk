@@ -1614,6 +1614,16 @@ class SlovenianTarokk extends Table {
 			),
 		);
 
+		$declarer = self::getGameStateValue( 'declarer' );
+		if ( $declarer == $playerId
+			&& self::getGameStateValue( 'highBid' ) == BID_OPEN_BEGGAR
+			&& self::getGameStateValue( 'trickCount' ) >1 ) {
+			self::notifyAllPlayers(
+				'openBeggar',
+				'',
+				array( 'beggar_cards' => $this->cards->getCardsInLocation( 'hand', $playerId ) )
+			);
+		}
 		self::trace( 'playCard->playCard' );
 		$this->gamestate->nextState( 'playCard' );
 	}
@@ -2257,6 +2267,14 @@ class SlovenianTarokk extends Table {
 				self::trace( 'stNextPlayer->endHand' );
 				$this->gamestate->nextState( 'endHand' );
 			} else {
+				if ( $currentBid == BID_OPEN_BEGGAR ) {
+					self::notifyAllPlayers(
+						'openBeggar',
+						'',
+						array( 'beggar_cards' => $this->cards->getCardsInLocation( 'hand', self::getGameStateValue( 'declarer' ) ) )
+					);
+				}
+
 				self::trace( 'stNextPlayer->nextTrick' );
 				$this->gamestate->nextState( 'nextTrick' );
 			}
