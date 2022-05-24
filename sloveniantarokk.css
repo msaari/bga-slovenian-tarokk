@@ -136,3 +136,7 @@
 #talonexchange .cardontable {
 	position: relative;
 }
+
+#openbeggarhand {
+	display: none;
+}
