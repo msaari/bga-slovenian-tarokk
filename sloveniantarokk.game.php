@@ -2002,6 +2002,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'trickCount', 0 );
 		self::setGameStateValue( 'tricksByDeclarer', 0 );
 		self::setGameStateValue( 'gameValue', 1 );
+		self::setGameStateValue( 'calledKingChosen', 0 );
 
 		$sql = "UPDATE player SET player_identity = ''";
 		self::DbQuery( $sql );
