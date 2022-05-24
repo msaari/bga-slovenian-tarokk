@@ -1883,8 +1883,9 @@ class SlovenianTarokk extends Table {
 		$currentValue = self::getGameStateValue( $this->announcements[ $announcement ]['value'] );
 		if ( $currentValue == 0 ) {
 			$currentValue = 1;
+		} else {
+			$currentValue = $currentValue * 2;
 		}
-		$currentValue = $currentValue * 2;
 		if ( $announcement != ANNOUNCEMENT_GAME ) {
 			self::setGameStateValue(
 				$this->announcements[ $announcement ]['player'],
