@@ -149,6 +149,7 @@ function (dojo, declare) {
                     this.gamedatas.valatValue = 0;
                     dojo.empty("talonexchange");
                     this.emptyPlayerGame();
+                    this.emptyBeggarHand();
                     break;
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
@@ -206,6 +207,14 @@ function (dojo, declare) {
                     if (this.gamedatas.highBid == 0) {
                         this.gamedatas.highBid = 2;
                     }
+                    break;
+                case 'newTrick':
+                    if (this.gamedatas.highBid == this.bids.open_beggar) {
+                        dojo.style('openbeggarhand', 'display', 'block');
+                    }
+                    break;
+                case 'endHand':
+                    dojo.style('openbeggarhand', 'display', 'none');
                     break;
             }
         },
@@ -692,6 +701,11 @@ function (dojo, declare) {
             }
         },
 
+        emptyBeggarHand: function () {
+            console.log("empty beggar hand");
+            dojo.empty('ob_hand');
+
+        },
         // /////////////////////////////////////////////////
         // // Player's action
 
@@ -963,6 +977,7 @@ function (dojo, declare) {
             dojo.subscribe('playerDataUpdate', this, "notif_playerDataUpdate");
             dojo.subscribe('makeAnnouncement', this, "notif_makeAnnouncement");
             dojo.subscribe('passAnnouncement', this, "notif_passAnnouncement");
+            dojo.subscribe('openBeggar', this, "notif_openBeggar");
         },
 
         notif_checkCompulsoryKlop: function (notif) {
@@ -1141,5 +1156,19 @@ function (dojo, declare) {
             console.log("passAnnouncement received");
             this.gamedatas.playerAnnouncements = 0;
         },
+
+        notif_openBeggar: function (notif) {
+            console.log("openBeggar received");
+            var beggar_hand = '<div id="ob_hand">' + _("Beggar hand") + ': ';
+            var beggar_cards = [];
+            for ( var i in notif.args.beggar_cards) {
+                var card = notif.args.beggar_cards[i];
+                beggar_cards.push(this.getSuitValue(card));
+            }
+            beggar_cards.sort();
+            beggar_hand += beggar_cards.join(', ') + '</div>';
+            console.log(beggar_hand);
+            dojo.place(beggar_hand, "ob_hand", "replace");
+        }
    });
 });
