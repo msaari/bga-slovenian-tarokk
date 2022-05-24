@@ -1217,133 +1217,90 @@ class SlovenianTarokk extends Table {
 			return $points;
 		}
 
-		self::notifyAllPlayers(
+		$points += self::notifyAllPlayers(
 			'gamePoints',
 			clienttranslate( 'The declarer scores ${points} points for game.' ),
 			array( 'points' => $gamePoints )
 		);
 
-		$declarerHasTrula   = $this->hasTrula( $teamCards['Declarer'] );
-		$opponentsHaveTrula = $this->hasTrula( $teamCards['Opponents'] );
+		$points += $this->doOneBonus(
+			$this->hasTrula( $teamCards['Declarer'] ),
+			$this->hasTrula( $teamCards['Opponents'] ),
+			$trulaPlayer,
+			ANNOUNCEMENT_TRULA,
+			'trulaValue',
+			clienttranslate( 'The declarer gets ${points} points for trula.' )
+		);
 
-		if ( $declarerHasTrula || $opponentsHaveTrula || $trulaPlayer > 0 ) {
-			$trulaTeam   = $trulaPlayer ? $this->getPlayerTeam( $trulaPlayer ) : null;
-			$trulaPoints = $this->announcements[ ANNOUNCEMENT_TRULA ]['points'];
+		$points += $this->doOneBonus(
+			$this->hasKings( $teamCards['Declarer'] ),
+			$this->hasKings( $teamCards['Opponents'] ),
+			$kingsPlayer,
+			ANNOUNCEMENT_KINGS,
+			'kingsValue',
+			clienttranslate( 'The declarer gets ${points} points for kings.' )
+		);
 
-			if ( ! $trulaPlayer ) {
-				if ( $opponentsHaveTrula ) {
-					$trulaPoints = -$trulaPoints;
-				}
-			} else {
-				$trulaPoints = $trulaPoints * 2;
-			}
+		$points += $this->doOneBonus(
+			self::getGameStateValue( 'pagatUltimoStatus' ),
+			null,
+			$pagatUltimoPlayer,
+			ANNOUNCEMENT_PAGATULTIMO,
+			'pagatUltimoValue',
+			clienttranslate( 'The declarer gets ${points} points for pagat ultimo.' )
+		);
 
-			if ( $opponentsHaveTrula ) {
-				$trulaPoints = -$trulaPoints;
-			}
-
-			if ( $trulaTeam == 'declarer' && ! $declarerHasTrula ) {
-				$trulaPoints = -$trulaPoints;
-			}
-
-			$trulaPoints = $trulaPoints * self::getGameStateValue( 'trulaValue' );
-			$points     += $trulaPoints;
-
-			self::notifyAllPlayers(
-				'bonusPoints',
-				clienttranslate( 'The declarer gets ${points} points for trula.' ),
-				array( 'points' => $trulaPoints	)
-			);
-		}
-
-		$declarerHasKings   = $this->hasKings( $teamCards['Declarer'] );
-		$opponentsHaveKings = $this->hasKings( $teamCards['Opponents'] );
-
-		if ( $declarerHasKings || $opponentsHaveKings || $kingsPlayer > 0 ) {
-			$kingsTeam   = $kingsPlayer ? $this->getPlayerTeam( $kingsPlayer ) : null;
-			$kingsPoints = $this->announcements[ ANNOUNCEMENT_KINGS ]['points'];
-
-			if ( ! $kingsPlayer ) {
-				if ( $opponentsHaveKings ) {
-					$kingsPoints = -$kingsPoints;
-				}
-			} else {
-				$kingsPoints = $kingsPoints * 2;
-			}
-
-			if ( $opponentsHaveKings ) {
-				$kingsPoints = -$kingsPoints;
-			}
-
-			if ( $kingsTeam == 'declarer' && ! $declarerHasKings ) {
-				$kingsPoints = -$kingsPoints;
-			}
-
-			$kingsPoints = $kingsPoints * self::getGameStateValue( 'kingsValue' );
-			$points     += $kingsPoints;
-
-			self::notifyAllPlayers(
-				'bonusPoints',
-				clienttranslate( 'The declarer gets ${points} points for kings.' ),
-				array( 'points' => $kingsPoints	)
-			);
-		}
-
-		$pagatUltimoStatus = self::getGameStateValue( 'pagatUltimoStatus' );
-
-		if ( $pagatUltimoStatus ) {
-			$pagatUltimoTeam = $pagatUltimoPlayer ? $this->getPlayerTeam( $pagatUltimoPlayer ) : null;
-			$pagatPoints     = $this->announcements[ ANNOUNCEMENT_PAGATULTIMO ]['points'];
-
-			if ( $pagatUltimoTeam == 'declarer' && $pagatUltimoStatus == BONUS_FAILURE ) {
-				$pagatPoints = -$pagatPoints;
-			}
-
-			if ( $pagatUltimoTeam == 'opponent' && $pagatUltimoStatus == BONUS_SUCCESS ) {
-				$pagatPoints = -$pagatPoints;
-			}
-
-			if ( $pagatUltimoPlayer ) {
-				$pagatPoints = $pagatPoints * 2;
-			}
-
-			$points += $pagatPoints;
-
-			self::notifyAllPlayers(
-				'bonusPoints',
-				clienttranslate( 'The declarer gets ${points} points for pagat ultimo.' ),
-				array( 'points' => $pagatPoints	)
-			);
-		}
-
-		$kingUltimoStatus = self::getGameStateValue( 'kingUltimoStatus' );
-
-		if ( $kingUltimoStatus ) {
-			$kingUltimoTeam = $kingUltimoPlayer ? $this->getPlayerTeam( $kingUltimoPlayer ) : null;
-			$kingPoints     = $this->announcements[ ANNOUNCEMENT_KINGULTIMO ]['points'];
-
-			if ( $kingUltimoTeam == 'declarer' && $kingUltimoStatus == BONUS_FAILURE ) {
-				$kingPoints = -$kingPoints;
-			}
-
-			if ( $kingUltimoTeam == 'opponent' && $kingUltimoStatus == BONUS_SUCCESS ) {
-				$kingPoints = -$kingPoints;
-			}
-
-			if ( $kingUltimoPlayer ) {
-				$kingPoints = $kingPoints * 2;
-			}
-
-			$points += $kingPoints;
-
-			self::notifyAllPlayers(
-				'bonusPoints',
-				clienttranslate( 'The declarer gets ${points} points for king ultimo.' ),
-				array( 'points' => $kingPoints )
-			);
-		}
+		$this->doOneBonus(
+			self::getGameStateValue( 'kingUltimoStatus' ),
+			null,
+			$kingUltimoPlayer,
+			ANNOUNCEMENT_KINGULTIMO,
+			'kingUltimoValue',
+			clienttranslate( 'The declarer gets ${points} points for king ultimo.' )
+		);
 
 		return $gamePoints + $points;
+	}
+
+	public function doOneBonus( $declarerHas, $opponentsHave, $announcer, $announcement, $value, $notification ) {
+		$bonusPoints = 0;
+
+		if ( $declarerHas || $opponentsHave || $announcer > 0 ) {
+			$announcerTeam = $announcer ? $this->getPlayerTeam( $announcer ) : null;
+			$bonusPoints   = $this->announcements[ $announcement ]['points'];
+
+			if ( $announcement == ANNOUNCEMENT_PAGATULTIMO || $announcement == ANNOUNCEMENT_KINGULTIMO ) {
+				if ( $announcerTeam == 'declarer' && $declarerHas == BONUS_FAILURE ) {
+					$bonusPoints = -$bonusPoints;
+				}
+
+				if ( $announcerTeam == 'opponent' && $declarerHas == BONUS_SUCCESS ) {
+					$bonusPoints = -$bonusPoints;
+				}
+			} else {
+				if ( $opponentsHave || ($announcerTeam == 'declarer' && ! $declarerHas) ) {
+					$bonusPoints = -$bonusPoints;
+				}
+			}
+
+			if ( $announcer ) {
+				$bonusPoints = $bonusPoints * 2;
+			}
+
+			$bonusValue = self::getGameStateValue( $value );
+			if ( $bonusValue < 1 ) {
+				$bonusValue = 1;
+			}
+			$bonusPoints = $bonusPoints * $bonusValue;
+
+			self::notifyAllPlayers(
+				'bonusPoints',
+				$notification,
+				array( 'points' => $bonusPoints	)
+			);
+		}
+
+		return $bonusPoints;
 	}
 
 	/**
