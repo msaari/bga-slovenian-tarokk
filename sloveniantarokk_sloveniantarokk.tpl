@@ -17,9 +17,13 @@
     </div>
     <!-- END player -->
 
-    <div id="vitamin" class="playertable">
-    </div>
+</div>
 
+<div id="vitamin" class="playertable">
+</div>
+
+<div id="openbeggarhand" class="whiteblock">
+<div id="ob_hand"></div>
 </div>
 
 <div id="myhand_wrap" class="whiteblock">
