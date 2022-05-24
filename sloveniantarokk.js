@@ -642,6 +642,9 @@ function (dojo, declare) {
                 if (player_id == this.gamedatas.highBidder) {
                     console.log("highbid is " + this.gamedatas.highBid);
                     switch (parseInt(this.gamedatas.highBid)) {
+                        case this.bids.klop:
+                            game_note = '';
+                            break;
                         case this.bids.three:
                             game_note = "3";
                             break;
@@ -678,6 +681,8 @@ function (dojo, declare) {
                         case this.bids.valat:
                             game_note = "V";
                             break;
+                        default:
+                            game_note = '';
                     }
                     game_class = 'declarer';
                 } else if (this.getPlayerTeam(player_id) == 'declarer') {
@@ -707,7 +712,6 @@ function (dojo, declare) {
         emptyBeggarHand: function () {
             console.log("empty beggar hand");
             dojo.empty('ob_hand');
-
         },
 
         getSuitValue: function (card) {
