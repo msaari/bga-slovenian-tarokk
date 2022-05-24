@@ -706,6 +706,27 @@ function (dojo, declare) {
             dojo.empty('ob_hand');
 
         },
+
+        getSuitValue: function (card) {
+            var value = card.type_arg;
+            var color = '';
+            switch (card.type) {
+                case "1":
+                    color = '♠';
+                    break;
+                case "2":
+                    color = '♣';
+                    break;
+                case "3":
+                    color = '<span style="color: #D22B2B">♥</span>';
+                    break;
+                case "4":
+                    color = '<span style="color: #D22B2B">♦</span>';
+                    break;
+            }
+            return color + value;
+        },
+
         // /////////////////////////////////////////////////
         // // Player's action
 
