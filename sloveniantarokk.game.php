@@ -844,9 +844,7 @@ class SlovenianTarokk extends Table {
 		$bestValuePlayerId = $this->checkForEmperorsTrick( $pagatPlayer, $mondPlayer, $bestValuePlayerId, $players );
 		$this->checkForMondCapture( $currentBid, $mondPlayer, $bestValuePlayerId, $players );
 
-		if ( $trickCount == HAND_SIZE ) {
-			$this->checkUltimoStatus( $pagatPlayer, $kingPlayer, $bestValuePlayerId, $players );
-		}
+		$this->checkUltimoStatus( $pagatPlayer, $kingPlayer, $bestValuePlayerId, $players, $trickCount );
 
 		$this->gamestate->changeActivePlayer( $bestValuePlayerId );
 		$this->cards->moveAllCardsInLocation( 'cardsontable', 'cardswon', null, $bestValuePlayerId );
@@ -1343,10 +1341,26 @@ class SlovenianTarokk extends Table {
 		return self::getCollectionFromDb( $sql );
 	}
 
-	public function checkUltimoStatus( $pagatPlayer, $kingPlayer, $bestValuePlayerId, $players ) {
-		self::trace( 'checkUltimoStatus' );
+	public function checkPagatUltimo( $pagatPlayer, $bestValuePlayerId, $players, $trickCount ) {
+		$pagatAnnounced = self::getGameStateValue( 'pagatUltimoPlayer' );
 
-		self::trace( "pagatPlayer: $pagatPlayer - kingPlayer: $kingPlayer - bestValuePlayerId: $bestValuePlayerId " );
+		if ( $pagatPlayer && $pagatAnnounced && $trickCount < HAND_SIZE ) {
+			// Announced pagat ultimo, played pagat earlier.
+			self::setGameStateValue( 'pagatUltimoStatus', BONUS_FAILURE );
+			self::notifyAllPlayers(
+				'pagatUltimo',
+				clienttranslate( '${player_name} lost the pagat ultimo bonus' ),
+				array(
+					'player_name' => $players[ $pagatPlayer ]['player_name'],
+				)
+			);
+			return;
+		}
+
+		if ( $trickCount < HAND_SIZE ) {
+			// Not the last trick, not interested.
+			return;
+		}
 
 		if ( $pagatPlayer == $bestValuePlayerId ) {
 			self::setGameStateValue( 'pagatUltimoStatus', BONUS_SUCCESS );
@@ -1366,6 +1380,28 @@ class SlovenianTarokk extends Table {
 					'player_name' => $players[ $pagatPlayer ]['player_name'],
 				)
 			);
+		}
+	}
+
+	public function checkKingUltimo( $kingPlayer, $bestValuePlayerId, $players, $trickCount ) {
+		$kingAnnounced = self::getGameStateValue( 'kingUltimoPlayer' );
+
+		if ( $kingPlayer && $kingAnnounced && $trickCount < HAND_SIZE ) {
+			// Announced pagat ultimo, played pagat earlier.
+			self::setGameStateValue( 'kingUltimoStatus', BONUS_FAILURE );
+			self::notifyAllPlayers(
+				'kingUltimo',
+				clienttranslate( '${player_name} lost the king ultimo bonus' ),
+				array(
+					'player_name' => $players[ $kingPlayer ]['player_name'],
+				)
+			);
+			return;
+		}
+
+		if ( $trickCount < HAND_SIZE ) {
+			// Not the last trick, not interested.
+			return;
 		}
 
 		if ( $kingPlayer ) {
@@ -1388,6 +1424,23 @@ class SlovenianTarokk extends Table {
 					)
 				);
 			}
+		}
+	}
+
+	public function checkUltimoStatus( $pagatPlayer, $kingPlayer, $bestValuePlayerId, $players, $trickCount ) {
+		self::trace( 'checkUltimoStatus' );
+
+		$pagatUltimoStatus = self::getGameStateValue( 'pagatUltimoStatus' );
+		$kingUltimoStatus  = self::getGameStateValue( 'kingUltimoStatus' );
+
+		self::trace( "pagatPlayer: $pagatPlayer - kingPlayer: $kingPlayer - bestValuePlayerId: $bestValuePlayerId " );
+
+		if ( $pagatUltimoStatus == 0 ) {
+			$this->checkPagatUltimo( $pagatPlayer, $bestValuePlayerId, $players, $trickCount );
+		}
+
+		if ( $kingUltimoStatus == 0 ) {
+			$this->checkKingUltimo( $kingPlayer, $bestValuePlayerId, $players, $trickCount );
 		}
 	}
 
