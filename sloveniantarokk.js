@@ -233,6 +233,7 @@ function (dojo, declare) {
 
             switch (stateName) {
                 case 'exchange':
+                    dojo.empty('talonexchange');
                     dojo.style('talonexchange', 'display', 'none');
                     break;
             }
@@ -1132,6 +1133,8 @@ function (dojo, declare) {
                 });
                 anim.play();
             }
+            this.gamedatas.cardsintalon = [];
+            dojo.empty("talonexchange");
         },
 
         notif_callKing: function (notif) {
