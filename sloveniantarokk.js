@@ -1028,17 +1028,6 @@ function (dojo, declare) {
             this.gamedatas.calledKing = 0;
         },
 
-        notif_newCards: function (notif) {
-            console.log( "on newCards ", notif.args.cards);
-            for ( var i in notif.args.cards) {
-                var card = notif.args.cards[i];
-                var color = card.type;
-                var value = card.type_arg;
-                this.playerHand.addToStockWithId(this.getCardUniqueId(color, value), card.id);
-                console.log("new card " + this.getCardUniqueId(color, value) + " " + color + " " + value);
-            }
-        },
-
         notif_newTalon: function (notif) {
             console.log( "on newTalon ", notif.args.talon);
             this.gamedatas.cardsintalon = notif.args.talon;
