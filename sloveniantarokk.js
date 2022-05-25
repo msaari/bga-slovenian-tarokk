@@ -989,7 +989,6 @@ function (dojo, declare) {
             dojo.subscribe('newDealer', this, "notif_checkCompulsoryKlop");
             dojo.subscribe('newHand', this, "notif_newHand");
             dojo.subscribe('newDeal', this, "notif_checkCompulsoryKlop");
-            dojo.subscribe('newCards', this, "notif_newCards");
             dojo.subscribe('newTalon', this, "notif_newTalon");
             dojo.subscribe('setPriorityOrder', this, "notif_setPriorityOrder");
             dojo.subscribe('updateBids', this, "notif_updateBids");
