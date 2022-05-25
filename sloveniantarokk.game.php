@@ -1947,9 +1947,14 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'playerAnnouncements', 0 );
 
 		if ( $type == 'pass' ) {
+			$declarer    = self::getGameStateValue( 'declarer' );
 			$firstPasser = self::getGameStateValue( 'firstPasser' );
 			if ( $firstPasser == 0 ) {
-				self::setGameStateValue( 'firstPasser', $playerId );
+				if ( $playerId !== $declarer ) {
+					// Don't count the declarer's first pass, so that all four
+					// players get a chance to announce.
+					self::setGameStateValue( 'firstPasser', $playerId );
+				}
 			} else {
 				$secondPasser = self::getGameStateValue( 'secondPasser' );
 				if ( $secondPasser == 0 ) {
