@@ -1915,6 +1915,7 @@ class SlovenianTarokk extends Table {
 		$playerAnnouncements = self::incGameStateValue( 'playerAnnouncements', 1 );
 
 		if ( $this->playerIdentityHidden( $playerId ) ) {
+			self::trace( "identity hidden, maybe reveal $announcement - $currentValue - $playerId " );
 			$this->maybeRevealIdentity( $announcement, $currentValue, $playerId );
 		}
 
