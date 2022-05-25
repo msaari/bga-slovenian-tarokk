@@ -990,6 +990,7 @@ function (dojo, declare) {
             dojo.subscribe('newTalon', this, "notif_newTalon");
             dojo.subscribe('setPriorityOrder', this, "notif_setPriorityOrder");
             dojo.subscribe('updateBids', this, "notif_updateBids");
+            dojo.subscribe('declarer', this, "notif_declarer");
             dojo.subscribe('talonChosen', this, "notif_talonChosen");
             dojo.subscribe('discardCard', this, "notif_discardCard");
             dojo.subscribe('upgradeToColourValat', this, "notif_upgradeToColourValat");
@@ -1062,6 +1063,11 @@ function (dojo, declare) {
             this.gamedatas.highBidder = notif.args.highBidder;
             this.gamedatas.highBid = notif.args.highBid;
             this.updatePlayerGame();
+        },
+
+        notif_declarer: function (notif) {
+            console.log("on declarer ", notif.args);
+            this.gamedatas.players[notif.args.playerId].team = "declarer";
         },
 
         notif_discardCard: function (notif) {
