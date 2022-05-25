@@ -1069,7 +1069,7 @@ function (dojo, declare) {
 
         notif_declarer: function (notif) {
             console.log("on declarer ", notif.args);
-            this.gamedatas.players[notif.args.playerId].team = "declarer";
+            this.gamedatas.players[notif.args.player_id].team = "declarer";
         },
 
         notif_discardCard: function (notif) {
