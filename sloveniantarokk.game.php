@@ -763,7 +763,7 @@ class SlovenianTarokk extends Table {
 	function hasKings( $cards ) {
 		$kings = 0;
 		foreach ( $cards as $card ) {
-			if ( $card['type_arg'] == '14' ) {
+			if ( $card['type_arg'] == '14' && $card['type'] != SUIT_TRUMP ) {
 				$kings++;
 			}
 		}
