@@ -2246,6 +2246,8 @@ class SlovenianTarokk extends Table {
 
 	function stNewTrick() {
 		self::setGameStateValue( 'trickColor', 0 );
+		self::setGameStateValue( 'compulsoryKlop', 0 );
+
 		if ( self::getGameStateValue( 'trickCount' ) < 1 ) {
 			$bid         = self::getGameStateValue( 'highBid' );
 			$firstPlayer = self::getGameStateValue( 'forehand' );
@@ -2341,15 +2343,14 @@ class SlovenianTarokk extends Table {
 			$players = self::loadPlayersBasicInfos();
 			$dealer  = intval( self::getGameStateValue( 'dealer' ) );
 
-			self::setGameStateValue( 'compulsoryKlop', 0 );
-
 			$nextDealer = $this->getPlayerAfter( $dealer );
 			self::notifyAllPlayers(
 				'newDealer',
 				clienttranslate( '${player_name} is the new dealer' ),
 				array(
-					'player_id'   => $nextDealer,
-					'player_name' => $players[ $nextDealer ]['player_name'],
+					'player_id'      => $nextDealer,
+					'player_name'    => $players[ $nextDealer ]['player_name'],
+					'compulsoryKlop' => self::getGameStateValue( 'compulsoryKlop' ),
 				)
 			);
 			self::setGameStateValue( 'dealer', $nextDealer );
