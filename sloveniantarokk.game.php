@@ -1250,7 +1250,7 @@ class SlovenianTarokk extends Table {
 			clienttranslate( 'The declarer gets ${points} points for pagat ultimo.' )
 		);
 
-		$this->doOneBonus(
+		$points += $this->doOneBonus(
 			self::getGameStateValue( 'kingUltimoStatus' ),
 			null,
 			$kingUltimoPlayer,
