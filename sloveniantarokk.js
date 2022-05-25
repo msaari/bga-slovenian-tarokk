@@ -144,7 +144,7 @@ function (dojo, declare) {
                     }
                     break;
                 case 'startAnnouncements':
-                    this.gamedatas.gamevalue = 1;
+                    this.gamedatas.gameValue = 1;
                     this.gamedatas.trulaPlayer = 0;
                     this.gamedatas.trulaValue = 1;
                     this.gamedatas.kingsPlayer = 0;
@@ -155,6 +155,7 @@ function (dojo, declare) {
                     this.gamedatas.pagatUltimoValue = 1;
                     this.gamedatas.valatPlayer = 0;
                     this.gamedatas.valatValue = 0;
+                    break;
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
 
