@@ -1205,7 +1205,11 @@ class SlovenianTarokk extends Table {
 				$points = -$points;
 			}
 
-			$points = $points * self::getGameStateValue( 'valatValue' );
+			$valatValue = self::getGameStateValue( 'valatValue' );
+			if ( $valatValue < 1 ) {
+				$valatValue = 1;
+			}
+			$points = $points * $valatValue;
 
 			self::notifyAllPlayers(
 				'bonusPoints',
