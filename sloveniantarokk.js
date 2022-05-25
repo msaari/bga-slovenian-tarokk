@@ -1019,6 +1019,7 @@ function (dojo, declare) {
 
         notif_newHand : function(notif) {
             this.playerHand.removeAll();
+            this.gamedatas.hand = notif.args.cards;
 
             for ( var i in notif.args.cards) {
                 var card = notif.args.cards[i];
