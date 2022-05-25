@@ -136,6 +136,14 @@ function (dojo, declare) {
             switch (stateName) {
                 case 'newHand':
                     this.gamedatas.highBid = 2;
+                    dojo.empty("talonexchange");
+                    this.emptyPlayerGame();
+                    this.emptyBeggarHand();
+                    for (var player_id in this.gamedatas.players) {
+                        this.gamedatas.players[player_id].team = '';
+                    }
+                    break;
+                case 'startAnnouncements':
                     this.gamedatas.gamevalue = 1;
                     this.gamedatas.trulaPlayer = 0;
                     this.gamedatas.trulaValue = 1;
@@ -147,13 +155,6 @@ function (dojo, declare) {
                     this.gamedatas.pagatUltimoValue = 1;
                     this.gamedatas.valatPlayer = 0;
                     this.gamedatas.valatValue = 0;
-                    dojo.empty("talonexchange");
-                    this.emptyPlayerGame();
-                    this.emptyBeggarHand();
-                    for (var player_id in this.gamedatas.players) {
-                        this.gamedatas.players[player_id].team = '';
-                    }
-                    break;
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
 
