@@ -1895,6 +1895,10 @@ class SlovenianTarokk extends Table {
 		self::checkAction( 'makeAnnouncement' );
 		self::trace( 'makeAnnouncement: ' . $announcement );
 
+		self::setGameStateValue( 'firstPasser', 0 );
+		self::setGameStateValue( 'secondPasser', 0 );
+		self::setGameStateValue( 'thirdPasser', 0 );
+
 		$playerId = self::getActivePlayerId();
 
 		$currentValue = self::getGameStateValue( $this->announcements[ $announcement ]['value'] );
