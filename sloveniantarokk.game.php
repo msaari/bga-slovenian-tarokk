@@ -757,6 +757,7 @@ class SlovenianTarokk extends Table {
 				$trulaCards++;
 			}
 		}
+		self::trace( 'hasTrula: ' . $trulaCards );
 		return $trulaCards == 3;
 	}
 
@@ -767,6 +768,7 @@ class SlovenianTarokk extends Table {
 				$kings++;
 			}
 		}
+		self::trace( 'hasKings: ' . $kings );
 		return $kings == 4;
 	}
 
