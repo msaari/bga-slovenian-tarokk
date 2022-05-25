@@ -2079,7 +2079,7 @@ class SlovenianTarokk extends Table {
 		if ( $dealCount > 1 ) {
 			self::notifyAllPlayers(
 				'newDeal',
-				clienttranslate( 'Someone was dealt a hand with no trump, this round has compulsory klop.' ),
+				clienttranslate( 'Someone was dealt a hand with no trumps, this round has compulsory klop.' ),
 				array( 'compulsoryKlop' => 1 )
 			);
 			self::setGameStateValue( 'compulsoryKlop', 1 );
