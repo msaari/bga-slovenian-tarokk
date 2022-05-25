@@ -215,6 +215,7 @@ function (dojo, declare) {
                     if (this.gamedatas.highBid == this.bids.open_beggar) {
                         dojo.style('openbeggarhand', 'display', 'block');
                     }
+                    this.gamedatas.compulsoryKlop = 0;
                     break;
                 case 'endHand':
                     dojo.style('openbeggarhand', 'display', 'none');
@@ -590,8 +591,8 @@ function (dojo, declare) {
                 { name: _('Valat without'), value: 13, action: 'onBidValat', id: 'bid_valat' },
                 { name: _('Pass'), value: 14, action: 'onPass', id: 'pass' },
             ];
-            if (this.gamedatas.compulsoryKlop == 1) {
-                bids = bids.filter(bid => bid.value == 1 && bid.value >= 9);
+            if (this.gamedatas.compulsoryKlop == "1") {
+                bids = bids.filter(bid => bid.value == 1 || bid.value >= 9);
             }
             return bids.filter(bid => bid.value >= minimumBid);
         },
