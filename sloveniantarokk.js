@@ -159,6 +159,8 @@ function (dojo, declare) {
                 case 'exchange':
                     dojo.style('talonexchange', 'display', 'block');
 
+                    console.log(this.gamedatas);
+
                     var talonSplit = 3;
                     if (this.gamedatas.highBid == this.bids.three || this.gamedatas.highBid == this.bids.solo_three) {
                         dojo.place(this.format_block('jstpl_talonexchange_33', {}), "talonexchange");
