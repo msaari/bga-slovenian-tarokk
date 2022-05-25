@@ -1276,7 +1276,12 @@ class SlovenianTarokk extends Table {
 					$bonusPoints = -$bonusPoints;
 				}
 			} else {
-				if ( $opponentsHave || ($announcerTeam == 'declarer' && ! $declarerHas) ) {
+				if ( $opponentsHave ) {
+					self::trace( "Opponents have $announcement, minus points! " );
+					$bonusPoints = -$bonusPoints;
+				}
+				if ( $announcerTeam == 'declarer' && ! $declarerHas ) {
+					self::trace( "Declarer announced $announcement and failed, minus points! " );
 					$bonusPoints = -$bonusPoints;
 				}
 			}
