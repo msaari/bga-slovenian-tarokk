@@ -2204,17 +2204,17 @@ class SlovenianTarokk extends Table {
 
 	public function stStartAnnouncements() {
 		self::setGameStateValue( 'trulaPlayer', 0 );
-		self::setGameStateValue( 'trulaValue', 1 );
+		self::setGameStateValue( 'trulaValue', 0 );
 		self::setGameStateValue( 'kingsPlayer', 0 );
-		self::setGameStateValue( 'kingsValue', 1 );
+		self::setGameStateValue( 'kingsValue', 0 );
 		self::setGameStateValue( 'kingUltimoPlayer', 0 );
-		self::setGameStateValue( 'kingUltimoValue', 1 );
+		self::setGameStateValue( 'kingUltimoValue', 0 );
 		self::setGameStateValue( 'kingUltimoStatus', 0 );
 		self::setGameStateValue( 'pagatUltimoPlayer', 0 );
-		self::setGameStateValue( 'pagatUltimoValue', 1 );
+		self::setGameStateValue( 'pagatUltimoValue', 0 );
 		self::setGameStateValue( 'pagatUltimoStatus', 0 );
 		self::setGameStateValue( 'valatPlayer', 0 );
-		self::setGameStateValue( 'valatValue', 1 );
+		self::setGameStateValue( 'valatValue', 0 );
 
 		self::setGameStateValue( 'firstPasser', 0 );
 		self::setGameStateValue( 'secondPasser', 0 );
