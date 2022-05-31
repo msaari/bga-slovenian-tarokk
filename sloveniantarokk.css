@@ -80,7 +80,7 @@
 	margin-top: -60px;
 }
 
-.game.declarer, .game.partner {
+.game.declarer, .game.partner, .king {
 	position: absolute;
     right: 0px;
     background-color: yellowgreen;
@@ -91,6 +91,10 @@
     font-size: 20px;
     top: 0px;
     line-height: 35px;
+}
+
+.king {
+	top: 40px;
 }
 
 #vitamin {
