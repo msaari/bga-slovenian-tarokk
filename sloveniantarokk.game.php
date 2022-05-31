@@ -548,7 +548,7 @@ class SlovenianTarokk extends Table {
 		$failed     = self::getGameStateValue( 'tricksByDeclarer' );
 		$currentBid = self::getGameStateValue( 'highBid' );
 
-		$points = $this->radliAdjustment( $this->bid_point_values[ $currentBid ], $declarer );
+		$points = $this->radliAdjustment( $this->bid_data[ $currentBid ]['value'], $declarer );
 
 		if ( $failed ) {
 			$sql = "UPDATE player SET player_score=player_score-$points WHERE player_id = $declarer";
@@ -585,7 +585,7 @@ class SlovenianTarokk extends Table {
 		$tricks     = self::getGameStateValue( 'tricksByDeclarer' );
 		$currentBid = self::getGameStateValue( 'highBid' );
 
-		$points = $this->radliAdjustment( $this->bid_point_values[ $currentBid ], $declarer );
+		$points = $this->radliAdjustment( $this->bid_data[ $currentBid ]['value'], $declarer );
 
 		if ( $tricks < HAND_SIZE ) {
 			$sql = "UPDATE player SET player_score=player_score-$points WHERE player_id = $declarer";
@@ -641,7 +641,7 @@ class SlovenianTarokk extends Table {
 			);
 		}
 		if ( $loser ) {
-			$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ], $loser );
+			$points = $this->radliAdjustment( $this->bid_data[ BID_KLOP ]['value'], $loser );
 			$sql    = "UPDATE player SET player_score=player_score-$points  WHERE player_id='$loser'";
 			self::DbQuery($sql);
 			self::notifyAllPlayers(
@@ -656,7 +656,7 @@ class SlovenianTarokk extends Table {
 		}
 		if ( count ( $winners ) > 0 ) {
 			foreach ( $winners as $winner_id ) {
-				$points = $this->radliAdjustment( $this->bid_point_values[ BID_KLOP ], $winner_id );
+				$points = $this->radliAdjustment( $this->bid_data[ BID_KLOP ]['value'], $winner_id );
 				$sql    = "UPDATE player SET player_score=player_score+$points  WHERE player_id='$winner_id'";
 				self::DbQuery($sql);
 				self::notifyAllPlayers(
@@ -722,7 +722,7 @@ class SlovenianTarokk extends Table {
 			);
 		}
 
-		$points = $this->bid_point_values[ $currentBid ];
+		$points = $this->bid_data[ $currentBid ]['value'];
 		if ( $currentBid >= BID_THREE && $currentBid <= BID_SOLO_ONE ) {
 			$difference = abs( $teamScores['Declarer'] - 35 );
 			$points    += $this->roundToNearestFive( $difference );
@@ -1068,48 +1068,7 @@ class SlovenianTarokk extends Table {
 	}
 
 	function increaseBidStat( $highBid ) {
-		$statToInc = '';
-		switch ( intval( $highBid ) ) {
-			case BID_KLOP:
-				$statToInc = 'bid_klop';
-				break;
-			case BID_THREE:
-				$statToInc = 'bid_three';
-				break;
-			case BID_TWO:
-				$statToInc = 'bid_two';
-				break;
-			case BID_ONE:
-				$statToInc = 'bid_one';
-				break;
-			case BID_SOLO_THREE:
-				$statToInc = 'bid_solo_three';
-				break;
-			case BID_SOLO_TWO:
-				$statToInc = 'bid_solo_two';
-				break;
-			case BID_SOLO_ONE:
-				$statToInc = 'bid_solo_one';
-				break;
-			case BID_BEGGAR:
-				$statToInc = 'bid_beggar';
-				break;
-			case BID_SOLO_WITHOUT:
-				$statToInc = 'bid_solo_without';
-				break;
-			case BID_OPEN_BEGGAR:
-				$statToInc = 'bid_open_beggar';
-				break;
-			case BID_COLOUR_VALAT_WITHOUT:
-				$statToInc = 'bid_colour_valat_without';
-				break;
-			case BID_COLOUR_VALAT:
-				$statToInc = 'bid_colour_valat';
-				break;
-			case BID_VALAT:
-				$statToInc = 'bid_valat';
-				break;
-		}
+		$statToInc = $this->bid_data[ $highBid ]['stat'] ?? false;
 		if ( $statToInc ) {
 			$this->incStat( 1, $statToInc );
 		}
@@ -1542,7 +1501,7 @@ class SlovenianTarokk extends Table {
 					'highBidder'  => $playerId,
 					'player_name' => self::getActivePlayerName(),
 					'highBid'     => $bid,
-					'bid_name'    => $this->bid_names[ $bid ],
+					'bid_name'    => $this->bid_data[ $bid ]['name'],
 				)
 			);
 
@@ -1572,7 +1531,8 @@ class SlovenianTarokk extends Table {
 			array(
 				'player_id'   => $playerId,
 				'player_name' => $players[ $playerId ]['player_name'],
-				'contract'    => $this->bid_names[ $bid ],
+				'contract'    => $this->bid_data[ $bid ]['name'],
+				'highBid'	  => $bid,
 			)
 		);
 		$this->incStat( 1, 'games_declared', $playerId );
