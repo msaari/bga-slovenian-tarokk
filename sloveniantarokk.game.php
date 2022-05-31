@@ -110,6 +110,7 @@ class SlovenianTarokk extends Table {
 				'kingUltimoStatus'    => 40,
 				'handsPlayed'         => 41,
 				'calledKingChosen'    => 42,
+				'mondCapture'         => 43,
 				'gameLength'          => OPTION_GAME_LENGTH,
 				'radliValue'          => OPTION_RADLI_VALUE,
 				'allowUpgrades'       => OPTION_ALLOW_UPGRADES,
@@ -187,6 +188,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateInitialValue( 'kingUltimoStatus', 0 );
 		self::setGameStateInitialValue( 'handsPlayed', 0 );
 		self::setGameStateInitialValue( 'calledKingChosen', 0 );
+		self::setGameStateInitialValue( 'mondCapture', 0 );
 
 		// Create cards
 		$cards = array ();
@@ -988,6 +990,7 @@ class SlovenianTarokk extends Table {
 			$this->updateScores();
 			$this->incStat( 1, 'monds_captured', $bestValuePlayerId );
 			$this->incStat( 1, 'monds_lost', $mondPlayer );
+			self::setGameStateValue( 'mondCapture', $mondPlayer );
 		}
 	}
 
@@ -2034,6 +2037,7 @@ class SlovenianTarokk extends Table {
 		self::setGameStateValue( 'tricksByDeclarer', 0 );
 		self::setGameStateValue( 'gameValue', 1 );
 		self::setGameStateValue( 'calledKingChosen', 0 );
+		self::setGameStateValue( 'mondCapture', 0 );
 
 		$sql = "UPDATE player SET player_identity = ''";
 		self::DbQuery( $sql );
