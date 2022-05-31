@@ -546,7 +546,7 @@ function (dojo, declare) {
             if (player_id != this.player_id) {
                 // Some opponent played a card
                 // Move card from player panel
-                this.placeOnObject('cardontable_' + player_id, 'overall_player_board_' + player_id);
+                this.placeOnObject('cardontable_' + player_id, 'player_' + player_id);
             } else {
                 // You played a card. If it exists in your hand, move card from there and remove
                 // corresponding item
@@ -1096,7 +1096,7 @@ function (dojo, declare) {
 
         notif_giveVitamin: function (notif) {
             console.log("Giving vitamin to ", notif.args.player_id);
-            var anim = this.slideToObject('cardontable_vitamin', 'overall_player_board_' + notif.args.player_id);
+            var anim = this.slideToObject('cardontable_vitamin', 'player_' + notif.args.player_id);
             dojo.connect(anim, 'onEnd', function(node) {
                 dojo.destroy(node);
             });
@@ -1107,7 +1107,7 @@ function (dojo, declare) {
             // Move all cards on table to given table, then destroy them
             var winner_id = notif.args.player_id;
             for ( var player_id in this.gamedatas.players) {
-                var anim = this.slideToObject('cardontable_' + player_id, 'overall_player_board_' + winner_id);
+                var anim = this.slideToObject('cardontable_' + player_id, 'player_' + winner_id);
                 dojo.connect(anim, 'onEnd', function(node) {
                     dojo.destroy(node);
                 });
@@ -1124,7 +1124,7 @@ function (dojo, declare) {
 
         notif_talonChosen: function (notif) {
             if (notif.args.player_id != this.player_id) {
-                var anim = this.slideToObject(notif.args.talon_id, 'overall_player_board_' + notif.args.player_id);
+                var anim = this.slideToObject(notif.args.talon_id, 'player_' + notif.args.player_id);
                 dojo.connect(anim, 'onEnd', function (node) {
                     dojo.destroy(node);
                 });
