@@ -1064,6 +1064,8 @@ function (dojo, declare) {
         notif_declarer: function (notif) {
             console.log("on declarer ", notif.args);
             this.gamedatas.players[notif.args.player_id].team = "declarer";
+            this.gamedatas.highBid = notif.args.highBid;
+            this.updatePlayerGame();
         },
 
         notif_youreChosen: function (notif) {
