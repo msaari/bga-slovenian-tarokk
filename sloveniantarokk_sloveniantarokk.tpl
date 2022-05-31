@@ -57,6 +57,9 @@ var jstpl_radl =
 var jstpl_game =
 '<div class="game ${game_class}">${player_game}</div>';
 
+var jstpl_game_king =
+'<div class="game ${game_class}">${player_game}</div> <div class="king">${player_king}</div>';
+
 </script>
 
 {OVERALL_GAME_FOOTER}
