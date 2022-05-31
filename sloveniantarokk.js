@@ -720,7 +720,7 @@ function (dojo, declare) {
             dojo.empty('ob_hand');
         },
 
-        getSuitValue: function (card) {
+        getSuitValue: function (card, withSpan = true) {
             var value = card.type_arg;
             var color = '';
             switch (card.type) {
@@ -731,10 +731,10 @@ function (dojo, declare) {
                     color = '♣';
                     break;
                 case "3":
-                    color = '<span style="color: #D22B2B">♥</span>';
+                    color = withSpan ? '<span style="color: #D22B2B">♥</span>' : '♥';
                     break;
                 case "4":
-                    color = '<span style="color: #D22B2B">♦</span>';
+                    color = withSpan ? '<span style="color: #D22B2B">♦</span>' : '♦';
                     break;
             }
             return color + value;
