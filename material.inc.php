@@ -129,37 +129,72 @@ $this->point_values = array(
 	14 => 5,
 );
 
-$this->bid_names = array(
-	1 => clienttranslate( 'Klop' ),
-	2 => clienttranslate( 'Three' ),
-	3 => clienttranslate( 'Two' ),
-	4 => clienttranslate( 'One' ),
-	5 => clienttranslate( 'Solo three' ),
-	6 => clienttranslate( 'Solo two' ),
-	7 => clienttranslate( 'Solo one' ),
-	8 => clienttranslate( 'Beggar' ),
-	9 => clienttranslate( 'Solo without' ),
-	10 => clienttranslate( 'Open beggar' ),
-	11 => clienttranslate( 'Colour valat' ),
-	12 => clienttranslate( 'Colour valat without' ),
-	13 => clienttranslate( 'Valat' ),
-	'pass' => clienttranslate( 'Pass' ),
-);
-
-$this->bid_point_values = array(
-	1 => 70,
-	2 => 10,
-	3 => 20,
-	4 => 30,
-	5 => 40,
-	6 => 50,
-	7 => 60,
-	8 => 70,
-	9 => 80,
-	10 => 90,
-	11 => 125,
-	12 => 125,
-	13 => 500,
+$this->bid_data = array(
+	BID_KLOP => array(
+		'name'  => clienttranslate( 'Klop' ),
+		'stat'  => 'bid_klop',
+		'value' => 70,
+	),
+	BID_THREE => array(
+		'name'  => clienttranslate( 'Three' ),
+		'stat'  => 'bid_three',
+		'value' => 10,
+	),
+	BID_TWO => array(
+		'name'  => clienttranslate( 'Two' ),
+		'stat'  => 'bid_two',
+		'value' => 20,
+	),
+	BID_ONE => array(
+		'name'  => clienttranslate( 'One' ),
+		'stat'  => 'bid_one',
+		'value' => 30,
+	),
+	BID_SOLO_THREE => array(
+		'name'  => clienttranslate( 'Solo three' ),
+		'stat'  => 'bid_solo_three',
+		'value' => 40,
+	),
+	BID_SOLO_TWO => array(
+		'name'  => clienttranslate( 'Solo two' ),
+		'stat'  => 'bid_solo_two',
+		'value' => 50,
+	),
+	BID_SOLO_ONE => array(
+		'name'  => clienttranslate( 'Solo one' ),
+		'stat'  => 'bid_solo_one',
+		'value' => 60,
+	),
+	BID_BEGGAR => array(
+		'name'  => clienttranslate( 'Beggar' ),
+		'stat'  => 'bid_beggar',
+		'value' => 70,
+	),
+	BID_SOLO_WITHOUT => array(
+		'name'  => clienttranslate( 'Solo without' ),
+		'stat'  => 'bid_solo_without',
+		'value' => 80,
+	),
+	BID_OPEN_BEGGAR => array(
+		'name'  => clienttranslate( 'Open beggar' ),
+		'stat'  => 'bid_open_beggar',
+		'value' => 90,
+	),
+	BID_COLOUR_VALAT_WITHOUT => array(
+		'name'  => clienttranslate( 'Colour valat without' ),
+		'stat'  => 'bid_colour_valat_without',
+		'value' => 125,
+	),
+	BID_COLOUR_VALAT => array(
+		'name'  => clienttranslate( 'Colour valat' ),
+		'stat'  => 'bid_colour_valat',
+		'value' => 125,
+	),
+	BID_VALAT => array(
+		'name'  => clienttranslate( 'Valat' ),
+		'stat'  => 'bid_valat',
+		'value' => 500,
+	),
 );
 
 $this->announcements = array(
