@@ -1144,6 +1144,23 @@ function (dojo, declare) {
 
         notif_callKing: function (notif) {
             this.gamedatas.calledKing = notif.args.color;
+            this.updatePlayerGame();
+            var call = '';
+            switch (notif.args.color) {
+                case this.suits.spades:
+                    call = _("I call the king of spades");
+                    break;
+                case this.suits.hearts:
+                    call = _("I call the king of hearts");
+                    break;
+                case this.suits.diamonds:
+                    call = _("I call the king of diamonds");
+                    break;
+                case this.suits.clubs:
+                    call = _("I call the king of clubs");
+                    break;
+            }
+            this.showBubble('overall_player_board_' + notif.args.player_id, call);
         },
 
         notif_playerDataUpdate: function (notif) {
