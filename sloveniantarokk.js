@@ -1016,6 +1016,7 @@ function (dojo, declare) {
             dojo.subscribe('declarer', this, "notif_declarer");
             dojo.subscribe('youreChosen', this, "notif_youreChosen");
             dojo.subscribe('talonChosen', this, "notif_talonChosen");
+            this.notifqueue.setSynchronous('trickWin', 1000);
             dojo.subscribe('discardCard', this, "notif_discardCard");
             dojo.subscribe('upgradeToColourValat', this, "notif_upgradeToColourValat");
             dojo.subscribe('playCard', this, "notif_playCard");
