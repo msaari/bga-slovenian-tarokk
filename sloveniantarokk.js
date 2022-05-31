@@ -645,20 +645,29 @@ function (dojo, declare) {
             for (var player_id in this.gamedatas.players) {
                 var game_note = '';
                 var game_class = '';
+                var king_note = '';
                 if (player_id == this.gamedatas.highBidder) {
                     console.log("highbid is " + this.gamedatas.highBid);
+                    var kingCard = {
+                        type_arg: '',
+                        type: this.gamedatas.calledKing
+                    }
+
                     switch (parseInt(this.gamedatas.highBid)) {
                         case this.bids.klop:
                             game_note = '';
                             break;
                         case this.bids.three:
                             game_note = "3";
+                            king_note = this.getSuitValue(kingCard, false);
                             break;
                         case this.bids.two:
                             game_note = "2";
+                            king_note = this.getSuitValue(kingCard, false);
                             break;
                         case this.bids.one:
                             game_note = "1";
+                            king_note = this.getSuitValue(kingCard, false);
                             break;
                         case this.bids.solo_three:
                             game_note = "S3";
@@ -689,6 +698,7 @@ function (dojo, declare) {
                             break;
                         default:
                             game_note = '';
+                            king_note = '';
                     }
                     game_class = 'declarer';
                 } else if (this.getPlayerTeam(player_id) == 'declarer') {
@@ -699,10 +709,18 @@ function (dojo, declare) {
                 if (game_note == '') {
                     dojo.empty('playergame_' + player_id);
                 } else {
-                    dojo.place(this.format_block('jstpl_game', {
-                        player_game: game_note,
-                        game_class: game_class,
-                    }), 'playergame_' + player_id);
+                    if (king_note != '') {
+                        dojo.place(this.format_block('jstpl_game_king', {
+                            player_game: game_note,
+                            player_king: king_note,
+                            game_class: game_class,
+                        }), 'playergame_' + player_id);
+                    } else {
+                        dojo.place(this.format_block('jstpl_game', {
+                            player_game: game_note,
+                            game_class: game_class,
+                        }), 'playergame_' + player_id);
+                    }
                 }
             }
         },
